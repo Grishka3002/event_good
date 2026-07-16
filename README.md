@@ -1,12 +1,19 @@
 # Сайт «Хорошее решение» — публикация
 
 ## Что это
-Статический сайт: index.html (главная), specialists.html, cases.html, blog.html (статьи для SEO), privacy.html (политика), 404.html, admin.html (панель управления, закрыта от индексации).
+Статический сайт: index.html (главная), specialists.html, cases.html, blog.html (статьи для SEO), privacy.html (политика), 404.html, admin.html (панель управления, закрыта от индексации и паролем). server.js + package.json — мини-сервер для Railway и другого Node-хостинга.
 
-## Как опубликовать
+## Публикация на Railway (основной способ)
+1. Railway → New Project → Deploy from GitHub repo → выберите этот репозиторий. Railway сам определит Node-проект и запустит `npm start`.
+2. Обязательно добавьте переменную: вкладка **Variables** → `ADMIN_PASSWORD` = ваш пароль от админки. Без неё сайт работает, но /admin.html отвечает «закрыто».
+3. Вкладка **Settings → Networking → Generate Domain** — получите публичный адрес сайта.
+4. Админка: откройте https://ваш-домен/admin.html — браузер спросит логин и пароль. Логин любой (например, admin), пароль — тот, что в ADMIN_PASSWORD.
+
+## Как опубликовать на статическом хостинге (без пароля на админке!)
 1. Загрузите ВСЁ содержимое этой папки в корень хостинга (reg.ru, Timeweb, Netlify, GitHub Pages — любой статический хостинг).
-2. Адрес сайта уже прописан: https://grishka3002.github.io/event_good/ (canonical/og:url, robots.txt, sitemap.xml). Если переедете на свой домен — замените эту строку во всех файлах на новый домен.
+2. В canonical/og:url, robots.txt и sitemap.xml сейчас прописан адрес https://grishka3002.github.io/event_good/. Когда появится постоянный домен (Railway или свой) — замените эту строку во всех файлах на реальный адрес.
 3. Проверьте, что открывается https://домен/ — главная.
+4. Внимание: на чисто статическом хостинге (GitHub Pages и т.п.) admin.html НЕ защищена паролем — пароль работает только через server.js (Railway и другой Node-хостинг).
 
 ## 404-страница
 Файл 404.html подхватывается автоматически на GitHub Pages. На Netlify/Vercel и большинстве хостингов укажите его как error page (или в .htaccess: ErrorDocument 404 /404.html).

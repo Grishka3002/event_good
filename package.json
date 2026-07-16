@@ -1,0 +1,12 @@
+{
+  "name": "event-good",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Сайт ивент-объединения «Хорошее решение»",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
