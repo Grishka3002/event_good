@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Страница не найдена — Хорошее решение</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+:root{--acc:#EE7F2D}
+body{margin:0;background:#0C1117;color:#F2F5F8;font-family:'Montserrat',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#F2F5F8;text-decoration:none}
+a:hover{color:var(--acc)}
+::selection{background:var(--acc);color:#0C1117}
+@keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+</style>
+</helmet>
+<div data-screen-label="404" style="min-height:100vh;background:linear-gradient(118deg,#090D12 0%,#0C1117 46%,#111925 46.15%,#0C1117 100%);color:#F2F5F8;font-family:'Montserrat',system-ui,sans-serif;display:flex;flex-direction:column">
+  <nav style="padding:20px 28px">
+    <a href="./index.html" style="display:inline-flex;align-items:center;gap:12px">
+      <div style="width:9px;height:36px;background:var(--acc)"></div>
+      <div style="line-height:1.15"><div style="font-weight:900;font-size:13.5px;letter-spacing:.2em">ХОРОШЕЕ</div><div style="font-weight:900;font-size:13.5px;letter-spacing:.2em">РЕШЕНИЕ</div></div>
+    </a>
+  </nav>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px 28px 80px">
+    <div style="max-width:720px;text-align:center">
+      <div style="position:relative;display:inline-block;animation:fadeUp .6s cubic-bezier(.22,.61,.36,1) both">
+        <div style="font-size:clamp(110px,22vw,220px);font-weight:900;line-height:.9;color:transparent;-webkit-text-stroke:2px #39434E;letter-spacing:.02em">404</div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+          <span style="background:var(--acc);color:#0C1117;font-size:clamp(11px,1.6vw,14px);font-weight:800;letter-spacing:.24em;text-transform:uppercase;padding:10px 20px;border-radius:999px;transform:rotate(-4deg);box-shadow:0 12px 34px rgba(0,0,0,.5)">Такой страницы нет</span>
+        </div>
+      </div>
+      <h1 style="margin:34px 0 14px;font-size:clamp(22px,3vw,32px);font-weight:900;text-transform:uppercase;line-height:1.15;animation:fadeUp .6s cubic-bezier(.22,.61,.36,1) .1s both">Но событие мы всё равно организуем</h1>
+      <p style="margin:0 0 34px;font-size:15.5px;line-height:1.7;color:#9AA6B2;animation:fadeUp .6s cubic-bezier(.22,.61,.36,1) .18s both">Страница переехала или никогда не существовала. Зато существуют 100 специалистов, 12 направлений и кэшбек 100% — всё это на главной.</p>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s cubic-bezier(.22,.61,.36,1) .26s both">
+        <a href="./index.html" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">На главную</a>
+        <a href="./specialists.html" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Специалисты</a>
+        <a href="{{ tgHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в TG</a>
+      </div>
+    </div>
+  </div>
+  <footer style="padding:26px 28px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#56626F">
+    <span>© 2026 «Хорошее решение»</span>
+    <span style="letter-spacing:.24em;text-transform:uppercase">Не агентство</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { d: null };
+  componentDidMount() { import('./data.js').then(m => this.setState({ d: m.loadData() })); }
+  renderVals() {
+    const cts = (this.state.d || {}).contacts || { tg: 'sazelenskiy' };
+    return { tgHref: 'https://t.me/' + String(cts.tg || '').replace(/^@/, '') };
+  }
+}
+</script>
+</body>
+</html>

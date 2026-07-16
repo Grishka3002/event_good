@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Админ-панель — Хорошее решение</title>
+<link rel="canonical" href="https://grishka3002.github.io/event_good/admin.html">
+<meta property="og:url" content="https://grishka3002.github.io/event_good/admin.html">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
+<style>
+:root{--acc:#EE7F2D}
+body{margin:0;background:#0A0E13;color:#F2F5F8;font-family:'Montserrat',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#F2F5F8;text-decoration:none}
+a:hover{color:var(--acc)}
+input::placeholder,textarea::placeholder{color:#4C5762}
+option{background:#121A26;color:#F2F5F8}
+::selection{background:var(--acc);color:#0C1117}
+</style>
+</helmet>
+<div style="min-height:100vh;font-family:'Montserrat',system-ui,sans-serif">
+
+<div data-screen-label="Шапка админки" style="position:sticky;top:0;z-index:50;background:rgba(10,14,19,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)">
+  <div style="max-width:1180px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:12px;margin-right:auto">
+      <div style="width:9px;height:32px;background:var(--acc)"></div>
+      <div><div style="font-weight:900;font-size:14px;letter-spacing:.14em">АДМИН-ПАНЕЛЬ</div><div style="font-size:11px;color:#97A3B0;margin-top:2px">Хорошее решение · контент сайта</div></div>
+    </div>
+    <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7CC46B">Сохранено ✓</span></sc-if>
+    <a href="./index.html" style="border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:11px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase" style-hover="border-color:var(--acc);color:var(--acc)">Открыть сайт →</a>
+  </div>
+</div>
+
+<div style="max-width:1180px;margin:0 auto;padding:26px 28px 80px">
+  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Изменения сохраняются автоматически в этом браузере и сразу видны на сайте. Фотографии добавляются перетаскиванием прямо на карточки сайта. Чтобы зафиксировать данные в исходниках навсегда — вкладка «Экспорт».</div>
+
+  <div data-screen-label="Вкладки" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="7">
+      <button onClick="{{ t.pick }}" style="background:{{ t.bg }};color:{{ t.color }};border:1px solid {{ t.border }};border-radius:999px;padding:11px 20px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc)">{{ t.label }}</button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isSpec }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="Специалисты" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Специалисты <span style="color:#56626F;font-weight:600;font-size:15px">{{ specCount }}</span></h2>
+        <button onClick="{{ addSpec }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <input value="{{ q }}" onInput="{{ uQ }}" placeholder="Поиск по имени или роли…" style="flex:2;min-width:220px;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:12px 14px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+        <select data-selval="{{ fcat }}" onChange="{{ uFcat }}" style="flex:1;min-width:190px;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:12px 14px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;cursor:pointer" style-focus="border-color:var(--acc)"><option value="all">Все категории</option><sc-for list="{{ cats }}" as="c"><option value="{{ c.slug }}">{{ c.name }}</option></sc-for></select>
+      </div>
+      <sc-if value="{{ noSpecs }}" hint-placeholder-val="{{ false }}"><div style="border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:34px;text-align:center;color:#7C8894;font-size:13.5px">Никого не нашлось — измените поиск или категорию.</div></sc-if>
+      <sc-for list="{{ specs }}" as="s" hint-placeholder-count="4">
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end">
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Имя</div><input value="{{ s.name }}" onInput="{{ s.uName }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Категория</div><select data-selval="{{ s.cat }}" onChange="{{ s.uCat }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;cursor:pointer"><sc-for list="{{ cats }}" as="c"><option value="{{ c.slug }}">{{ c.name }}</option></sc-for></select></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Роль / жанр</div><input value="{{ s.role }}" onInput="{{ s.uRole }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Опыт</div><input value="{{ s.exp }}" onInput="{{ s.uExp }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Цена</div><input value="{{ s.price }}" onInput="{{ s.uPrice }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div style="display:flex;gap:6px">
+            <button onClick="{{ s.up }}" title="Переместить выше" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↑</button>
+            <button onClick="{{ s.down }}" title="Переместить ниже" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↓</button>
+            <button onClick="{{ s.dup }}" title="Дублировать" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">⧉</button>
+            <button onClick="{{ s.del }}" title="Удалить" style="flex:1;background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isCases }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Кейсы" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Кейсы <span style="color:#56626F;font-weight:600;font-size:15px">{{ caseCount }}</span></h2>
+        <button onClick="{{ addCase }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить</button>
+      </div>
+      <sc-for list="{{ caseRows }}" as="k" hint-placeholder-count="3">
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Название</div><input value="{{ k.title }}" onInput="{{ k.uTitle }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Формат</div><input value="{{ k.format }}" onInput="{{ k.uFormat }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Гостей</div><input value="{{ k.guests }}" onInput="{{ k.uGuests }}" placeholder="450" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Специалистов</div><input value="{{ k.team }}" onInput="{{ k.uTeam }}" placeholder="12" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Город</div><input value="{{ k.city }}" onInput="{{ k.uCity }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Год</div><input value="{{ k.year }}" onInput="{{ k.uYear }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Ссылка на видео</div><input value="{{ k.video }}" onInput="{{ k.uVideo }}" placeholder="https://…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:end">
+            <div style="flex:1"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Описание</div><textarea rows="2" value="{{ k.desc }}" onInput="{{ k.uDesc }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+            <div style="display:flex;gap:6px;height:fit-content">
+              <button onClick="{{ k.up }}" title="Выше" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↑</button>
+              <button onClick="{{ k.down }}" title="Ниже" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↓</button>
+              <button onClick="{{ k.dup }}" title="Дублировать" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">⧉</button>
+              <button onClick="{{ k.del }}" title="Удалить" style="background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPack }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Пакеты" style="display:flex;flex-direction:column;gap:14px">
+      <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Пакеты услуг</h2>
+      <sc-for list="{{ packRows }}" as="p" hint-placeholder-count="3">
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Название</div><input value="{{ p.name }}" onInput="{{ p.uName }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Цена</div><input value="{{ p.price }}" onInput="{{ p.uPrice }}" placeholder="от 50 000 ₽" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Подзаголовок</div><input value="{{ p.desc }}" onInput="{{ p.uDesc }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div style="grid-column:1/-1"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Пункты (каждый с новой строки)</div><textarea rows="4" value="{{ p.itemsText }}" onInput="{{ p.uItems }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isRev }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Отзывы" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Отзывы <span style="color:#56626F;font-weight:600;font-size:15px">{{ revCount }}</span></h2>
+        <button onClick="{{ addRev }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить</button>
+      </div>
+      <sc-for list="{{ revRows }}" as="r" hint-placeholder-count="3">
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Автор</div><input value="{{ r.author }}" onInput="{{ r.uAuthor }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Событие / год</div><input value="{{ r.event }}" onInput="{{ r.uEvent }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:end">
+            <div style="flex:1"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Текст</div><textarea rows="3" value="{{ r.text }}" onInput="{{ r.uText }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+            <div style="display:flex;gap:6px;height:fit-content">
+              <button onClick="{{ r.up }}" title="Выше" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↑</button>
+              <button onClick="{{ r.down }}" title="Ниже" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↓</button>
+              <button onClick="{{ r.del }}" title="Удалить" style="background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isBlog }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Блог" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Статьи блога <span style="color:#56626F;font-weight:600;font-size:15px">{{ artCount }}</span></h2>
+        <button onClick="{{ addArt }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить</button>
+      </div>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Текст статьи: каждый раздел с новой строки в формате «Заголовок|Абзац текста». Slug — латиницей через дефис, попадает в адрес страницы.</div>
+      <sc-for list="{{ artRows }}" as="a" hint-placeholder-count="3">
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+            <div style="grid-column:span 2"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Заголовок</div><input value="{{ a.title }}" onInput="{{ a.uTitle }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Slug (адрес)</div><input value="{{ a.slug }}" onInput="{{ a.uSlug }}" placeholder="kak-vybrat-vedushchego" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Рубрика</div><input value="{{ a.tag }}" onInput="{{ a.uTag }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Дата (ГГГГ-ММ-ДД)</div><input value="{{ a.date }}" onInput="{{ a.uDate }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Минут чтения</div><input value="{{ a.minutes }}" onInput="{{ a.uMinutes }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          </div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Лид (анонс)</div><textarea rows="2" value="{{ a.lead }}" onInput="{{ a.uLead }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+          <div style="display:flex;gap:12px;align-items:end">
+            <div style="flex:1"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Текст (Заголовок|Абзац, раздел с новой строки)</div><textarea rows="5" value="{{ a.body }}" onInput="{{ a.uBody }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+            <div style="display:flex;gap:6px;height:fit-content">
+              <button onClick="{{ a.up }}" title="Выше" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↑</button>
+              <button onClick="{{ a.down }}" title="Ниже" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↓</button>
+              <button onClick="{{ a.del }}" title="Удалить" style="background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:8px;padding:11px 13px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isVid }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Видео" style="display:flex;flex-direction:column;gap:14px">
+      <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Видео на главной</h2>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Обложки перетаскиваются прямо на карточки на главной. Здесь — названия и ссылки (YouTube, VK, Rutube, диск).</div>
+      <sc-for list="{{ vidRows }}" as="v" hint-placeholder-count="3">
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Название</div><input value="{{ v.title }}" onInput="{{ v.uTitle }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Ссылка</div><input value="{{ v.url }}" onInput="{{ v.uUrl }}" placeholder="https://…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isCont }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Контакты" style="display:flex;flex-direction:column;gap:14px">
+      <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Контакты</h2>
+      <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Имя (кто на связи)</div><input value="{{ cPerson }}" onInput="{{ uPerson }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+        <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Телефон</div><input value="{{ cPhone }}" onInput="{{ uPhone }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+        <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Telegram (без @)</div><input value="{{ cTg }}" onInput="{{ uTg }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+        <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Почта</div><input value="{{ cEmail }}" onInput="{{ uEmail }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+      </div>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Все кнопки «Telegram», телефон и почта на сайте обновятся автоматически. Заявки с формы приходят сообщением в этот Telegram.</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isExp }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Экспорт" style="display:flex;flex-direction:column;gap:16px">
+      <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Экспорт / импорт</h2>
+      <div style="font-size:13px;color:#9AA6B2;line-height:1.7;max-width:760px">Данные живут в памяти этого браузера. Чтобы закрепить их в коде сайта навсегда (и чтобы они были видны всем) — скопируйте JSON и пришлите его в чат: вшью в исходники. Также JSON можно перенести в другой браузер через «Импорт».</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button onClick="{{ copyJson }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">{{ copyJsonLabel }}</button>
+        <button onClick="{{ applyImport }}" style="background:transparent;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">Импортировать из поля ниже</button>
+        <button onClick="{{ resetAll }}" style="background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">{{ resetLabel }}</button>
+      </div>
+      <sc-if value="{{ hasImpErr }}" hint-placeholder-val="{{ false }}"><div style="border:1px solid rgba(229,83,60,.5);background:rgba(229,83,60,.1);color:#F2A79A;border-radius:10px;padding:13px 16px;font-size:13px">{{ impErr }}</div></sc-if>
+      <textarea ref="{{ refJson }}" rows="18" defaultValue="{{ jsonText }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;color:#9AA6B2;font-size:12px;line-height:1.6;font-family:ui-monospace,Menlo,monospace;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea>
+    </div>
+  </sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { d: null, C: [], tab: 'spec', saved: false, copiedJson: false, resetArmed: false, impErr: null };
+  jsonRef = null;
+  componentDidMount() {
+    import('./data.js').then(m => { this.mod = m; this.setState({ d: m.loadData(), C: m.CATEGORIES }); });
+    this._selT = setInterval(() => this.syncSelects(), 400);
+  }
+  componentWillUnmount() { clearInterval(this._selT); }
+  syncSelects() {
+    if (this.state.tab !== 'spec' || !this._selOrder) return;
+    const sels = document.querySelectorAll('select');
+    // порядок в DOM: [0] — фильтр категорий, дальше — селект категории каждой карточки
+    const expected = [this._selFcat === 'all' ? 'all' : this._selFcat].concat(this._selOrder);
+    sels.forEach((el, i) => {
+      const v = expected[i];
+      if (v == null) return;
+      if (el.value !== v && [...el.options].some(o => o.value === v)) el.value = v;
+      [...el.options].forEach(o => { if ((o.value === v) !== o.hasAttribute('selected')) o.toggleAttribute('selected', o.value === v); });
+    });
+  }
+  componentDidUpdate() { this.syncSelects(); }
+  save(extra) {
+    this.mod.saveData(this.state.d);
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ saved: false }), 1600);
+    this.setState({ d: this.state.d, saved: true, ...(extra || {}) });
+  }
+  bind(obj, field) { return e => { obj[field] = e.target.value; this.save(); }; }
+  mv(arr, item, delta) { const i = arr.indexOf(item); const j = i + delta; if (i < 0 || j < 0 || j >= arr.length) return; arr.splice(i, 1); arr.splice(j, 0, item); this.save(); }
+  renderVals() {
+    const { d, C, tab } = this.state;
+    const tabDefs = [['spec', 'Специалисты'], ['cases', 'Кейсы'], ['pack', 'Пакеты'], ['rev', 'Отзывы'], ['vid', 'Видео'], ['blog', 'Блог'], ['cont', 'Контакты'], ['exp', 'Экспорт']];
+    const tabs = tabDefs.map(([id, label]) => ({ id, label,
+      bg: tab === id ? 'var(--acc)' : 'transparent', color: tab === id ? '#0C1117' : '#C7D0D9', border: tab === id ? 'var(--acc)' : 'rgba(255,255,255,.16)',
+      pick: () => this.setState({ tab: id, resetArmed: false, impErr: null }) }));
+    if (!d) return { tabs, isSpec: true, specs: [], cats: [], specCount: '' };
+    const fcat = this.state.fcat || 'all', q = (this.state.q || '').trim().toLowerCase();
+    const dup = (arr, item, idp) => () => { const i = arr.indexOf(item); arr.splice(i + 1, 0, { ...item, id: idp + Date.now() }); this.save(); };
+    const specs = d.specialists.filter(s => (fcat === 'all' || s.cat === fcat) && (!q || (s.name + ' ' + s.role).toLowerCase().includes(q))).map(s => ({ ...s,
+      uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
+      uCat: e => { s.cat = e.target.value; this.save(); },
+      up: () => this.mv(d.specialists, s, -1), down: () => this.mv(d.specialists, s, 1), dup: dup(d.specialists, s, 's'),
+      del: () => { d.specialists = d.specialists.filter(x => x !== s); this.save(); } }));
+    const caseRows = d.cases.map(k => ({ ...k,
+      uTitle: this.bind(k, 'title'), uFormat: this.bind(k, 'format'), uGuests: this.bind(k, 'guests'), uCity: this.bind(k, 'city'), uYear: this.bind(k, 'year'), uVideo: this.bind(k, 'video'), uDesc: this.bind(k, 'desc'), uTeam: this.bind(k, 'team'),
+      up: () => this.mv(d.cases, k, -1), down: () => this.mv(d.cases, k, 1), dup: dup(d.cases, k, 'c'),
+      del: () => { d.cases = d.cases.filter(x => x !== k); this.save(); } }));
+    const packRows = d.packages.map(p => ({ ...p, itemsText: (p.items || []).join('\n'),
+      uName: this.bind(p, 'name'), uPrice: this.bind(p, 'price'), uDesc: this.bind(p, 'desc'),
+      uItems: e => { p.items = e.target.value.split('\n').filter(x => x.trim()); this.save(); } }));
+    const revRows = d.reviews.map(r => ({ ...r,
+      uAuthor: this.bind(r, 'author'), uEvent: this.bind(r, 'event'), uText: this.bind(r, 'text'),
+      up: () => this.mv(d.reviews, r, -1), down: () => this.mv(d.reviews, r, 1),
+      del: () => { d.reviews = d.reviews.filter(x => x !== r); this.save(); } }));
+    const vidRows = d.videos.map(v => ({ ...v, uTitle: this.bind(v, 'title'), uUrl: this.bind(v, 'url') }));
+    if (!Array.isArray(d.articles)) d.articles = [];
+    const artRows = d.articles.map(a => ({ ...a,
+      uTitle: this.bind(a, 'title'), uTag: this.bind(a, 'tag'), uDate: this.bind(a, 'date'), uMinutes: this.bind(a, 'minutes'), uLead: this.bind(a, 'lead'), uBody: this.bind(a, 'body'),
+      uSlug: e => { a.slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'); this.save(); },
+      up: () => this.mv(d.articles, a, -1), down: () => this.mv(d.articles, a, 1),
+      del: () => { d.articles = d.articles.filter(x => x !== a); this.save(); } }));
+    this._selOrder = specs.map(s => s.cat);
+    this._selFcat = fcat;
+    return {
+      tabs,
+      isSpec: tab === 'spec', isCases: tab === 'cases', isPack: tab === 'pack', isRev: tab === 'rev', isVid: tab === 'vid', isBlog: tab === 'blog', isCont: tab === 'cont', isExp: tab === 'exp',
+      artRows, artCount: d.articles.length + ' шт.',
+      addArt: () => { d.articles.unshift({ id: 'a' + Date.now(), slug: 'novaya-statya-' + (d.articles.length + 1), title: 'Новая статья', date: new Date().toISOString().slice(0, 10), minutes: '5', tag: 'Советы', lead: '', body: 'Первый раздел|Текст раздела.' }); this.save(); },
+      saved: this.state.saved,
+      cats: C,
+      specs, specCount: (fcat === 'all' && !q) ? d.specialists.length + ' шт.' : specs.length + ' из ' + d.specialists.length,
+      noSpecs: specs.length === 0,
+      q: this.state.q || '', uQ: e => this.setState({ q: e.target.value }),
+      fcat, uFcat: e => this.setState({ fcat: e.target.value }),
+      addSpec: () => { d.specialists.unshift({ id: 's' + Date.now(), cat: 'vedushchie', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '' }); this.save(); },
+      caseRows, caseCount: d.cases.length + ' шт.',
+      addCase: () => { d.cases.unshift({ id: 'c' + Date.now(), title: 'Новый кейс', format: '', guests: '', city: '', year: '2026', desc: '', video: '', team: '' }); this.save(); },
+      packRows, revRows, revCount: d.reviews.length + ' шт.',
+      addRev: () => { d.reviews.unshift({ id: 'r' + Date.now(), author: 'Имя клиента', event: '', text: '' }); this.save(); },
+      vidRows,
+      cPerson: d.contacts.person || '', cPhone: d.contacts.phone || '', cTg: d.contacts.tg || '', cEmail: d.contacts.email || '',
+      uPerson: this.bind(d.contacts, 'person'), uPhone: this.bind(d.contacts, 'phone'), uTg: e => { d.contacts.tg = e.target.value.replace(/^@/, ''); this.save(); }, uEmail: this.bind(d.contacts, 'email'),
+      jsonText: JSON.stringify(d, null, 2),
+      refJson: el => { this.jsonRef = el; },
+      copyJsonLabel: this.state.copiedJson ? 'Скопировано ✓' : 'Скопировать JSON',
+      copyJson: () => { try { navigator.clipboard.writeText(JSON.stringify(this.state.d, null, 2)); this.setState({ copiedJson: true }); setTimeout(() => this.setState({ copiedJson: false }), 1800); } catch (e) {} },
+      applyImport: () => {
+        try {
+          const parsed = JSON.parse(this.jsonRef ? this.jsonRef.value : '');
+          if (!parsed || !Array.isArray(parsed.specialists)) throw new Error('bad');
+          this.mod.saveData(parsed);
+          this.setState({ d: this.mod.loadData(), impErr: null, saved: true });
+        } catch (e) { this.setState({ impErr: 'Не получилось разобрать JSON — проверьте, что вставлен весь текст без изменений.' }); }
+      },
+      hasImpErr: !!this.state.impErr, impErr: this.state.impErr || '',
+      resetLabel: this.state.resetArmed ? 'Точно сбросить?' : 'Сбросить к исходным',
+      resetAll: () => {
+        if (!this.state.resetArmed) { this.setState({ resetArmed: true }); return; }
+        localStorage.removeItem(this.mod.STORE_KEY);
+        this.setState({ d: this.mod.loadData(), resetArmed: false, saved: true });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
