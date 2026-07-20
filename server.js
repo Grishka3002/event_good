@@ -10,6 +10,10 @@ const zlib = require('zlib');
 const ROOT = __dirname;
 const PORT = process.env.PORT || 8080;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+// Заявки: токен бота — только в переменных окружения (Railway → Variables).
+const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
+// Главный получатель заявок; в админке не отображается.
+const LEAD_MAIN_ID = process.env.LEAD_MAIN_ID || '933148831';
 // Базовый адрес, зашитый в исходниках; на лету заменяется на реальный домен запроса.
 const BASE_PLACEHOLDER = 'https://grishka3002.github.io/event_good';
 
@@ -83,6 +87,66 @@ function adminAuthorized(req) {
   return password === ADMIN_PASSWORD;
 }
 
+// Дополнительные получатели заявок — из data.js (contacts.leadIds, через запятую).
+function extraLeadIds() {
+  try {
+    const src = fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8');
+    const m = src.match(/leadIds:\s*'([^']*)'/);
+    if (!m) return [];
+    return m[1].split(',').map(s => s.trim()).filter(s => /^\d{5,15}$/.test(s));
+  } catch { return []; }
+}
+
+async function tgSend(chatId, text) {
+  const r = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text }),
+  });
+  const j = await r.json().catch(() => ({}));
+  return !!j.ok;
+}
+
+// Простейшая защита от спама: не более 5 заявок с одного IP за 10 минут.
+const leadLog = new Map();
+function rateLimited(ip) {
+  const now = Date.now();
+  const arr = (leadLog.get(ip) || []).filter(t => now - t < 600000);
+  if (arr.length >= 5) return true;
+  arr.push(now);
+  leadLog.set(ip, arr);
+  if (leadLog.size > 5000) leadLog.clear();
+  return false;
+}
+
+function handleLead(req, res) {
+  if (req.method !== 'POST') return send(req, res, 405, '{"ok":false}', { 'Content-Type': 'application/json' });
+  if (!TG_BOT_TOKEN) return send(req, res, 503, '{"ok":false,"reason":"no-token"}', { 'Content-Type': 'application/json' });
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  if (rateLimited(ip)) return send(req, res, 429, '{"ok":false,"reason":"rate-limit"}', { 'Content-Type': 'application/json' });
+
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk;
+    if (body.length > 8192) { req.destroy(); }
+  });
+  req.on('end', async () => {
+    let text;
+    try { text = String(JSON.parse(body).text || '').trim(); } catch { text = ''; }
+    if (!text || text.length > 3500) return send(req, res, 400, '{"ok":false,"reason":"bad-text"}', { 'Content-Type': 'application/json' });
+    try {
+      const okMain = await tgSend(LEAD_MAIN_ID, text);
+      for (const id of extraLeadIds()) {
+        if (id !== LEAD_MAIN_ID) await tgSend(id, text).catch(() => {});
+      }
+      if (okMain) return send(req, res, 200, '{"ok":true}', { 'Content-Type': 'application/json' });
+      return send(req, res, 502, '{"ok":false,"reason":"tg-failed"}', { 'Content-Type': 'application/json' });
+    } catch {
+      return send(req, res, 502, '{"ok":false,"reason":"tg-error"}', { 'Content-Type': 'application/json' });
+    }
+  });
+}
+
 http.createServer((req, res) => {
   let urlPath;
   try {
@@ -90,6 +154,8 @@ http.createServer((req, res) => {
   } catch {
     return send(req, res, 400, 'Bad request', { 'Content-Type': 'text/plain; charset=utf-8' });
   }
+
+  if (urlPath === '/api/lead') return handleLead(req, res);
 
   // Дубли главной склеиваем 301-редиректом на «/» — для SEO
   if (urlPath === '/index.html' || urlPath === '/index') {

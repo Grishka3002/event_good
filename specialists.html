@@ -58,6 +58,7 @@ a:hover{color:var(--acc)}
     <div style="display:flex;align-items:center;gap:18px">
       <a href="{{ phoneHref }}" style="font-weight:700;font-size:14px;letter-spacing:.04em">{{ phone }}</a>
       <a href="{{ tgHref }}" target="_blank" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="filter:brightness(1.1);color:#0C1117">Telegram</a>
+      <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ maxHref }}" target="_blank" style="border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="border-color:var(--acc);color:var(--acc)">MAX</a></sc-if>
     </div>
     </sc-if>
     <sc-if value="{{ mobNav }}" hint-placeholder-val="{{ false }}">
@@ -76,6 +77,7 @@ a:hover{color:var(--acc)}
       <div style="display:flex;gap:10px">
         <a href="./index.html#zayavka" style="flex:1;text-align:center;background:var(--acc);color:#0C1117;font-weight:800;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="filter:brightness(1.1);color:#0C1117">Заявка</a>
         <a href="{{ tgHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">Telegram</a>
+        <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ maxHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">MAX</a></sc-if>
       </div>
     </div>
   </sc-if>
@@ -138,6 +140,7 @@ a:hover{color:var(--acc)}
     <div style="display:flex;gap:14px;flex-wrap:wrap">
       <a href="./index.html#zayavka" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">Рассчитать событие</a>
       <a href="{{ tgHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в TG</a>
+      <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ maxHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в MAX</a></sc-if>
     </div>
   </div>
 </section>
@@ -177,6 +180,8 @@ class Component extends DCLogic {
     const { d, C, cat } = this.state;
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
+    const maxRaw = String(cts.max || '').trim();
+    const maxHref = maxRaw ? (maxRaw.startsWith('http') ? maxRaw : 'https://' + maxRaw.replace(/^\/+/, '')) : '';
     const all = d ? d.specialists : [];
     const cur = C.find(c => c.slug === cat);
     const list = (cat === 'all' ? all : all.filter(s => s.cat === cat)).map(s => {
@@ -192,7 +197,7 @@ class Component extends DCLogic {
       bg: cat === c.slug ? 'var(--acc)' : 'transparent', color: cat === c.slug ? '#0C1117' : '#C7D0D9', border: cat === c.slug ? 'var(--acc)' : 'rgba(255,255,255,.16)',
       pick: () => { this.setState({ cat: c.slug }); history.replaceState(null, '', '?cat=' + c.slug); } });
     return {
-      person: cts.person, phone: cts.phone, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''), tgHref,
+      person: cts.person, phone: cts.phone, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''), tgHref, maxHref, hasMax: !!maxHref,
       deskNav: !this.state.mobile, mobNav: !!this.state.mobile,
       menuOpen: !!(this.state.menuOpen && this.state.mobile),
       burgerIcon: this.state.menuOpen ? '✕' : '☰',

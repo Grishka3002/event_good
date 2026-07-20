@@ -199,8 +199,14 @@ option{background:#121A26;color:#F2F5F8}
         <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Телефон</div><input value="{{ cPhone }}" onInput="{{ uPhone }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
         <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Telegram (без @)</div><input value="{{ cTg }}" onInput="{{ uTg }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
         <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Почта</div><input value="{{ cEmail }}" onInput="{{ uEmail }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+        <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">MAX (ссылка на профиль)</div><input value="{{ cMax }}" onInput="{{ uMax }}" placeholder="max.ru/u/… — пусто = кнопок MAX нет" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
       </div>
-      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Все кнопки «Telegram», телефон и почта на сайте обновятся автоматически. Заявки с формы приходят сообщением в этот Telegram.</div>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Все кнопки «Telegram» и «MAX», телефон и почта на сайте обновятся автоматически. Если поле MAX пустое — кнопки MAX на сайте не показываются.</div>
+      <h2 style="margin:14px 0 0;font-size:22px;font-weight:900;text-transform:uppercase">Заявки с формы</h2>
+      <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Дополнительные получатели — Telegram user ID через запятую</div><input value="{{ cLeadIds }}" onInput="{{ uLeadIds }}" placeholder="Например: 123456789, 987654321" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+        <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Заявки с формы сайта рассылает Telegram-бот. Каждый получатель должен один раз написать боту /start, иначе Telegram не даст боту прислать сообщение. Свой user ID можно узнать у бота @userinfobot. Токен бота задаётся не здесь, а в настройках хостинга: Railway → Variables → TG_BOT_TOKEN. Основной получатель заявок зашит в код сервера. Чтобы новые ID заработали для всех посетителей — вкладка «Экспорт» и обновление data.js, как с остальным контентом.</div>
+      </div>
     </div>
   </sc-if>
 
@@ -302,7 +308,9 @@ class Component extends DCLogic {
       addRev: () => { d.reviews.unshift({ id: 'r' + Date.now(), author: 'Имя клиента', event: '', text: '' }); this.save(); },
       vidRows,
       cPerson: d.contacts.person || '', cPhone: d.contacts.phone || '', cTg: d.contacts.tg || '', cEmail: d.contacts.email || '',
+      cMax: d.contacts.max || '', cLeadIds: d.contacts.leadIds || '',
       uPerson: this.bind(d.contacts, 'person'), uPhone: this.bind(d.contacts, 'phone'), uTg: e => { d.contacts.tg = e.target.value.replace(/^@/, ''); this.save(); }, uEmail: this.bind(d.contacts, 'email'),
+      uMax: this.bind(d.contacts, 'max'), uLeadIds: this.bind(d.contacts, 'leadIds'),
       jsonText: JSON.stringify(d, null, 2),
       refJson: el => { this.jsonRef = el; },
       copyJsonLabel: this.state.copiedJson ? 'Скопировано ✓' : 'Скопировать JSON',

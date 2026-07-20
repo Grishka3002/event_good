@@ -15,7 +15,7 @@ export const CATEGORIES = [
 ];
 
 export const DEFAULTS = {
-  contacts: { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru' },
+  contacts: { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru', max: '', leadIds: '' },
   specialists: [
     { id: 's1', cat: 'vedushchie', name: 'Имя Фамилия', role: 'Ведущий · стендап-комик', exp: '10+ лет', price: 'от — ₽', tg: '' },
     { id: 's2', cat: 'vedushchie', name: 'Имя Фамилия', role: 'Ведущая · теле- и радиоведущая', exp: '12 лет', price: 'от — ₽', tg: '' },
