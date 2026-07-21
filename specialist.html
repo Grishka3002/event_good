@@ -92,7 +92,8 @@ a:hover{color:var(--acc)}
     </div>
     <div style="display:grid;grid-template-columns:{{ profCols }};gap:46px;align-items:start">
       <div style="position:relative;aspect-ratio:3/4;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.09);filter:var(--pf);background:#121A26">
-        <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ slotId }}" shape="rect" placeholder="Портрет специалиста — перетащите фото" hint-size="100%,440px" style="position:absolute;inset:0"></x-import>
+        <sc-if value="{{ hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ photoSrc }}" alt="{{ photoAlt }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+        <sc-if value="{{ noPhoto }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ slotId }}" shape="rect" placeholder="Портрет специалиста — перетащите фото" hint-size="100%,440px" style="position:absolute;inset:0"></x-import></sc-if>
       </div>
       <div>
         <h1 style="margin:0 0 10px;font-size:clamp(32px,4.2vw,56px);font-weight:900;text-transform:uppercase;line-height:1.04;letter-spacing:.01em">{{ name }}</h1>
@@ -292,6 +293,8 @@ class Component extends DCLogic {
       profCols: this.state.mobile ? '1fr' : 'minmax(300px,380px) 1fr',
       vidCols: this.state.mobile ? '1fr' : 'repeat(auto-fit,minmax(min(420px,100%),1fr))',
       slotId: s ? 'spec-' + s.id : 'spec-none',
+      photoSrc: (s && s.photo) || '', hasPhoto: !!(s && s.photo), noPhoto: !(s && s.photo),
+      photoAlt: s ? s.name + ' — ' + s.role : '',
       name: s ? s.name : '', role: s ? s.role : '', exp: s ? s.exp : '', price: s ? s.price : '',
       catName: cat ? cat.name : '', catHref: cat ? './specialists.html?cat=' + cat.slug : './specialists.html',
       about: s ? (s.about || 'Описание появится в ближайшее время. А пока напишите нам в Telegram — расскажем о специалисте, пришлём примеры работ и проверим свободные даты.') : '',

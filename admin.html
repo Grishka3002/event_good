@@ -67,6 +67,13 @@ option{background:#121A26;color:#F2F5F8}
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Роль / жанр</div><input value="{{ s.role }}" onInput="{{ s.uRole }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Опыт</div><input value="{{ s.exp }}" onInput="{{ s.uExp }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Цена</div><input value="{{ s.price }}" onInput="{{ s.uPrice }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Фото профиля</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ s.photoSrc }}" alt="" style="width:42px;height:54px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.15);flex:none"></sc-if>
+              <label style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:11px 10px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:#F2F5F8" style-hover="border-color:var(--acc);color:var(--acc)">{{ s.photoLabel }}<input type="file" accept="image/*" onChange="{{ s.uPhotoFile }}" style="display:none"></label>
+              <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><button onClick="{{ s.delPhoto }}" title="Удалить фото" style="background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:8px;padding:11px 12px;font-size:13px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button></sc-if>
+            </div>
+          </div>
           <details style="grid-column:1/-1;border-top:1px dashed rgba(255,255,255,.1);padding-top:12px">
             <summary style="cursor:pointer;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#97A3B0">Профиль: описание · фишки · видео · портфолио</summary>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:14px">
@@ -292,6 +299,26 @@ class Component extends DCLogic {
     this.setState({ d: this.state.d, saved: true, ...(extra || {}) });
   }
   bind(obj, field) { return e => { obj[field] = e.target.value; this.save(); }; }
+  // Фото профиля: ужимаем до 900px по ширине в JPEG, чтобы уместиться в localStorage/экспорт
+  photoTo(s) { return e => {
+    const f = e.target.files && e.target.files[0];
+    const input = e.target;
+    if (!f) return;
+    const img = new Image();
+    const url = URL.createObjectURL(f);
+    img.onload = () => {
+      const k = Math.min(1, 900 / img.width);
+      const w = Math.round(img.width * k), h = Math.round(img.height * k);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      input.value = '';
+      try { s.photo = cv.toDataURL('image/jpeg', 0.85); this.save(); }
+      catch (err) { alert('Не получилось сохранить фото — возможно, заполнено хранилище браузера. Удалите неиспользуемые фото и попробуйте снова.'); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); input.value = ''; alert('Файл не похож на изображение.'); };
+    img.src = url;
+  }; }
   mv(arr, item, delta) { const i = arr.indexOf(item); const j = i + delta; if (i < 0 || j < 0 || j >= arr.length) return; arr.splice(i, 1); arr.splice(j, 0, item); this.save(); }
   renderVals() {
     const { d, C, tab } = this.state;
@@ -306,6 +333,8 @@ class Component extends DCLogic {
     const specs = d.specialists.filter(s => (fcat === 'all' || s.cat === fcat) && (!q || (s.name + ' ' + s.role).toLowerCase().includes(q))).map(s => ({ ...s,
       uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
       uCat: e => { s.cat = e.target.value; this.save(); },
+      hasPhoto: !!s.photo, photoSrc: s.photo || '', photoLabel: s.photo ? 'Заменить' : 'Загрузить',
+      uPhotoFile: this.photoTo(s), delPhoto: () => { s.photo = ''; this.save(); },
       profHref: './specialist.html?id=' + s.id,
       aboutText: s.about || '', uAbout: this.bind(s, 'about'),
       featsText: (s.feats || []).join('\n'),

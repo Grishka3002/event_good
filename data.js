@@ -99,7 +99,7 @@ export function loadData() {
       if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
       if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
       if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
-      if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
+      if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
       if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
       return d;
     }
