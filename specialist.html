@@ -26,6 +26,7 @@ body{margin:0;background:#0C1117;color:#F2F5F8;font-family:'Montserrat',system-u
 a{color:#F2F5F8;text-decoration:none}
 a:hover{color:var(--acc)}
 ::selection{background:var(--acc);color:#0C1117}
+@media (max-width:600px){.nav-badge{display:none}}
 </style>
 </helmet>
 <div style="min-height:100vh;background:#0C1117;color:#F2F5F8;font-family:'Montserrat',system-ui,sans-serif">
@@ -35,7 +36,7 @@ a:hover{color:var(--acc)}
     <a href="./index.html" style="display:flex;align-items:center;gap:12px">
       <div style="width:9px;height:36px;background:var(--acc)"></div>
       <div style="line-height:1.15"><div style="font-weight:900;font-size:13.5px;letter-spacing:.2em">ХОРОШЕЕ</div><div style="font-weight:900;font-size:13.5px;letter-spacing:.2em">РЕШЕНИЕ</div></div>
-      <div style="font-size:9.5px;font-weight:700;letter-spacing:.28em;color:#97A3B0;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 10px;text-transform:uppercase">не агентство</div>
+      <div class="nav-badge" style="font-size:9.5px;font-weight:700;letter-spacing:.28em;color:#97A3B0;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 10px;text-transform:uppercase">не агентство</div>
     </a>
     <sc-if value="{{ deskNav }}" hint-placeholder-val="{{ true }}">
     <div style="display:flex;align-items:center;gap:26px;flex-wrap:wrap;font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase">

@@ -44,6 +44,8 @@ summary{list-style:none;cursor:pointer}
 summary::-webkit-details-marker{display:none}
 input::placeholder,textarea::placeholder{color:#56626F}
 option{background:#121A26;color:#F2F5F8}
+@media (max-width:600px){.nav-badge{display:none}}
+@media (max-width:600px){.hero-badge{gap:6px!important;padding:7px 12px!important;font-size:9px!important;letter-spacing:.05em!important}}
 </style>
 </helmet>
 <div id="top" style="min-height:100vh;background:#0C1117;color:#F2F5F8;font-family:'Montserrat',system-ui,sans-serif">
@@ -53,7 +55,7 @@ option{background:#121A26;color:#F2F5F8}
     <a href="#top" style="display:flex;align-items:center;gap:12px">
       <div style="width:9px;height:36px;background:var(--acc)"></div>
       <div style="line-height:1.15"><div style="font-weight:900;font-size:13.5px;letter-spacing:.2em">ХОРОШЕЕ</div><div style="font-weight:900;font-size:13.5px;letter-spacing:.2em">РЕШЕНИЕ</div></div>
-      <div style="font-size:9.5px;font-weight:700;letter-spacing:.28em;color:#97A3B0;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 10px;text-transform:uppercase">не агентство</div>
+      <div class="nav-badge" style="font-size:9.5px;font-weight:700;letter-spacing:.28em;color:#97A3B0;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 10px;text-transform:uppercase">не агентство</div>
     </a>
     <sc-if value="{{ deskNav }}" hint-placeholder-val="{{ true }}">
     <div style="display:flex;align-items:center;gap:26px;flex-wrap:wrap;font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase">
@@ -100,9 +102,9 @@ option{background:#121A26;color:#F2F5F8}
   </sc-if>
   <div style="position:relative;max-width:1240px;margin:0 auto;padding:0 28px">
     <div style="display:grid;grid-template-columns:{{ heroCols }};gap:clamp(36px,4vw,64px);align-items:center">
-    <div>
-    <div style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:9px 18px;font-size:11.5px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#C7D0D9;margin-bottom:34px;animation:fadeUp .6s cubic-bezier(.22,.61,.36,1) both"><span style="color:var(--acc)">Не агентство</span><span style="color:#4C5762">·</span><span>объединение профессионалов</span></div>
-    <h1 style="margin:0;text-transform:uppercase;line-height:.98;animation:fadeUp .7s cubic-bezier(.22,.61,.36,1) .08s both"><span style="display:block;font-size:clamp(46px,7.2vw,104px);font-weight:900;letter-spacing:.005em">Объединение</span><span style="display:block;font-size:clamp(19px,2.9vw,42px);font-weight:500;letter-spacing:.34em;margin-top:14px;color:#DDE4EA">ивент-специалистов</span></h1>
+    <div style="min-width:0">
+    <div class="hero-badge" style="display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:9px 18px;font-size:11.5px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#C7D0D9;margin-bottom:34px;max-width:100%;animation:fadeUp .6s cubic-bezier(.22,.61,.36,1) both"><span style="color:var(--acc)">Не агентство</span><span style="color:#4C5762">·</span><span>объединение профессионалов</span></div>
+    <h1 style="margin:0;text-transform:uppercase;line-height:.98;animation:fadeUp .7s cubic-bezier(.22,.61,.36,1) .08s both"><span style="display:block;font-size:clamp(46px,7.2vw,104px);font-weight:900;letter-spacing:.005em">Объединение</span><span style="display:block;font-size:clamp(19px,2.9vw,42px);font-weight:500;letter-spacing:.34em;margin-top:14px;color:#DDE4EA;overflow-wrap:break-word">ивент-специалистов</span></h1>
     <p style="max-width:660px;font-size:17.5px;line-height:1.7;color:#9AA6B2;margin:30px 0 40px;animation:fadeUp .7s cubic-bezier(.22,.61,.36,1) .16s both">Соберём для вас команду или сделаем событие под ключ — от корпоратива на 3000 гостей до закрытого ужина. <b style="color:#F2F5F8">Цены специалистов прямые</b>, а статьи «организация» в смете просто нет.</p>
     <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;animation:fadeUp .7s cubic-bezier(.22,.61,.36,1) .24s both">
       <a href="#quiz" style="display:inline-flex;align-items:center;gap:10px;background:var(--acc);color:#0C1117;font-weight:800;font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;padding:19px 32px;border-radius:11px" style-hover="filter:brightness(1.1);transform:translateY(-1px);color:#0C1117">Подобрать формат за 4 клика</a>
