@@ -80,7 +80,7 @@ a:hover{color:var(--acc)}
       <a href="./blog.html" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Блог</a>
       <a href="./index.html#packages" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Пакеты</a>
       <a href="./index.html#faq" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">FAQ</a>
-      <a href="{{ phoneHref }}" style="padding:18px 0 20px;font-size:15.5px;font-weight:800;color:#F2F5F8">{{ phone }}</a>
+      <a href="{{ phoneHref }}" style="padding:18px 0 20px;font-size:15.5px;font-weight:800;color:#F2F5F8">Связаться</a>
       <div style="display:flex;gap:10px">
         <a href="./index.html#zayavka" style="flex:1;text-align:center;background:var(--acc);color:#0C1117;font-weight:800;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="filter:brightness(1.1);color:#0C1117">Заявка</a>
         <a href="{{ mainHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">{{ mainLabel }}</a>
@@ -127,9 +127,9 @@ a:hover{color:var(--acc)}
               <span style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:5px 11px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#C7D0D9">{{ s.exp }}</span>
               <span style="border:1px solid color-mix(in oklab,var(--acc) 55%,transparent);color:var(--acc);border-radius:999px;padding:5px 11px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase">{{ s.price }}</span>
             </div>
-            <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+              <button onClick="{{ s.book }}" style="background:transparent;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:13px;border-radius:9px;cursor:pointer;font-family:inherit" style-hover="background:var(--acc);border-color:var(--acc);color:#0C1117">Забронировать</button>
               <a href="{{ s.profHref }}" style="display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:9px" style-hover="border-color:var(--acc);color:var(--acc)">Профиль</a>
-              <button onClick="{{ s.book }}" style="background:transparent;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:9px;cursor:pointer;font-family:inherit" style-hover="background:var(--acc);border-color:var(--acc);color:#0C1117">Бронь</button>
             </div>
           </div>
         </div>
@@ -150,7 +150,7 @@ a:hover{color:var(--acc)}
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap">
       <a href="./index.html#zayavka" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">Рассчитать событие</a>
-      <a href="{{ mainHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в {{ mainLabel }}</a>
+      <a href="{{ mainHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в&nbsp;{{ mainLabel }}</a>
       <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в Telegram</a></sc-if>
     </div>
   </div>
@@ -158,7 +158,7 @@ a:hover{color:var(--acc)}
 
 <footer data-screen-label="Футер" style="background:#080B0F;padding:34px 0">
   <div style="max-width:1240px;margin:0 auto;padding:0 28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#56626F">
-    <span>© 2026 «Хорошее решение» · {{ person }} · <a href="{{ phoneHref }}" style="color:#7C8894">{{ phone }}</a></span>
+    <span>© 2026 «Хорошее решение» · {{ person }} · <a href="{{ phoneHref }}" style="color:#7C8894;white-space:nowrap">{{ phone }}</a></span>
     <span style="display:flex;gap:18px;flex-wrap:wrap"><a href="./privacy.html" style="color:#7C8894">Политика конфиденциальности</a><span style="letter-spacing:.24em;text-transform:uppercase">Не агентство</span></span>
   </div>
 </footer>
