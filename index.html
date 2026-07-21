@@ -66,8 +66,8 @@ option{background:#121A26;color:#F2F5F8}
     </div>
     <div style="display:flex;align-items:center;gap:18px">
       <a href="{{ phoneHref }}" style="font-weight:700;font-size:14px;letter-spacing:.04em">{{ phone }}</a>
-      <a href="{{ tgHref }}" target="_blank" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="filter:brightness(1.1);color:#0C1117">Telegram</a>
-      <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ maxHref }}" target="_blank" style="border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="border-color:var(--acc);color:var(--acc)">MAX</a></sc-if>
+      <a href="{{ mainHref }}" target="_blank" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="filter:brightness(1.1);color:#0C1117">{{ mainLabel }}</a>
+      <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="border-color:var(--acc);color:var(--acc)">Telegram</a></sc-if>
     </div>
     </sc-if>
     <sc-if value="{{ mobNav }}" hint-placeholder-val="{{ false }}">
@@ -85,8 +85,8 @@ option{background:#121A26;color:#F2F5F8}
       <a href="{{ phoneHref }}" style="padding:18px 0 20px;font-size:15.5px;font-weight:800;color:#F2F5F8">{{ phone }}</a>
       <div style="display:flex;gap:10px">
         <a href="#zayavka" onClick="{{ closeMenu }}" style="flex:1;text-align:center;background:var(--acc);color:#0C1117;font-weight:800;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="filter:brightness(1.1);color:#0C1117">Заявка</a>
-        <a href="{{ tgHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">Telegram</a>
-        <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ maxHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">MAX</a></sc-if>
+        <a href="{{ mainHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">{{ mainLabel }}</a>
+        <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">Telegram</a></sc-if>
       </div>
     </div>
   </sc-if>
@@ -106,8 +106,8 @@ option{background:#121A26;color:#F2F5F8}
     <p style="max-width:660px;font-size:17.5px;line-height:1.7;color:#9AA6B2;margin:30px 0 40px;animation:fadeUp .7s cubic-bezier(.22,.61,.36,1) .16s both">Соберём для вас команду или сделаем событие под ключ — от корпоратива на 3000 гостей до закрытого ужина. <b style="color:#F2F5F8">Цены специалистов прямые</b>, а статьи «организация» в смете просто нет.</p>
     <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;animation:fadeUp .7s cubic-bezier(.22,.61,.36,1) .24s both">
       <a href="#quiz" style="display:inline-flex;align-items:center;gap:10px;background:var(--acc);color:#0C1117;font-weight:800;font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;padding:19px 32px;border-radius:11px" style-hover="filter:brightness(1.1);transform:translateY(-1px);color:#0C1117">Подобрать формат за 4 клика</a>
-      <a href="{{ tgHref }}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 30px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в Telegram</a>
-      <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ maxHref }}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 30px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в MAX</a></sc-if>
+      <a href="{{ mainHref }}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 30px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в {{ mainLabel }}</a>
+      <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 30px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в Telegram</a></sc-if>
     </div>
     <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:34px;animation:fadeUp .7s cubic-bezier(.22,.61,.36,1) .3s both">
       <a href="./specialists.html?cat=vedushchie" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Ведущие</a>
@@ -454,9 +454,9 @@ option{background:#121A26;color:#F2F5F8}
         <h2 style="margin:0 0 22px;font-size:clamp(28px,3vw,40px);font-weight:900;letter-spacing:.01em;text-transform:uppercase;line-height:1.08">Рассчитаем ваше событие</h2>
         <p style="font-size:15.5px;line-height:1.7;color:#9AA6B2;margin:0 0 30px">Заполните форму — соберём заявку и откроем чат в Telegram. Ответим в течение часа, смета с прямыми ценами — бесплатно.</p>
         <div style="display:flex;flex-direction:column;gap:14px;font-size:14.5px">
-          <div style="display:flex;gap:12px;align-items:baseline"><span style="color:var(--acc);font-weight:900">—</span><span style="color:#C7D0D9">Telegram: <a href="{{ tgHref }}" target="_blank" style="color:#F2F5F8;font-weight:700;border-bottom:1px solid var(--acc)">{{ tgAt }}</a></span></div>
           <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:12px;align-items:baseline"><span style="color:var(--acc);font-weight:900">—</span><span style="color:#C7D0D9">MAX: <a href="{{ maxHref }}" target="_blank" style="color:#F2F5F8;font-weight:700;border-bottom:1px solid var(--acc)">написать в MAX</a></span></div></sc-if>
-          <div style="display:flex;gap:12px;align-items:baseline"><span style="color:var(--acc);font-weight:900">—</span><span style="color:#C7D0D9">Телефон: <a href="{{ phoneHref }}" style="color:#F2F5F8;font-weight:700">{{ phone }}</a></span></div>
+          <div style="display:flex;gap:12px;align-items:baseline"><span style="color:var(--acc);font-weight:900">—</span><span style="color:#C7D0D9">Telegram: <a href="{{ tgHref }}" target="_blank" style="color:#F2F5F8;font-weight:700;border-bottom:1px solid var(--acc)">{{ tgAt }}</a></span></div>
+                    <div style="display:flex;gap:12px;align-items:baseline"><span style="color:var(--acc);font-weight:900">—</span><span style="color:#C7D0D9">Телефон: <a href="{{ phoneHref }}" style="color:#F2F5F8;font-weight:700">{{ phone }}</a></span></div>
           <div style="display:flex;gap:12px;align-items:baseline"><span style="color:var(--acc);font-weight:900">—</span><span style="color:#C7D0D9">Почта: <a href="{{ mailHref }}" style="color:#F2F5F8;font-weight:700">{{ email }}</a></span></div>
           <div style="display:flex;gap:12px;align-items:baseline"><span style="color:var(--acc);font-weight:900">—</span><span style="color:#C7D0D9">На связи — {{ person }}, основатель объединения</span></div>
         </div>
@@ -495,8 +495,8 @@ option{background:#121A26;color:#F2F5F8}
             <div style="font-size:14.5px;line-height:1.7;color:#C7D0D9">Мы уже получили её и свяжемся с вами в течение часа. Если удобнее — напишите нам напрямую.</div>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <a href="{{ tgHref }}" target="_blank" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:15px 24px;border-radius:10px" style-hover="filter:brightness(1.1);color:#0C1117">Telegram</a>
-            <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ maxHref }}" target="_blank" style="background:transparent;border:1px solid rgba(255,255,255,.25);color:#F2F5F8;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:15px 24px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">MAX</a></sc-if>
+            <a href="{{ mainHref }}" target="_blank" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:15px 24px;border-radius:10px" style-hover="filter:brightness(1.1);color:#0C1117">{{ mainLabel }}</a>
+            <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="background:transparent;border:1px solid rgba(255,255,255,.25);color:#F2F5F8;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:15px 24px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">Telegram</a></sc-if>
             <button onClick="{{ resetForm }}" style="background:transparent;border:none;color:#97A3B0;font-weight:600;font-size:13px;padding:15px 10px;cursor:pointer;font-family:inherit" style-hover="color:var(--acc)">← Новая заявка</button>
           </div>
         </div>
@@ -558,7 +558,7 @@ option{background:#121A26;color:#F2F5F8}
   </div>
 </footer>
 
-<a href="{{ tgHref }}" target="_blank" data-screen-label="Плавающая кнопка TG" style="position:fixed;right:22px;bottom:22px;z-index:60;display:inline-flex;align-items:center;gap:10px;background:var(--acc);color:#0C1117;font-weight:800;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;padding:15px 22px;border-radius:999px;box-shadow:0 10px 34px rgba(0,0,0,.5);animation:tgPulse 2.8s ease-in-out infinite" style-hover="filter:brightness(1.1);transform:translateY(-2px);color:#0C1117">Написать в TG</a>
+<a href="{{ mainHref }}" target="_blank" data-screen-label="Плавающая кнопка TG" style="position:fixed;right:22px;bottom:22px;z-index:60;display:inline-flex;align-items:center;gap:10px;background:var(--acc);color:#0C1117;font-weight:800;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;padding:15px 22px;border-radius:999px;box-shadow:0 10px 34px rgba(0,0,0,.5);animation:tgPulse 2.8s ease-in-out infinite" style-hover="filter:brightness(1.1);transform:translateY(-2px);color:#0C1117">Написать в {{ mainLabel }}</a>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;},&quot;showVideo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Секции&quot;}}">
@@ -667,6 +667,8 @@ class Component extends DCLogic {
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
     const maxRaw = String(cts.max || '').trim();
     const maxHref = maxRaw ? (maxRaw.startsWith('http') ? maxRaw : 'https://' + maxRaw.replace(/^\/+/, '')) : '';
+    const mainHref = maxHref || tgHref;
+    const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const plural = n => n % 10 === 1 && n % 100 !== 11 ? 'специалист' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'специалиста' : 'специалистов');
     const catCards = C.map(c => {
       const n = d ? d.specialists.filter(s => s.cat === c.slug).length : 0;
@@ -720,7 +722,7 @@ class Component extends DCLogic {
       closeMenu: () => this.setState({ menuOpen: false }),
       person: cts.person, phone: cts.phone, email: cts.email,
       tgAt: '@' + String(cts.tg || '').replace(/^@/, ''),
-      tgHref, maxHref, hasMax: !!maxHref, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''), mailHref: 'mailto:' + cts.email,
+      tgHref, maxHref, hasMax: !!maxHref, mainHref, mainLabel, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''), mailHref: 'mailto:' + cts.email,
       catCards, casesPreview, packages, videos,
       reviews: d ? d.reviews : [],
       showVideos: (this.props.showVideo ?? true),

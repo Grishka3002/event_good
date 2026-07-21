@@ -67,6 +67,26 @@ option{background:#121A26;color:#F2F5F8}
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Роль / жанр</div><input value="{{ s.role }}" onInput="{{ s.uRole }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Опыт</div><input value="{{ s.exp }}" onInput="{{ s.uExp }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Цена</div><input value="{{ s.price }}" onInput="{{ s.uPrice }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <details style="grid-column:1/-1;border-top:1px dashed rgba(255,255,255,.1);padding-top:12px">
+            <summary style="cursor:pointer;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#97A3B0">Профиль: описание · фишки · видео · портфолио</summary>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:14px">
+              <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Описание (абзац)</div><textarea rows="5" value="{{ s.aboutText }}" onInput="{{ s.uAbout }}" placeholder="Кто это, чем силён, какие форматы ведёт…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+              <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Фишки / регалии (с новой строки)</div><textarea rows="5" value="{{ s.featsText }}" onInput="{{ s.uFeats }}" placeholder="Ведущий телепроекта…&#10;500+ мероприятий&#10;Работает на двух языках" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+              <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Видео (ссылка с новой строки, можно «Название | ссылка»)</div>
+                <sc-for list="{{ s.vidGroups }}" as="vg" hint-placeholder-count="1">
+                  <div style="margin-bottom:10px"><div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:5px">{{ vg.name }}</div><textarea rows="3" value="{{ vg.text }}" onInput="{{ vg.update }}" placeholder="Шоурил | https://youtu.be/…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="margin-top:14px"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">Категории портфолио (фото и видео группируются по ним)</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ s.mcatChips }}" as="mc" hint-placeholder-count="4">
+                  <button onClick="{{ mc.toggle }}" style="background:{{ mc.bg }};color:{{ mc.color }};border:1px solid {{ mc.border }};border-radius:999px;padding:9px 16px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s" style-hover="border-color:var(--acc)">{{ mc.name }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="margin-top:12px;font-size:12px;color:#7C8894;line-height:1.6">Отмеченные категории появятся на <a href="{{ s.profHref }}" style="color:#97A3B0;border-bottom:1px dashed #56626F">странице профиля</a> отдельными блоками: 4 фото-ячейки (заполняются перетаскиванием там же) + видео своей категории. Без отметок — общая галерея на 6 фото. Видео YouTube / VK / Rutube встраиваются плеером, прочие ссылки — кнопкой. Общий список категорий — во вкладке «Медиа-категории».</div>
+          </details>
           <div style="display:flex;gap:6px">
             <button onClick="{{ s.up }}" title="Переместить выше" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↑</button>
             <button onClick="{{ s.down }}" title="Переместить ниже" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↓</button>
@@ -191,6 +211,23 @@ option{background:#121A26;color:#F2F5F8}
     </div>
   </sc-if>
 
+  <sc-if value="{{ isMcat }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Медиа-категории" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Медиа-категории</h2>
+        <button onClick="{{ addMcat }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить</button>
+      </div>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Общие категории портфолио (Свадьбы, Корпоративы…). В карточке специалиста отмечаются категории из этого списка — фото и видео на его странице профиля группируются по ним. Удаление категории скрывает её блоки у всех специалистов (загруженные фото не стираются).</div>
+      <sc-for list="{{ mcatRows }}" as="c" hint-placeholder-count="4">
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;gap:12px;align-items:end">
+          <div style="flex:1"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Название</div><input value="{{ c.name }}" onInput="{{ c.uName }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div style="font-size:11.5px;color:#56626F;padding:11px 0">{{ c.usage }}</div>
+          <button onClick="{{ c.del }}" title="Удалить" style="background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:8px;padding:11px 16px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ isCont }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Контакты" style="display:flex;flex-direction:column;gap:14px">
       <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Контакты</h2>
@@ -201,7 +238,7 @@ option{background:#121A26;color:#F2F5F8}
         <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Почта</div><input value="{{ cEmail }}" onInput="{{ uEmail }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
         <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">MAX (ссылка на профиль)</div><input value="{{ cMax }}" onInput="{{ uMax }}" placeholder="max.ru/u/… — пусто = кнопок MAX нет" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
       </div>
-      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Все кнопки «Telegram» и «MAX», телефон и почта на сайте обновятся автоматически. Если поле MAX пустое — кнопки MAX на сайте не показываются.</div>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Все кнопки «Telegram» и «MAX», телефон и почта на сайте обновятся автоматически. Кнопка MAX — основная; если поле MAX пустое, показывается только Telegram.</div>
       <h2 style="margin:14px 0 0;font-size:22px;font-weight:900;text-transform:uppercase">Заявки с формы</h2>
       <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
         <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Дополнительные получатели — Telegram user ID через запятую</div><input value="{{ cLeadIds }}" onInput="{{ uLeadIds }}" placeholder="Например: 123456789, 987654321" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
@@ -258,16 +295,27 @@ class Component extends DCLogic {
   mv(arr, item, delta) { const i = arr.indexOf(item); const j = i + delta; if (i < 0 || j < 0 || j >= arr.length) return; arr.splice(i, 1); arr.splice(j, 0, item); this.save(); }
   renderVals() {
     const { d, C, tab } = this.state;
-    const tabDefs = [['spec', 'Специалисты'], ['cases', 'Кейсы'], ['pack', 'Пакеты'], ['rev', 'Отзывы'], ['vid', 'Видео'], ['blog', 'Блог'], ['cont', 'Контакты'], ['exp', 'Экспорт']];
+    const tabDefs = [['spec', 'Специалисты'], ['cases', 'Кейсы'], ['pack', 'Пакеты'], ['rev', 'Отзывы'], ['vid', 'Видео'], ['blog', 'Блог'], ['mcat', 'Медиа-категории'], ['cont', 'Контакты'], ['exp', 'Экспорт']];
     const tabs = tabDefs.map(([id, label]) => ({ id, label,
       bg: tab === id ? 'var(--acc)' : 'transparent', color: tab === id ? '#0C1117' : '#C7D0D9', border: tab === id ? 'var(--acc)' : 'rgba(255,255,255,.16)',
       pick: () => this.setState({ tab: id, resetArmed: false, impErr: null }) }));
     if (!d) return { tabs, isSpec: true, specs: [], cats: [], specCount: '' };
     const fcat = this.state.fcat || 'all', q = (this.state.q || '').trim().toLowerCase();
+    const mediaCats = Array.isArray(d.mediaCats) ? d.mediaCats : [];
     const dup = (arr, item, idp) => () => { const i = arr.indexOf(item); arr.splice(i + 1, 0, { ...item, id: idp + Date.now() }); this.save(); };
     const specs = d.specialists.filter(s => (fcat === 'all' || s.cat === fcat) && (!q || (s.name + ' ' + s.role).toLowerCase().includes(q))).map(s => ({ ...s,
       uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
       uCat: e => { s.cat = e.target.value; this.save(); },
+      profHref: './specialist.html?id=' + s.id,
+      aboutText: s.about || '', uAbout: this.bind(s, 'about'),
+      featsText: (s.feats || []).join('\n'),
+      uFeats: e => { s.feats = e.target.value.split('\n'); this.save(); },
+      mcatChips: mediaCats.map(c => { const on = Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id); return { name: c.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.25)', toggle: () => { s.mediaCats = on ? s.mediaCats.filter(x => x !== c.id) : (Array.isArray(s.mediaCats) ? s.mediaCats : []).concat(c.id); this.save(); } }; }),
+      vidGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все видео' }]).map(g => ({
+        name: g.name,
+        text: (s.videos || []).filter(v => (v.cat || '') === g.id).map(v => v.title ? v.title + ' | ' + v.url : v.url).join('\n'),
+        update: e => { const parsed = e.target.value.split('\n').map(l => { const t = l.trim(); const i = t.indexOf('|'); return i > 0 ? { title: t.slice(0, i).trim(), url: t.slice(i + 1).trim(), cat: g.id } : { title: '', url: t, cat: g.id }; }); s.videos = (s.videos || []).filter(v => (v.cat || '') !== g.id).concat(parsed); this.save(); },
+      })),
       up: () => this.mv(d.specialists, s, -1), down: () => this.mv(d.specialists, s, 1), dup: dup(d.specialists, s, 's'),
       del: () => { d.specialists = d.specialists.filter(x => x !== s); this.save(); } }));
     const caseRows = d.cases.map(k => ({ ...k,
@@ -292,7 +340,7 @@ class Component extends DCLogic {
     this._selFcat = fcat;
     return {
       tabs,
-      isSpec: tab === 'spec', isCases: tab === 'cases', isPack: tab === 'pack', isRev: tab === 'rev', isVid: tab === 'vid', isBlog: tab === 'blog', isCont: tab === 'cont', isExp: tab === 'exp',
+      isSpec: tab === 'spec', isCases: tab === 'cases', isPack: tab === 'pack', isRev: tab === 'rev', isVid: tab === 'vid', isBlog: tab === 'blog', isMcat: tab === 'mcat', isCont: tab === 'cont', isExp: tab === 'exp',
       artRows, artCount: d.articles.length + ' шт.',
       addArt: () => { d.articles.unshift({ id: 'a' + Date.now(), slug: 'novaya-statya-' + (d.articles.length + 1), title: 'Новая статья', date: new Date().toISOString().slice(0, 10), minutes: '5', tag: 'Советы', lead: '', body: 'Первый раздел|Текст раздела.' }); this.save(); },
       saved: this.state.saved,
@@ -307,6 +355,8 @@ class Component extends DCLogic {
       packRows, revRows, revCount: d.reviews.length + ' шт.',
       addRev: () => { d.reviews.unshift({ id: 'r' + Date.now(), author: 'Имя клиента', event: '', text: '' }); this.save(); },
       vidRows,
+      mcatRows: mediaCats.map(c => { const n = d.specialists.filter(s => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).length; return { ...c, usage: n ? 'у ' + n + ' спец.' : 'не используется', uName: this.bind(c, 'name'), del: () => { d.mediaCats = d.mediaCats.filter(x => x !== c); this.save(); } }; }),
+      addMcat: () => { if (!Array.isArray(d.mediaCats)) d.mediaCats = []; d.mediaCats.push({ id: 'mc' + Date.now(), name: 'Новая категория' }); this.save(); },
       cPerson: d.contacts.person || '', cPhone: d.contacts.phone || '', cTg: d.contacts.tg || '', cEmail: d.contacts.email || '',
       cMax: d.contacts.max || '', cLeadIds: d.contacts.leadIds || '',
       uPerson: this.bind(d.contacts, 'person'), uPhone: this.bind(d.contacts, 'phone'), uTg: e => { d.contacts.tg = e.target.value.replace(/^@/, ''); this.save(); }, uEmail: this.bind(d.contacts, 'email'),

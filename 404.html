@@ -45,8 +45,8 @@ a:hover{color:var(--acc)}
       <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s cubic-bezier(.22,.61,.36,1) .26s both">
         <a href="./index.html" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">На главную</a>
         <a href="./specialists.html" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Специалисты</a>
-        <a href="{{ tgHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в TG</a>
-        <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ maxHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в MAX</a></sc-if>
+        <a href="{{ mainHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в {{ mainLabel }}</a>
+        <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в Telegram</a></sc-if>
       </div>
     </div>
   </div>
@@ -64,7 +64,9 @@ class Component extends DCLogic {
     const cts = (this.state.d || {}).contacts || { tg: 'sazelenskiy' };
     const maxRaw = String(cts.max || '').trim();
     const maxHref = maxRaw ? (maxRaw.startsWith('http') ? maxRaw : 'https://' + maxRaw.replace(/^\/+/, '')) : '';
-    return { tgHref: 'https://t.me/' + String(cts.tg || '').replace(/^@/, ''), maxHref, hasMax: !!maxHref };
+    const mainHref = maxHref || tgHref;
+    const mainLabel = maxHref ? 'MAX' : 'Telegram';
+    return { tgHref: 'https://t.me/' + String(cts.tg || '').replace(/^@/, ''), maxHref, hasMax: !!maxHref, mainHref, mainLabel };
   }
 }
 </script>

@@ -16,6 +16,12 @@ export const CATEGORIES = [
 
 export const DEFAULTS = {
   contacts: { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru', max: '', leadIds: '' },
+  mediaCats: [
+    { id: 'svadby', name: 'Свадьбы' },
+    { id: 'korporativy', name: 'Корпоративы' },
+    { id: 'chastnye', name: 'Частные праздники' },
+    { id: 'koncerty', name: 'Концерты и фестивали' },
+  ],
   specialists: [
     { id: 's1', cat: 'vedushchie', name: 'Имя Фамилия', role: 'Ведущий · стендап-комик', exp: '10+ лет', price: 'от — ₽', tg: '' },
     { id: 's2', cat: 'vedushchie', name: 'Имя Фамилия', role: 'Ведущая · теле- и радиоведущая', exp: '12 лет', price: 'от — ₽', tg: '' },
@@ -93,6 +99,8 @@ export function loadData() {
       if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
       if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
       if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
+      if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
+      if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
       return d;
     }
   } catch (e) { console.warn('loadData', e); }
