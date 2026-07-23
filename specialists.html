@@ -166,13 +166,14 @@ a:hover{color:var(--acc)}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;}}">
 class Component extends DCLogic {
-  state = { d: null, C: [], cat: 'all' };
+  state = { d: null, cat: 'all' };
   componentDidMount() {
     const q = new URLSearchParams(location.search).get('cat');
     import('./data.js').then(m => {
       this.mod = m;
-      const valid = q && m.CATEGORIES.some(c => c.slug === q);
-      this.setState({ d: m.loadData(), C: m.CATEGORIES, cat: valid ? q : 'all' });
+      const d = m.loadData();
+      const valid = q && d.categories.some(c => c.slug === q);
+      this.setState({ d, cat: valid ? q : 'all' });
     });
     this.applyVars();
     this._mq = window.matchMedia('(max-width: 1020px)');
@@ -188,7 +189,8 @@ class Component extends DCLogic {
     r.setProperty('--pf', (this.props.grayscalePhotos ?? true) ? 'grayscale(1) contrast(1.05)' : 'none');
   }
   renderVals() {
-    const { d, C, cat } = this.state;
+    const { d, cat } = this.state;
+    const C = (d && d.categories) || [];
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
     const maxRaw = String(cts.max || '').trim();
@@ -221,7 +223,7 @@ class Component extends DCLogic {
       allBg: cat === 'all' ? 'var(--acc)' : 'transparent', allColor: cat === 'all' ? '#0C1117' : '#C7D0D9', allBorder: cat === 'all' ? 'var(--acc)' : 'rgba(255,255,255,.16)',
       pickAll: () => { this.setState({ cat: 'all' }); history.replaceState(null, '', location.pathname); },
       groupTitle: cat === 'all' ? 'Все специалисты' : (cur ? cur.name : ''),
-      groupDesc: cat === 'all' ? '12 направлений — от организаторов до артистов оригинального жанра' : (cur ? cur.desc : ''),
+      groupDesc: cat === 'all' ? C.length + ' направлений — от организаторов до артистов оригинального жанра' : (cur ? cur.desc : ''),
       list, isEmpty: !!d && list.length === 0
     };
   }

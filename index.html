@@ -117,7 +117,7 @@ option{background:#121A26;color:#F2F5F8}
       <a href="./specialists.html?cat=videografy" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Видеографы</a>
       <a href="./specialists.html?cat=didzhei" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Диджеи</a>
       <a href="./specialists.html?cat=muzykanty" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Музыканты</a>
-      <a href="./specialists.html" style="border:1px solid color-mix(in oklab,var(--acc) 55%,transparent);border-radius:999px;padding:12px 16px;font-size:12px;color:var(--acc);font-weight:700" style-hover="background:var(--acc);color:#0C1117">Все 12 направлений →</a>
+      <a href="./specialists.html" style="border:1px solid color-mix(in oklab,var(--acc) 55%,transparent);border-radius:999px;padding:12px 16px;font-size:12px;color:var(--acc);font-weight:700" style-hover="background:var(--acc);color:#0C1117">Все {{ catCount }} направлений →</a>
     </div>
     </div>
     <sc-if value="{{ deskNav }}" hint-placeholder-val="{{ true }}">
@@ -135,7 +135,7 @@ option{background:#121A26;color:#F2F5F8}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:34px;margin-top:86px;animation:fadeUp .8s cubic-bezier(.22,.61,.36,1) .34s both">
       <div><div data-count="100" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">100</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">человек всех<br>ивент-специальностей</div></div>
-      <div><div data-count="12" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">12</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">направлений —<br>от ведущих до прокатчиков</div></div>
+      <div><div data-count="{{ catCount }}" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">{{ catCount }}</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">направлений —<br>от ведущих до прокатчиков</div></div>
       <div><div data-count="16" data-suffix=" лет" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">16 лет</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">в event-индустрии,<br>специалистам 20–45 лет</div></div>
       <div><div data-count="1000" data-suffix="+" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">1000+</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">мероприятий —<br>от 1 до 3000 гостей</div></div>
     </div>
@@ -186,7 +186,7 @@ option{background:#121A26;color:#F2F5F8}
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:44px">
       <div>
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div style="width:34px;height:3px;background:var(--acc)"></div><div style="font-size:11px;font-weight:700;letter-spacing:.38em;color:#97A3B0;text-transform:uppercase">Специалисты</div></div>
-        <h2 style="margin:0;font-size:clamp(30px,3.4vw,44px);font-weight:900;letter-spacing:.01em;text-transform:uppercase;line-height:1.06">12 направлений —<br>одна команда</h2>
+        <h2 style="margin:0;font-size:clamp(30px,3.4vw,44px);font-weight:900;letter-spacing:.01em;text-transform:uppercase;line-height:1.06">{{ catCount }} направлений —<br>одна команда</h2>
       </div>
       <a href="./specialists.html" style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:15px 24px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">Все специалисты →</a>
     </div>
@@ -439,7 +439,7 @@ option{background:#121A26;color:#F2F5F8}
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div style="width:34px;height:3px;background:var(--acc)"></div><div style="font-size:11px;font-weight:700;letter-spacing:.38em;color:#97A3B0;text-transform:uppercase">FAQ</div></div>
     <h2 style="margin:0 0 34px;font-size:clamp(30px,3.4vw,44px);font-weight:900;letter-spacing:.01em;text-transform:uppercase;line-height:1.06">Частые вопросы</h2>
     <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Чем объединение отличается от агентства?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Агентство перепродаёт чужие услуги с наценкой. Мы — сами специалисты: вы работаете напрямую с теми, кто выйдет на вашу площадку. Поэтому в смете нет статьи «организация», а цены — прямые.</div></details>
-    <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Можно заказать одного специалиста, а не всё событие?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Да. Ведущего, фотографа, диджея, кавер-группу — кого угодно из 12 направлений. Подберём под формат и бюджет, при форс-мажоре бесплатно заменим.</div></details>
+    <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Можно заказать одного специалиста, а не всё событие?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Да. Ведущего, фотографа, диджея, кавер-группу — кого угодно из {{ catCount }} направлений. Подберём под формат и бюджет, при форс-мажоре бесплатно заменим.</div></details>
     <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Сколько это стоит?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Ровно столько, сколько стоят специалисты, — наценок нет. Смету с прямыми ценами присылаем после 15-минутного брифа. Это бесплатно и ни к чему не обязывает.</div></details>
     <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Работаете ли вы за пределами Владивостока?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Да, работаем по всему Дальнему Востоку, по России и за рубежом — логистику команды берём на себя и закладываем в смету прозрачно.</div></details>
     <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Что за кэшбек 100%?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">После события мы возвращаем 100% оплаты бонусными рублями на будущие мероприятия. Так постоянным клиентам каждое следующее событие обходится ощутимо дешевле.</div></details>
@@ -595,7 +595,7 @@ class Component extends DCLogic {
   calcSizes = [['до 50', 1], ['50–150', 1.15], ['150–500', 1.35], ['500+', 1.6]];
   brands = ['Аэрофлот', 'Mercedes-Benz', 'Audi', 'Land Rover', 'Bosch', 'Jaguar', 'BMW', 'KIA', 'Росбанк', 'Газпром', 'Газпромнефть', 'Роснефть', 'Норникель', 'Tetra Pak', 'Omega', "Johnson's", 'Boehringer Ingelheim', 'МГТС', 'Danone', 'Магнат'];
   componentDidMount() {
-    import('./data.js').then(m => { this.mod = m; this.setState({ d: m.loadData(), C: m.CATEGORIES }); });
+    import('./data.js').then(m => { this.mod = m; this.setState({ d: m.loadData() }); });
     this.applyVars();
     this._mq = window.matchMedia('(max-width: 1020px)');
     this._mqFn = () => this.setState({ mobile: this._mq.matches, menuOpen: false });
@@ -664,7 +664,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const d = this.state.d;
-    const C = this.state.C || [];
+    const C = (d && d.categories) || [];
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
     const maxRaw = String(cts.max || '').trim();
@@ -672,9 +672,9 @@ class Component extends DCLogic {
     const mainHref = maxHref || tgHref;
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const plural = n => n % 10 === 1 && n % 100 !== 11 ? 'специалист' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'специалиста' : 'специалистов');
-    const catCards = C.map(c => {
+    const catCards = C.map((c, i) => {
       const n = d ? d.specialists.filter(s => s.cat === c.slug).length : 0;
-      return { ...c, countLabel: n ? n + ' ' + plural(n) : 'состав уточняется', href: './specialists.html?cat=' + c.slug };
+      return { ...c, num: String(i + 1).padStart(2, '0'), countLabel: n ? n + ' ' + plural(n) : 'состав уточняется', href: './specialists.html?cat=' + c.slug };
     });
     const casesPreview = d ? d.cases.slice(0, 3).map(k => ({ ...k, slotId: 'case-' + k.id, ph: 'Фото: ' + k.title, meta: k.guests + ' гостей · ' + k.city + ' · ' + k.year })) : [];
     const packages = d ? d.packages.map((p, i) => ({ ...p, featured: i === 1, bg: i === 1 ? '#131D2B' : '#121A26', border: i === 1 ? 'color-mix(in oklab, var(--acc) 55%, transparent)' : 'rgba(255,255,255,.07)', choose: () => { if (this.f.need) this.f.need.value = i === 2 ? 'Событие под ключ' : (i === 1 ? 'Команда специалистов' : 'Один-два специалиста'); location.hash = ''; location.hash = 'zayavka'; } })) : [];
@@ -725,7 +725,7 @@ class Component extends DCLogic {
       person: cts.person, phone: cts.phone, email: cts.email,
       tgAt: '@' + String(cts.tg || '').replace(/^@/, ''),
       tgHref, maxHref, hasMax: !!maxHref, mainHref, mainLabel, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''), mailHref: 'mailto:' + cts.email,
-      catCards, casesPreview, packages, videos,
+      catCards, catCount: C.length, casesPreview, packages, videos,
       reviews: d ? d.reviews : [],
       showVideos: (this.props.showVideo ?? true),
       refName: rf('name'), refContact: rf('contact'), refNeed: rf('need'), refFormat: rf('format'), refDate: rf('date'), refGuests: rf('guests'), refBudget: rf('budget'), refMsg: rf('msg'),

@@ -1,18 +1,32 @@
 // «Хорошее решение» — данные сайта. Правки: через Admin.dc.html (localStorage) или прямо здесь.
+// Порядковый номер (num) не хранится — считается по позиции в списке при отображении,
+// чтобы при добавлении/удалении категорий в админке нумерация всегда оставалась 01..N.
 export const CATEGORIES = [
-  { slug: 'organizatory', num: '01', name: 'Организаторы', desc: 'Продюсируют событие целиком: идея, смета, площадка, тайминг' },
-  { slug: 'fotografy', num: '02', name: 'Фотографы', desc: 'Репортаж и постановка; снимали концерты российских и зарубежных звёзд' },
-  { slug: 'videografy', num: '03', name: 'Видеографы', desc: 'Операторы федеральных каналов, режиссёры и гаферы' },
-  { slug: 'vedushchie', num: '04', name: 'Ведущие', desc: 'Актёры, КВНщики, стендап-комики, теле- и радиоведущие' },
-  { slug: 'didzhei', num: '05', name: 'Диджеи', desc: 'Танцпол любого формата: от гала-ужина до фестиваля' },
-  { slug: 'muzykanty', num: '06', name: 'Музыканты', desc: 'Кавер-группы, вокалисты, инструменталисты' },
-  { slug: 'dekoratory', num: '07', name: 'Декораторы', desc: 'Оформление площадок, флористика, свет и сцена' },
-  { slug: 'animatory', num: '08', name: 'Аниматоры', desc: 'Детские и взрослые интерактивы, welcome-зоны' },
-  { slug: 'stilisty', num: '09', name: 'Стилисты', desc: 'Образы для героев события и команд' },
-  { slug: 'vizazhisty', num: '10', name: 'Визажисты', desc: 'Макияж и укладки на площадке в любое время' },
-  { slug: 'prokatchiki', num: '11', name: 'Прокатчики', desc: 'Звук, свет, экраны, сцены и спецэффекты' },
-  { slug: 'artisty', num: '12', name: 'Артисты оригинального жанра', desc: 'Шоу-номера, цирк, иллюзия, перформансы' },
+  { slug: 'organizatory', name: 'Организаторы', desc: 'Продюсируют событие целиком: идея, смета, площадка, тайминг' },
+  { slug: 'fotografy', name: 'Фотографы', desc: 'Репортаж и постановка; снимали концерты российских и зарубежных звёзд' },
+  { slug: 'videografy', name: 'Видеографы', desc: 'Операторы федеральных каналов, режиссёры и гаферы' },
+  { slug: 'vedushchie', name: 'Ведущие', desc: 'Актёры, КВНщики, стендап-комики, теле- и радиоведущие' },
+  { slug: 'didzhei', name: 'Диджеи', desc: 'Танцпол любого формата: от гала-ужина до фестиваля' },
+  { slug: 'muzykanty', name: 'Музыканты', desc: 'Кавер-группы, вокалисты, инструменталисты' },
+  { slug: 'dekoratory', name: 'Декораторы', desc: 'Оформление площадок, флористика, свет и сцена' },
+  { slug: 'animatory', name: 'Аниматоры', desc: 'Детские и взрослые интерактивы, welcome-зоны' },
+  { slug: 'stilisty', name: 'Стилисты', desc: 'Образы для героев события и команд' },
+  { slug: 'vizazhisty', name: 'Визажисты', desc: 'Макияж и укладки на площадке в любое время' },
+  { slug: 'prokatchiki', name: 'Прокатчики', desc: 'Звук, свет, экраны, сцены и спецэффекты' },
+  { slug: 'artisty', name: 'Артисты оригинального жанра', desc: 'Шоу-номера, цирк, иллюзия, перформансы' },
 ];
+
+// Транслитерация имени категории в URL-слаг; при коллизии добавляется числовой суффикс.
+export function slugify(name, existingSlugs) {
+  const map = { а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya' };
+  let base = String(name || '').toLowerCase().split('').map(ch => map[ch] !== undefined ? map[ch] : ch).join('');
+  base = base.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'kategoriya';
+  const taken = new Set(existingSlugs || []);
+  if (!taken.has(base)) return base;
+  let i = 2;
+  while (taken.has(base + '-' + i)) i++;
+  return base + '-' + i;
+}
 
 // Что уместно показывать/запрашивать в профиле специалиста по категориям —
 // video: 'reel' (одна визитка), 'few' (несколько роликов) или 'none';
@@ -35,6 +49,7 @@ export const DEFAULT_PORTFOLIO_CFG = { video: 'few', links: false };
 
 export const DEFAULTS = {
   contacts: { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru', max: '', leadIds: '' },
+  categories: CATEGORIES,
   mediaCats: [
     { id: 'svadby', name: 'Свадьбы' },
     { id: 'korporativy', name: 'Корпоративы' },
@@ -120,6 +135,7 @@ export function loadData() {
       if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
       if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
       if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
+      if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));
       return d;
     }
   } catch (e) { console.warn('loadData', e); }

@@ -223,6 +223,24 @@ option{background:#121A26;color:#F2F5F8}
     </div>
   </sc-if>
 
+  <sc-if value="{{ isScat }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Категории специалистов" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Категории специалистов</h2>
+        <button onClick="{{ addScat }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить</button>
+      </div>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Направления, по которым делится каталог специалистов (Ведущие, Фотографы…). Появляются в фильтре на сайте и в выпадающем списке «Категория» у каждого специалиста. Пока у категории есть хоть один специалист — удалить её нельзя, сначала переназначьте их.</div>
+      <sc-for list="{{ scatRows }}" as="c" hint-placeholder-count="4">
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:grid;grid-template-columns:1fr 1.6fr auto auto;gap:12px;align-items:end">
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Название</div><input value="{{ c.name }}" onInput="{{ c.uName }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Описание (короткое, для карточки на главной)</div><input value="{{ c.desc }}" onInput="{{ c.uDesc }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div style="font-size:11.5px;color:#56626F;padding:11px 0;white-space:nowrap">{{ c.usage }}</div>
+          <button onClick="{{ c.del }}" title="{{ c.delTitle }}" style="background:transparent;border:1px solid {{ c.delBorder }};color:{{ c.delColor }};border-radius:8px;padding:11px 16px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ isMcat }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Медиа-категории" style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
@@ -277,10 +295,10 @@ option{background:#121A26;color:#F2F5F8}
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { d: null, C: [], tab: 'spec', saved: false, copiedJson: false, resetArmed: false, impErr: null };
+  state = { d: null, tab: 'spec', saved: false, copiedJson: false, resetArmed: false, impErr: null };
   jsonRef = null;
   componentDidMount() {
-    import('./data.js').then(m => { this.mod = m; this.setState({ d: m.loadData(), C: m.CATEGORIES }); });
+    import('./data.js').then(m => { this.mod = m; this.setState({ d: m.loadData() }); });
     this._selT = setInterval(() => this.syncSelects(), 400);
   }
   componentWillUnmount() { clearInterval(this._selT); }
@@ -326,14 +344,15 @@ class Component extends DCLogic {
   }; }
   mv(arr, item, delta) { const i = arr.indexOf(item); const j = i + delta; if (i < 0 || j < 0 || j >= arr.length) return; arr.splice(i, 1); arr.splice(j, 0, item); this.save(); }
   renderVals() {
-    const { d, C, tab } = this.state;
-    const tabDefs = [['spec', 'Специалисты'], ['cases', 'Кейсы'], ['pack', 'Пакеты'], ['rev', 'Отзывы'], ['vid', 'Видео'], ['blog', 'Блог'], ['mcat', 'Медиа-категории'], ['cont', 'Контакты'], ['exp', 'Экспорт']];
+    const { d, tab } = this.state;
+    const tabDefs = [['spec', 'Специалисты'], ['cases', 'Кейсы'], ['pack', 'Пакеты'], ['rev', 'Отзывы'], ['vid', 'Видео'], ['blog', 'Блог'], ['scat', 'Категории специалистов'], ['mcat', 'Медиа-категории'], ['cont', 'Контакты'], ['exp', 'Экспорт']];
     const tabs = tabDefs.map(([id, label]) => ({ id, label,
       bg: tab === id ? 'var(--acc)' : 'transparent', color: tab === id ? '#0C1117' : '#C7D0D9', border: tab === id ? 'var(--acc)' : 'rgba(255,255,255,.16)',
       pick: () => this.setState({ tab: id, resetArmed: false, impErr: null }) }));
     if (!d) return { tabs, isSpec: true, specs: [], cats: [], specCount: '' };
     const fcat = this.state.fcat || 'all', q = (this.state.q || '').trim().toLowerCase();
     const mediaCats = Array.isArray(d.mediaCats) ? d.mediaCats : [];
+    const C = Array.isArray(d.categories) ? d.categories : [];
     const dup = (arr, item, idp) => () => { const i = arr.indexOf(item); arr.splice(i + 1, 0, { ...item, id: idp + Date.now() }); this.save(); };
     const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
     const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
@@ -385,7 +404,7 @@ class Component extends DCLogic {
     this._selFcat = fcat;
     return {
       tabs,
-      isSpec: tab === 'spec', isCases: tab === 'cases', isPack: tab === 'pack', isRev: tab === 'rev', isVid: tab === 'vid', isBlog: tab === 'blog', isMcat: tab === 'mcat', isCont: tab === 'cont', isExp: tab === 'exp',
+      isSpec: tab === 'spec', isCases: tab === 'cases', isPack: tab === 'pack', isRev: tab === 'rev', isVid: tab === 'vid', isBlog: tab === 'blog', isScat: tab === 'scat', isMcat: tab === 'mcat', isCont: tab === 'cont', isExp: tab === 'exp',
       artRows, artCount: d.articles.length + ' шт.',
       addArt: () => { d.articles.unshift({ id: 'a' + Date.now(), slug: 'novaya-statya-' + (d.articles.length + 1), title: 'Новая статья', date: new Date().toISOString().slice(0, 10), minutes: '5', tag: 'Советы', lead: '', body: 'Первый раздел|Текст раздела.' }); this.save(); },
       saved: this.state.saved,
@@ -402,6 +421,23 @@ class Component extends DCLogic {
       vidRows,
       mcatRows: mediaCats.map(c => { const n = d.specialists.filter(s => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).length; return { ...c, usage: n ? 'у ' + n + ' спец.' : 'не используется', uName: this.bind(c, 'name'), del: () => { d.mediaCats = d.mediaCats.filter(x => x !== c); this.save(); } }; }),
       addMcat: () => { if (!Array.isArray(d.mediaCats)) d.mediaCats = []; d.mediaCats.push({ id: 'mc' + Date.now(), name: 'Новая категория' }); this.save(); },
+      scatRows: C.map(c => {
+        const n = d.specialists.filter(s => s.cat === c.slug).length;
+        const canDel = n === 0;
+        return { ...c, usage: n ? 'у ' + n + ' спец.' : 'не используется',
+          uName: this.bind(c, 'name'), uDesc: this.bind(c, 'desc'),
+          delTitle: canDel ? 'Удалить категорию' : 'Сначала переназначьте специалистов этой категории',
+          delColor: canDel ? '#E5533C' : '#56626F', delBorder: canDel ? 'rgba(229,83,60,.45)' : 'rgba(255,255,255,.14)',
+          del: canDel
+            ? () => { d.categories = d.categories.filter(x => x !== c); this.save(); }
+            : () => alert('У категории «' + c.name + '» ещё ' + n + ' специалист(ов). Смените им категорию во вкладке «Специалисты», потом эту можно будет удалить.') };
+      }),
+      addScat: () => {
+        if (!Array.isArray(d.categories)) d.categories = [];
+        const slug = this.mod.slugify('Новая категория', d.categories.map(c => c.slug));
+        d.categories.push({ slug, name: 'Новая категория', desc: '' });
+        this.save();
+      },
       cPerson: d.contacts.person || '', cPhone: d.contacts.phone || '', cTg: d.contacts.tg || '', cEmail: d.contacts.email || '',
       cMax: d.contacts.max || '', cLeadIds: d.contacts.leadIds || '',
       uPerson: this.bind(d.contacts, 'person'), uPhone: this.bind(d.contacts, 'phone'), uTg: e => { d.contacts.tg = e.target.value.replace(/^@/, ''); this.save(); }, uEmail: this.bind(d.contacts, 'email'),

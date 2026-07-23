@@ -216,10 +216,10 @@ a:hover{color:var(--acc)}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;}}">
 class Component extends DCLogic {
-  state = { d: null, C: [], id: null };
+  state = { d: null, id: null };
   componentDidMount() {
     this._qid = new URLSearchParams(location.search).get('id');
-    import('./data.js').then(m => { this.mod = m; this.setState({ d: m.loadData(), C: m.CATEGORIES, id: this._qid }); });
+    import('./data.js').then(m => { this.mod = m; this.setState({ d: m.loadData(), id: this._qid }); });
     this.applyVars();
     this._mq = window.matchMedia('(max-width: 1020px)');
     this._mqFn = () => this.setState({ mobile: this._mq.matches, menuOpen: false });
@@ -246,7 +246,8 @@ class Component extends DCLogic {
     if (document.title !== title) { document.title = title; setTimeout(() => { if (document.title !== title) document.title = title; }, 400); }
     if (this._seoFor === s.id) return;
     this._seoFor = s.id;
-    const cn = (this.state.C.find(c => c.slug === s.cat) || {}).name || '';
+    const scats = (this.state.d && this.state.d.categories) || [];
+    const cn = (scats.find(c => c.slug === s.cat) || {}).name || '';
     const md = document.querySelector('meta[name="description"]');
     if (md) md.setAttribute('content', s.name + ' (' + cn + ', опыт ' + s.exp + ') — профиль, портфолио и видео работ. Бронирование напрямую, ' + s.price + ', без агентской наценки.');
     let el = document.getElementById('ld-person');
@@ -259,7 +260,8 @@ class Component extends DCLogic {
     return m ? 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg' : null;
   }
   renderVals() {
-    const { d, C } = this.state;
+    const { d } = this.state;
+    const C = (d && d.categories) || [];
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
     const maxRaw = String(cts.max || '').trim();
