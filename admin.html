@@ -79,11 +79,16 @@ option{background:#121A26;color:#F2F5F8}
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:14px">
               <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Описание (абзац)</div><textarea rows="5" value="{{ s.aboutText }}" onInput="{{ s.uAbout }}" placeholder="Кто это, чем силён, какие форматы ведёт…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
               <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Фишки / регалии (с новой строки)</div><textarea rows="5" value="{{ s.featsText }}" onInput="{{ s.uFeats }}" placeholder="Ведущий телепроекта…&#10;500+ мероприятий&#10;Работает на двух языках" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
-              <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Видео (ссылка с новой строки, можно «Название | ссылка»)</div>
-                <sc-for list="{{ s.vidGroups }}" as="vg" hint-placeholder-count="1">
-                  <div style="margin-bottom:10px"><div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:5px">{{ vg.name }}</div><textarea rows="3" value="{{ vg.text }}" onInput="{{ vg.update }}" placeholder="Шоурил | https://youtu.be/…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
-                </sc-for>
-              </div>
+              <sc-if value="{{ s.showVideoField }}" hint-placeholder-val="{{ true }}">
+                <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">{{ s.videoFieldLabel }}</div>
+                  <sc-for list="{{ s.vidGroups }}" as="vg" hint-placeholder-count="1">
+                    <div style="margin-bottom:10px"><div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:5px">{{ vg.name }}</div><textarea rows="3" value="{{ vg.text }}" onInput="{{ vg.update }}" placeholder="{{ s.videoPlaceholder }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ s.showLinksField }}" hint-placeholder-val="{{ false }}">
+                <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Ссылки на портфолио (сайт, папка с работами — с новой строки, можно «Название | ссылка»)</div><textarea rows="5" value="{{ s.linksText }}" onInput="{{ s.uLinks }}" placeholder="Портфолио на сайте | https://…&#10;Папка с работами | https://…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+              </sc-if>
             </div>
             <div style="margin-top:14px"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">Категории портфолио (фото и видео группируются по ним)</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -92,7 +97,7 @@ option{background:#121A26;color:#F2F5F8}
                 </sc-for>
               </div>
             </div>
-            <div style="margin-top:12px;font-size:12px;color:#7C8894;line-height:1.6">Отмеченные категории появятся на <a href="{{ s.profHref }}" style="color:#97A3B0;border-bottom:1px dashed #56626F">странице профиля</a> отдельными блоками: 4 фото-ячейки (заполняются перетаскиванием там же) + видео своей категории. Без отметок — общая галерея на 6 фото. Видео показываются превью-карточкой (для YouTube — с настоящим кадром), клик уводит на само видео — плеер на сайт не грузится. Общий список категорий — во вкладке «Медиа-категории».</div>
+            <div style="margin-top:12px;font-size:12px;color:#7C8894;line-height:1.6">Отмеченные категории появятся на <a href="{{ s.profHref }}" style="color:#97A3B0;border-bottom:1px dashed #56626F">странице профиля</a> отдельными блоками: 4 фото-ячейки (заполняются перетаскиванием там же) + видео своей категории. Без отметок — общая галерея на 6 фото. Видео показываются превью-карточкой (для YouTube — с настоящим кадром), клик уводит на само видео — плеер на сайт не грузится. Поля «Видео»/«Ссылки на портфолио» показываются не у всех — набор подобран под специальность (например, декораторам видео не нужно, а фотографам полезны ссылки на портфолио). Общий список категорий — во вкладке «Медиа-категории».</div>
           </details>
           <div style="display:flex;gap:6px">
             <button onClick="{{ s.up }}" title="Переместить выше" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↑</button>
@@ -330,7 +335,11 @@ class Component extends DCLogic {
     const fcat = this.state.fcat || 'all', q = (this.state.q || '').trim().toLowerCase();
     const mediaCats = Array.isArray(d.mediaCats) ? d.mediaCats : [];
     const dup = (arr, item, idp) => () => { const i = arr.indexOf(item); arr.splice(i + 1, 0, { ...item, id: idp + Date.now() }); this.save(); };
-    const specs = d.specialists.filter(s => (fcat === 'all' || s.cat === fcat) && (!q || (s.name + ' ' + s.role).toLowerCase().includes(q))).map(s => ({ ...s,
+    const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
+    const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
+    const specs = d.specialists.filter(s => (fcat === 'all' || s.cat === fcat) && (!q || (s.name + ' ' + s.role).toLowerCase().includes(q))).map(s => {
+      const pcfg = portfolioCfg[s.cat] || defPortfolioCfg;
+      return { ...s,
       uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
       uCat: e => { s.cat = e.target.value; this.save(); },
       hasPhoto: !!s.photo, photoSrc: s.photo || '', photoLabel: s.photo ? 'Заменить' : 'Загрузить',
@@ -339,6 +348,12 @@ class Component extends DCLogic {
       aboutText: s.about || '', uAbout: this.bind(s, 'about'),
       featsText: (s.feats || []).join('\n'),
       uFeats: e => { s.feats = e.target.value.split('\n'); this.save(); },
+      showVideoField: pcfg.video !== 'none',
+      videoFieldLabel: pcfg.video === 'reel' ? 'Видео-визитка (обычно достаточно одной ссылки)' : 'Видео (ссылка с новой строки, можно «Название | ссылка»)',
+      videoPlaceholder: pcfg.video === 'reel' ? 'Визитка | https://youtu.be/…' : 'Шоурил | https://youtu.be/…',
+      showLinksField: !!pcfg.links,
+      linksText: (s.links || []).map(l => l.title ? l.title + ' | ' + l.url : l.url).join('\n'),
+      uLinks: e => { s.links = e.target.value.split('\n').map(l => { const t = l.trim(); const i = t.indexOf('|'); return i > 0 ? { title: t.slice(0, i).trim(), url: t.slice(i + 1).trim() } : { title: '', url: t }; }).filter(l => l.url); this.save(); },
       mcatChips: mediaCats.map(c => { const on = Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id); return { name: c.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.25)', toggle: () => { s.mediaCats = on ? s.mediaCats.filter(x => x !== c.id) : (Array.isArray(s.mediaCats) ? s.mediaCats : []).concat(c.id); this.save(); } }; }),
       vidGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все видео' }]).map(g => ({
         name: g.name,
@@ -346,7 +361,8 @@ class Component extends DCLogic {
         update: e => { const parsed = e.target.value.split('\n').map(l => { const t = l.trim(); const i = t.indexOf('|'); return i > 0 ? { title: t.slice(0, i).trim(), url: t.slice(i + 1).trim(), cat: g.id } : { title: '', url: t, cat: g.id }; }); s.videos = (s.videos || []).filter(v => (v.cat || '') !== g.id).concat(parsed); this.save(); },
       })),
       up: () => this.mv(d.specialists, s, -1), down: () => this.mv(d.specialists, s, 1), dup: dup(d.specialists, s, 's'),
-      del: () => { d.specialists = d.specialists.filter(x => x !== s); this.save(); } }));
+      del: () => { d.specialists = d.specialists.filter(x => x !== s); this.save(); } };
+    });
     const caseRows = d.cases.map(k => ({ ...k,
       uTitle: this.bind(k, 'title'), uFormat: this.bind(k, 'format'), uGuests: this.bind(k, 'guests'), uCity: this.bind(k, 'city'), uYear: this.bind(k, 'year'), uVideo: this.bind(k, 'video'), uDesc: this.bind(k, 'desc'), uTeam: this.bind(k, 'team'),
       up: () => this.mv(d.cases, k, -1), down: () => this.mv(d.cases, k, 1), dup: dup(d.cases, k, 'c'),

@@ -14,6 +14,25 @@ export const CATEGORIES = [
   { slug: 'artisty', num: '12', name: 'Артисты оригинального жанра', desc: 'Шоу-номера, цирк, иллюзия, перформансы' },
 ];
 
+// Что уместно показывать/запрашивать в профиле специалиста по категориям —
+// video: 'reel' (одна визитка), 'few' (несколько роликов) или 'none';
+// links: ссылки на внешний сайт/папку с работами (в основном фото/видеографам).
+export const CATEGORY_PORTFOLIO = {
+  vedushchie: { video: 'reel', links: false },
+  organizatory: { video: 'reel', links: false },
+  muzykanty: { video: 'few', links: false },
+  fotografy: { video: 'few', links: true },
+  videografy: { video: 'none', links: true },
+  dekoratory: { video: 'none', links: false },
+  animatory: { video: 'few', links: false },
+  didzhei: { video: 'none', links: false },
+  stilisty: { video: 'few', links: false },
+  vizazhisty: { video: 'few', links: false },
+  prokatchiki: { video: 'none', links: false },
+  artisty: { video: 'few', links: false },
+};
+export const DEFAULT_PORTFOLIO_CFG = { video: 'few', links: false };
+
 export const DEFAULTS = {
   contacts: { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru', max: '', leadIds: '' },
   mediaCats: [
@@ -99,7 +118,7 @@ export function loadData() {
       if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
       if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
       if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
-      if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
+      if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
       if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
       return d;
     }

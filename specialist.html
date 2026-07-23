@@ -127,6 +127,22 @@ a:hover{color:var(--acc)}
   <div style="max-width:1240px;margin:0 auto;padding:0 28px">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div style="width:34px;height:3px;background:var(--acc)"></div><div style="font-size:11px;font-weight:700;letter-spacing:.38em;color:#97A3B0;text-transform:uppercase">Портфолио</div></div>
     <h2 style="margin:0 0 38px;font-size:clamp(26px,3vw,40px);font-weight:900;text-transform:uppercase;line-height:1.08">Фото и видео работ</h2>
+    <sc-if value="{{ hasLinks }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-bottom:50px">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+          <span style="border:1px solid color-mix(in oklab,var(--acc) 55%,transparent);color:var(--acc);border-radius:999px;padding:8px 18px;font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase">Портфолио на сайте</span>
+          <span style="flex:1;height:1px;background:rgba(255,255,255,.08)"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+          <sc-for list="{{ links }}" as="l" hint-placeholder-count="2">
+            <a href="{{ l.url }}" target="_blank" style="display:flex;align-items:center;gap:14px;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px 22px;background:#121A26" style-hover="border-color:var(--acc)">
+              <span style="width:44px;height:44px;border-radius:50%;background:color-mix(in oklab,var(--acc) 18%,transparent);border:1.5px solid var(--acc);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--acc);font-size:17px;font-weight:700">↗</span>
+              <span style="font-weight:700;font-size:14.5px;color:#F2F5F8">{{ l.caption }}</span>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
     <sc-for list="{{ groups }}" as="g" hint-placeholder-count="1">
       <div style="margin-bottom:50px">
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
@@ -252,12 +268,16 @@ class Component extends DCLogic {
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const s = this.spec();
     const cat = s ? (C.find(c => c.slug === s.cat) || null) : null;
+    const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
+    const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
+    const pcfg = s ? (portfolioCfg[s.cat] || defPortfolioCfg) : defPortfolioCfg;
     const feats = ((s && Array.isArray(s.feats)) ? s.feats : []).filter(x => x && x.trim());
-    const vids = (s && Array.isArray(s.videos)) ? s.videos : [];
+    const vids = (s && pcfg.video !== 'none' && Array.isArray(s.videos)) ? s.videos : [];
     const allV = vids.map((v, i) => {
       const thumb = this.ytThumb(v.url);
       return { url: v.url, cat: v.cat || '', thumb: thumb || '', hasThumb: !!thumb, caption: v.title || 'Видео ' + (i + 1) };
     }).filter(v => v.url);
+    const links = (s && pcfg.links && Array.isArray(s.links) ? s.links : []).map((l, i) => ({ url: l.url, caption: l.title || 'Портфолио ' + (i + 1) })).filter(l => l.url);
     const mediaCats = (d && Array.isArray(d.mediaCats)) ? d.mediaCats : [];
     const selCats = s ? mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)) : [];
     let groups = [];
@@ -290,7 +310,8 @@ class Component extends DCLogic {
       catName: cat ? cat.name : '', catHref: cat ? './specialists.html?cat=' + cat.slug : './specialists.html',
       about: s ? (s.about || 'Описание появится в ближайшее время. А пока напишите нам в Telegram — расскажем о специалисте, пришлём примеры работ и проверим свободные даты.') : '',
       hasFeats: feats.length > 0, feats,
-      groups, showVideoHint: !!s && allV.length === 0,
+      groups, showVideoHint: !!s && allV.length === 0 && pcfg.video !== 'none',
+      links, hasLinks: links.length > 0,
       adminHref: './admin.html',
       hasRelated: related.length > 0, noRelated: !!s && related.length === 0, related,
       book: () => {
