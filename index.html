@@ -45,7 +45,13 @@ summary::-webkit-details-marker{display:none}
 input::placeholder,textarea::placeholder{color:#56626F}
 option{background:#121A26;color:#F2F5F8}
 @media (max-width:600px){.nav-badge{display:none}}
+@media (max-width:600px){.hero-header{padding-top:104px!important}}
 @media (max-width:600px){.hero-badge{gap:6px!important;padding:7px 12px!important;font-size:9px!important;letter-spacing:.05em!important}}
+.fmt-grid{container-type:inline-size}
+@container (min-width:490px){
+  .fmt-grid>div:nth-child(1){order:1} .fmt-grid>div:nth-child(2){order:3} .fmt-grid>div:nth-child(3){order:5} .fmt-grid>div:nth-child(4){order:7}
+  .fmt-grid>div:nth-child(5){order:2} .fmt-grid>div:nth-child(6){order:4} .fmt-grid>div:nth-child(7){order:6} .fmt-grid>div:nth-child(8){order:8}
+}
 </style>
 </helmet>
 <div id="top" style="min-height:100vh;background:#0C1117;color:#F2F5F8;font-family:'Montserrat',system-ui,sans-serif">
@@ -94,7 +100,7 @@ option{background:#121A26;color:#F2F5F8}
   </sc-if>
 </nav>
 
-<header data-screen-label="Хиро" style="position:relative;overflow:hidden;padding:190px 0 96px;background:linear-gradient(118deg,#090D12 0%,#0C1117 40%,#111925 40.15%,#0C1117 72%,#090D12 72.15%)">
+<header class="hero-header" data-screen-label="Хиро" style="position:relative;overflow:hidden;padding:190px 0 96px;background:linear-gradient(118deg,#090D12 0%,#0C1117 40%,#111925 40.15%,#0C1117 72%,#090D12 72.15%)">
   <div style="position:absolute;top:0;right:0;width:46%;height:60%;background-image:radial-gradient(rgba(255,255,255,.055) 1px,transparent 1.4px);background-size:24px 24px;pointer-events:none"></div>
   <sc-if value="{{ showGutters }}" hint-placeholder-val="{{ true }}">
   <div style="position:absolute;left:26px;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;font-size:10.5px;font-weight:700;letter-spacing:.5em;color:#4C5762;text-transform:uppercase;pointer-events:none">Хорошее решение</div>
@@ -167,14 +173,14 @@ option{background:#121A26;color:#F2F5F8}
     </div>
     <div>
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div style="width:34px;height:3px;background:var(--acc)"></div><div style="font-size:11px;font-weight:700;letter-spacing:.38em;color:#97A3B0;text-transform:uppercase">Форматы мероприятий</div></div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px 30px">
+      <div class="fmt-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px 30px">
         <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">1</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Корпоративные мероприятия и гала-ужины</div></div>
-        <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">5</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Презентации нового продукта, автомобилей и пр.</div></div>
         <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">2</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Фестивали, форумы и конференции</div></div>
-        <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">6</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Рекламные акции и открытия торговых центров, заводов</div></div>
         <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">3</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Концерты, шоу и конкурсы красоты</div></div>
-        <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">7</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Благотворительные мероприятия</div></div>
         <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">4</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Спортивные мероприятия и тимбилдинги</div></div>
+        <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">5</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Презентации нового продукта, автомобилей и пр.</div></div>
+        <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">6</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Рекламные акции и открытия торговых центров, заводов</div></div>
+        <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">7</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Благотворительные мероприятия</div></div>
         <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed rgba(255,255,255,.12)"><div style="font-size:30px;font-weight:900;color:#39434E;line-height:1">8</div><div style="font-size:14px;line-height:1.5;color:#C7D0D9;padding-top:5px">Частные закрытые события</div></div>
       </div>
     </div>
