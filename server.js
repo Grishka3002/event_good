@@ -8,6 +8,24 @@ const path = require('path');
 const zlib = require('zlib');
 
 const ROOT = __dirname;
+
+// Необязательный .env рядом с server.js — для хостингов без панели переменных
+// окружения (например, Beget). Реальные env-переменные (Railway) всегда в приоритете.
+(function loadEnvFile() {
+  const envPath = path.join(ROOT, '.env');
+  if (!fs.existsSync(envPath)) return;
+  for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const i = t.indexOf('=');
+    if (i < 0) continue;
+    const key = t.slice(0, i).trim();
+    let val = t.slice(i + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
+    if (key && !(key in process.env)) process.env[key] = val;
+  }
+})();
+
 const PORT = process.env.PORT || 8080;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 // Заявки: токен бота — только в переменных окружения (Railway → Variables).
