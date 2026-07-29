@@ -1,1 +1,3 @@
 .env
+.live-data.json
+.live-data.json.tmp

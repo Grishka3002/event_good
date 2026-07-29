@@ -155,7 +155,7 @@ a:hover{color:var(--acc)}
 class Component extends DCLogic {
   state = { d: null };
   componentDidMount() {
-    import('./data.js').then(m => this.setState({ d: m.loadData() }));
+    import('./data.js').then(m => m.loadData().then(d => this.setState({ d })));
     this.applyVars();
     this._mq = window.matchMedia('(max-width: 1020px)');
     this._mqFn = () => this.setState({ mobile: this._mq.matches, menuOpen: false });

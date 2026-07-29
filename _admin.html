@@ -35,13 +35,13 @@ option{background:#121A26;color:#F2F5F8}
       <div style="width:9px;height:32px;background:var(--acc)"></div>
       <div><div style="font-weight:900;font-size:14px;letter-spacing:.14em">АДМИН-ПАНЕЛЬ</div><div style="font-size:11px;color:#97A3B0;margin-top:2px">Хорошее решение · контент сайта</div></div>
     </div>
-    <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7CC46B">Сохранено ✓</span></sc-if>
+    <sc-if value="{{ hasSyncStatus }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{{ syncColor }}">{{ syncLabel }}</span></sc-if>
     <a href="./index.html" style="border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:11px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase" style-hover="border-color:var(--acc);color:var(--acc)">Открыть сайт →</a>
   </div>
 </div>
 
 <div style="max-width:1180px;margin:0 auto;padding:26px 28px 80px">
-  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Изменения сохраняются автоматически в этом браузере и сразу видны на сайте. Фотографии добавляются перетаскиванием прямо на карточки сайта. Чтобы зафиксировать данные в исходниках навсегда — вкладка «Экспорт».</div>
+  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Изменения сохраняются на сервере и сразу видны всем посетителям сайта — не только в этом браузере. Фотографии добавляются перетаскиванием прямо на карточки сайта. Статус сохранения — в правом верхнем углу.</div>
 
   <div data-screen-label="Вкладки" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">
     <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="7">
@@ -280,7 +280,7 @@ option{background:#121A26;color:#F2F5F8}
   <sc-if value="{{ isExp }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Экспорт" style="display:flex;flex-direction:column;gap:16px">
       <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Экспорт / импорт</h2>
-      <div style="font-size:13px;color:#9AA6B2;line-height:1.7;max-width:760px">Данные живут в памяти этого браузера. Чтобы закрепить их в коде сайта навсегда (и чтобы они были видны всем) — скопируйте JSON и пришлите его в чат: вшью в исходники. Также JSON можно перенести в другой браузер через «Импорт».</div>
+      <div style="font-size:13px;color:#9AA6B2;line-height:1.7;max-width:760px">Данные уже хранятся на сервере и видны всем посетителям — экспорт/импорт нужен только для резервной копии или переноса данных. «Скопировать JSON» — сохранить бэкап себе на компьютер. «Импортировать» — заменить текущие данные сайта содержимым поля ниже (сразу сохранится на сервере). «Сбросить к исходным» — вернуть заводские данные из кода сайта.</div>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <button onClick="{{ copyJson }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">{{ copyJsonLabel }}</button>
         <button onClick="{{ applyImport }}" style="background:transparent;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">Импортировать из поля ниже</button>
@@ -295,13 +295,13 @@ option{background:#121A26;color:#F2F5F8}
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { d: null, tab: 'spec', saved: false, copiedJson: false, resetArmed: false, impErr: null };
+  state = { d: null, tab: 'spec', syncState: null, copiedJson: false, resetArmed: false, impErr: null };
   jsonRef = null;
   componentDidMount() {
-    import('./data.js').then(m => { this.mod = m; this.setState({ d: m.loadData() }); });
+    import('./data.js').then(m => { this.mod = m; m.loadData().then(d => this.setState({ d })); });
     this._selT = setInterval(() => this.syncSelects(), 400);
   }
-  componentWillUnmount() { clearInterval(this._selT); }
+  componentWillUnmount() { clearInterval(this._selT); clearTimeout(this._syncT); clearTimeout(this._hideT); }
   syncSelects() {
     if (this.state.tab !== 'spec' || !this._selOrder) return;
     const sels = document.querySelectorAll('select');
@@ -315,11 +315,23 @@ class Component extends DCLogic {
     });
   }
   componentDidUpdate() { this.syncSelects(); }
-  save(extra) {
-    this.mod.saveData(this.state.d);
-    clearTimeout(this._t);
-    this._t = setTimeout(() => this.setState({ saved: false }), 1600);
-    this.setState({ d: this.state.d, saved: true, ...(extra || {}) });
+  // Мгновенно сохраняет локально (кэш на случай обрыва связи) и с паузой в 700мс
+  // после последней правки отправляет данные на сервер — так набор текста не
+  // шлёт запрос на каждую букву. dataOverride — для импорта/сброса, где данные
+  // подставляются целиком и не гарантированно успевают попасть в this.state к
+  // моменту вызова.
+  save(extra, dataOverride) {
+    const data = dataOverride || this.state.d;
+    this.mod.saveData(data);
+    clearTimeout(this._syncT);
+    clearTimeout(this._hideT);
+    this.setState({ d: data, syncState: 'pending', ...(extra || {}) });
+    this._syncT = setTimeout(() => {
+      this.mod.syncData(data).then(ok => {
+        this.setState({ syncState: ok ? 'ok' : 'error' });
+        if (ok) this._hideT = setTimeout(() => this.setState({ syncState: null }), 1800);
+      });
+    }, 700);
   }
   bind(obj, field) { return e => { obj[field] = e.target.value; this.save(); }; }
   // Фото профиля: ужимаем до 900px по ширине в JPEG, чтобы уместиться в localStorage/экспорт
@@ -407,7 +419,9 @@ class Component extends DCLogic {
       isSpec: tab === 'spec', isCases: tab === 'cases', isPack: tab === 'pack', isRev: tab === 'rev', isVid: tab === 'vid', isBlog: tab === 'blog', isScat: tab === 'scat', isMcat: tab === 'mcat', isCont: tab === 'cont', isExp: tab === 'exp',
       artRows, artCount: d.articles.length + ' шт.',
       addArt: () => { d.articles.unshift({ id: 'a' + Date.now(), slug: 'novaya-statya-' + (d.articles.length + 1), title: 'Новая статья', date: new Date().toISOString().slice(0, 10), minutes: '5', tag: 'Советы', lead: '', body: 'Первый раздел|Текст раздела.' }); this.save(); },
-      saved: this.state.saved,
+      hasSyncStatus: !!this.state.syncState,
+      syncLabel: this.state.syncState === 'pending' ? 'Сохраняю…' : this.state.syncState === 'error' ? 'Не сохранилось на сервере ⚠' : 'Сохранено ✓',
+      syncColor: this.state.syncState === 'error' ? '#E5533C' : this.state.syncState === 'pending' ? '#97A3B0' : '#7CC46B',
       cats: C,
       specs, specCount: (fcat === 'all' && !q) ? d.specialists.length + ' шт.' : specs.length + ' из ' + d.specialists.length,
       noSpecs: specs.length === 0,
@@ -450,8 +464,8 @@ class Component extends DCLogic {
         try {
           const parsed = JSON.parse(this.jsonRef ? this.jsonRef.value : '');
           if (!parsed || !Array.isArray(parsed.specialists)) throw new Error('bad');
-          this.mod.saveData(parsed);
-          this.setState({ d: this.mod.loadData(), impErr: null, saved: true });
+          this.setState({ impErr: null });
+          this.save(null, parsed);
         } catch (e) { this.setState({ impErr: 'Не получилось разобрать JSON — проверьте, что вставлен весь текст без изменений.' }); }
       },
       hasImpErr: !!this.state.impErr, impErr: this.state.impErr || '',
@@ -459,7 +473,8 @@ class Component extends DCLogic {
       resetAll: () => {
         if (!this.state.resetArmed) { this.setState({ resetArmed: true }); return; }
         localStorage.removeItem(this.mod.STORE_KEY);
-        this.setState({ d: this.mod.loadData(), resetArmed: false, saved: true });
+        this.setState({ resetArmed: false });
+        this.save(null, JSON.parse(JSON.stringify(this.mod.DEFAULTS)));
       }
     };
   }

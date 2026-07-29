@@ -106,7 +106,7 @@ a:hover{color:#F2F5F8}
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = { d: null };
-  componentDidMount() { import('./data.js').then(m => this.setState({ d: m.loadData() })); }
+  componentDidMount() { import('./data.js').then(m => m.loadData().then(d => this.setState({ d }))); }
   renderVals() {
     const cts = (this.state.d || {}).contacts || { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru' };
     const tg = String(cts.tg || '').replace(/^@/, '');

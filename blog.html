@@ -167,7 +167,7 @@ class Component extends DCLogic {
   state = { d: null, slug: null };
   componentDidMount() {
     this.setState({ slug: new URLSearchParams(location.search).get('post') });
-    import('./data.js').then(m => this.setState({ d: m.loadData() }));
+    import('./data.js').then(m => m.loadData().then(d => this.setState({ d })));
     this._mq = window.matchMedia('(max-width: 1020px)');
     this._mqFn = () => this.setState({ mobile: this._mq.matches, menuOpen: false });
     this._mq.addEventListener('change', this._mqFn);

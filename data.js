@@ -123,23 +123,58 @@ export const DEFAULTS = {
 };
 
 export const STORE_KEY = 'hr-site-data-v1';
-export function loadData() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      const d = { ...DEFAULTS, ...saved, contacts: { ...DEFAULTS.contacts, ...(saved.contacts || {}) } };
-      // миграция: подтягиваем новые поля из DEFAULTS в ранее сохранённые записи
-      if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
-      if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
-      if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
-      if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
-      if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
-      if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));
-      return d;
-    }
-  } catch (e) { console.warn('loadData', e); }
-  return JSON.parse(JSON.stringify(DEFAULTS));
+
+function mergeWithDefaults(saved) {
+  const d = { ...DEFAULTS, ...saved, contacts: { ...DEFAULTS.contacts, ...(saved.contacts || {}) } };
+  // миграция: подтягиваем новые поля из DEFAULTS в ранее сохранённые записи —
+  // так код можно обновлять сколько угодно, старые сохранённые данные не «слетают»
+  if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
+  if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
+  if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
+  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
+  if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
+  if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));
+  return d;
 }
-export function saveData(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+
+// Данные общие для всех посетителей теперь хранятся на сервере (/api/data) —
+// так правки из админки видят все, а не только тот браузер, где их сделали.
+// localStorage остаётся резервной копией: если сервер недоступен (например,
+// сайт открыт как статические файлы без server.js), сайт продолжит работать.
+export async function loadData() {
+  let saved = null;
+  try {
+    const r = await fetch('/api/data', { cache: 'no-store' });
+    if (r.ok) {
+      const j = await r.json();
+      if (j && typeof j === 'object' && Object.keys(j).length) saved = j;
+    }
+  } catch (e) { /* сервера нет рядом — используем localStorage ниже */ }
+
+  if (!saved) {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) saved = JSON.parse(raw);
+    } catch (e) { console.warn('loadData', e); }
+  }
+  if (!saved) return JSON.parse(JSON.stringify(DEFAULTS));
+
+  const d = mergeWithDefaults(saved);
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e) {} // тёплый кэш на случай, если сервер пропадёт
+  return d;
+}
+
+// Мгновенно — локальный кэш (чтобы интерфейс не ждал сеть); сама отправка на
+// сервер — через syncData (её вызывающий код обычно откладывает на паузу в вводе).
+export function saveData(d) { try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e) {} }
+
+// Отправляет данные на сервер. Возвращает true/false — успех/неуспех, чтобы
+// вызывающий код (админка) мог показать статус сохранения.
+export async function syncData(d) {
+  try {
+    const r = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+    return r.ok;
+  } catch (e) { return false; }
+}
+
 export function tgUrl(handle) { return 'https://t.me/' + String(handle || '').replace(/^@/, ''); }

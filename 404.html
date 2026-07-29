@@ -59,14 +59,15 @@ a:hover{color:var(--acc)}
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = { d: null };
-  componentDidMount() { import('./data.js').then(m => this.setState({ d: m.loadData() })); }
+  componentDidMount() { import('./data.js').then(m => m.loadData().then(d => this.setState({ d }))); }
   renderVals() {
     const cts = (this.state.d || {}).contacts || { tg: 'sazelenskiy' };
+    const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
     const maxRaw = String(cts.max || '').trim();
     const maxHref = maxRaw ? (maxRaw.startsWith('http') ? maxRaw : 'https://' + maxRaw.replace(/^\/+/, '')) : '';
     const mainHref = maxHref || tgHref;
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
-    return { tgHref: 'https://t.me/' + String(cts.tg || '').replace(/^@/, ''), maxHref, hasMax: !!maxHref, mainHref, mainLabel };
+    return { tgHref, maxHref, hasMax: !!maxHref, mainHref, mainLabel };
   }
 }
 </script>

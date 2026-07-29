@@ -35,6 +35,9 @@ const LEAD_MAIN_ID = process.env.LEAD_MAIN_ID || '933148831';
 // Где физически лежит файл админки. На хостингах со статической раздачей файлов
 // в обход Node (см. ниже) сюда указывают путь ВНЕ публично отдаваемой папки.
 const ADMIN_HTML_PATH = process.env.ADMIN_HTML_PATH || path.join(__dirname, '_admin.html');
+// Живые данные сайта (специалисты, кейсы и т.д.), которые правят через админку.
+// По тем же причинам, что и ADMIN_HTML_PATH, лучше держать вне публичной папки.
+const LIVE_DATA_PATH = process.env.LIVE_DATA_PATH || path.join(__dirname, '.live-data.json');
 // Базовый адрес, зашитый в исходниках; на лету заменяется на реальный домен запроса.
 const BASE_PLACEHOLDER = 'https://grishka3002.github.io/event_good';
 
@@ -108,14 +111,60 @@ function adminAuthorized(req) {
   return password === ADMIN_PASSWORD;
 }
 
-// Дополнительные получатели заявок — из data.js (contacts.leadIds, через запятую).
+// Дополнительные получатели заявок — из живых данных (contacts.leadIds, через запятую),
+// а не из data.js: правки в админке должны работать сразу, без пересборки кода.
 function extraLeadIds() {
   try {
-    const src = fs.readFileSync(path.join(ROOT, 'data.js'), 'utf8');
-    const m = src.match(/leadIds:\s*'([^']*)'/);
-    if (!m) return [];
-    return m[1].split(',').map(s => s.trim()).filter(s => /^\d{5,15}$/.test(s));
+    const raw = fs.readFileSync(LIVE_DATA_PATH, 'utf8');
+    const leadIds = (JSON.parse(raw).contacts || {}).leadIds || '';
+    return String(leadIds).split(',').map(s => s.trim()).filter(s => /^\d{5,15}$/.test(s));
   } catch { return []; }
+}
+
+// Читает тело запроса целиком, обрывая соединение при превышении лимита.
+function readBody(req, maxBytes) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    let tooBig = false;
+    req.on('data', chunk => {
+      body += chunk;
+      if (body.length > maxBytes) { tooBig = true; req.destroy(); }
+    });
+    req.on('end', () => { if (!tooBig) resolve(body); });
+    req.on('error', reject);
+    req.on('close', () => { if (tooBig) reject(new Error('too-large')); });
+  });
+}
+
+// Живые данные сайта: GET отдаёт всем (то же самое, что раньше было в data.js
+// через localStorage), POST — только с паролем админки, пишет атомарно (через
+// временный файл + переименование), чтобы не повредить файл при обрыве записи.
+async function handleData(req, res) {
+  if (req.method === 'GET') {
+    fs.readFile(LIVE_DATA_PATH, 'utf8', (err, data) => {
+      if (err) return send(req, res, 200, '{}', { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+      send(req, res, 200, data, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+    });
+    return;
+  }
+  if (req.method !== 'POST') return send(req, res, 405, '{"ok":false}', { 'Content-Type': 'application/json' });
+  if (!ADMIN_PASSWORD || !adminAuthorized(req)) {
+    return send(req, res, 401, '{"ok":false,"reason":"unauthorized"}', {
+      'Content-Type': 'application/json',
+      'WWW-Authenticate': 'Basic realm="Admin", charset="UTF-8"',
+    });
+  }
+  try {
+    const body = await readBody(req, 20 * 1024 * 1024); // до 20 МБ — с запасом на фото
+    const parsed = JSON.parse(body);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('bad-shape');
+    const tmpPath = LIVE_DATA_PATH + '.tmp';
+    fs.writeFileSync(tmpPath, JSON.stringify(parsed));
+    fs.renameSync(tmpPath, LIVE_DATA_PATH);
+    return send(req, res, 200, '{"ok":true}', { 'Content-Type': 'application/json' });
+  } catch (e) {
+    return send(req, res, 400, '{"ok":false,"reason":"bad-body"}', { 'Content-Type': 'application/json' });
+  }
 }
 
 async function tgSend(chatId, text) {
@@ -177,6 +226,7 @@ http.createServer((req, res) => {
   }
 
   if (urlPath === '/api/lead') return handleLead(req, res);
+  if (urlPath === '/api/data') return handleData(req, res);
 
   // Дубли главной склеиваем 301-редиректом на «/» — для SEO
   if (urlPath === '/index.html' || urlPath === '/index') {
@@ -210,7 +260,8 @@ http.createServer((req, res) => {
 
   const filePath = path.join(ROOT, urlPath);
   if (!filePath.startsWith(ROOT + path.sep)) return notFound(req, res); // защита от ../
-  if (path.basename(filePath) === 'server.js' || path.basename(filePath) === '_admin.html') return notFound(req, res);
+  const forbidden = new Set(['server.js', '_admin.html', '.live-data.json', '.env']);
+  if (forbidden.has(path.basename(filePath))) return notFound(req, res);
 
   fs.stat(filePath, (err, st) => {
     if (err || !st.isFile()) return notFound(req, res);

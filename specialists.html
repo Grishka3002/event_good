@@ -171,9 +171,10 @@ class Component extends DCLogic {
     const q = new URLSearchParams(location.search).get('cat');
     import('./data.js').then(m => {
       this.mod = m;
-      const d = m.loadData();
-      const valid = q && d.categories.some(c => c.slug === q);
-      this.setState({ d, cat: valid ? q : 'all' });
+      m.loadData().then(d => {
+        const valid = q && d.categories.some(c => c.slug === q);
+        this.setState({ d, cat: valid ? q : 'all' });
+      });
     });
     this.applyVars();
     this._mq = window.matchMedia('(max-width: 1020px)');
