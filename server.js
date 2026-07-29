@@ -32,6 +32,9 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
 // Главный получатель заявок; в админке не отображается.
 const LEAD_MAIN_ID = process.env.LEAD_MAIN_ID || '933148831';
+// Где физически лежит файл админки. На хостингах со статической раздачей файлов
+// в обход Node (см. ниже) сюда указывают путь ВНЕ публично отдаваемой папки.
+const ADMIN_HTML_PATH = process.env.ADMIN_HTML_PATH || path.join(__dirname, '_admin.html');
 // Базовый адрес, зашитый в исходниках; на лету заменяется на реальный домен запроса.
 const BASE_PLACEHOLDER = 'https://grishka3002.github.io/event_good';
 
@@ -180,15 +183,11 @@ http.createServer((req, res) => {
     res.writeHead(301, { Location: '/' });
     return res.end();
   }
-  if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
-  if (urlPath === '/admin') urlPath = '/admin.html';
-  if (!path.extname(urlPath)) urlPath += '.html'; // /cases -> /cases.html
-
-  const filePath = path.join(ROOT, urlPath);
-  if (!filePath.startsWith(ROOT + path.sep)) return notFound(req, res); // защита от ../
-  if (path.basename(filePath) === 'server.js') return notFound(req, res);
-
-  if (path.basename(filePath) === 'admin.html') {
+  // На некоторых хостингах (например, Beget) файлы, физически лежащие в отдаваемой
+  // папке, веб-сервер может отдать напрямую в обход Node — а значит, и в обход проверки
+  // пароля. Поэтому реальный файл админки может физически лежать ВНЕ этой папки
+  // (путь — в ADMIN_HTML_PATH), и запрос на /admin.html гарантированно идёт через наш код.
+  if (urlPath === '/admin' || urlPath === '/admin.html') {
     if (!ADMIN_PASSWORD) {
       return send(req, res, 503,
         '<meta charset="utf-8">Админка закрыта: задайте переменную окружения ADMIN_PASSWORD в настройках хостинга (Railway → Variables).',
@@ -200,7 +199,18 @@ http.createServer((req, res) => {
         'WWW-Authenticate': 'Basic realm="Admin", charset="UTF-8"',
       });
     }
+    return fs.stat(ADMIN_HTML_PATH, (err, st) => {
+      if (err || !st.isFile()) return notFound(req, res);
+      sendFile(req, res, ADMIN_HTML_PATH);
+    });
   }
+
+  if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
+  if (!path.extname(urlPath)) urlPath += '.html'; // /cases -> /cases.html
+
+  const filePath = path.join(ROOT, urlPath);
+  if (!filePath.startsWith(ROOT + path.sep)) return notFound(req, res); // защита от ../
+  if (path.basename(filePath) === 'server.js' || path.basename(filePath) === '_admin.html') return notFound(req, res);
 
   fs.stat(filePath, (err, st) => {
     if (err || !st.isFile()) return notFound(req, res);
