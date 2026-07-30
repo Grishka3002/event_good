@@ -121,6 +121,126 @@ function extraLeadIds() {
   } catch { return []; }
 }
 
+// Живые данные сайта целиком — для подстановки SEO-тегов конкретного специалиста/статьи
+// и для карты сайта. Если файла ещё нет (новая установка) — просто ничего не подставляем,
+// страница отдаётся с обычными заголовками по умолчанию.
+function readLiveData() {
+  try {
+    const j = JSON.parse(fs.readFileSync(LIVE_DATA_PATH, 'utf8'));
+    return (j && typeof j === 'object') ? j : null;
+  } catch { return null; }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// JSON.stringify экранирует кавычки/бэкслеши сам; здесь дополнительно экранируем "<",
+// чтобы содержимое (например, "</script>" внутри текста) не могло разорвать тег скрипта.
+function escapeJsonLd(obj) {
+  return JSON.stringify(obj).replace(/</g, '\\u003c');
+}
+
+function clamp(s, n) {
+  s = String(s == null ? '' : s);
+  return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s;
+}
+
+// Точечно подменяет title/canonical/og-теги и описание в уже готовом HTML на значения
+// конкретного специалиста/статьи — чтобы соцсети и поисковики видели их без выполнения JS
+// (клиентский код тоже это делает, но только после загрузки, а боты соцсетей JS не ждут).
+function injectHead(html, seo) {
+  if (!seo) return html;
+  if (seo.title) html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(seo.title)}</title>`);
+  if (seo.url) {
+    html = html.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${escapeHtml(seo.url)}">`);
+    html = html.replace(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${escapeHtml(seo.url)}">`);
+  }
+  if (seo.description) html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(seo.description)}">`);
+  if (seo.ogTitle) html = html.replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${escapeHtml(seo.ogTitle)}">`);
+  if (seo.ogDescription) html = html.replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escapeHtml(seo.ogDescription)}">`);
+  if (seo.ld) html = html.replace('<!--SEO_JSONLD-->', `<script type="application/ld+json">${escapeJsonLd(seo.ld)}</script>`);
+  return html;
+}
+
+function buildSpecialistSeo(s, categories, origin) {
+  const cat = (categories || []).find(c => c.slug === s.cat);
+  const catName = cat ? cat.name : '';
+  const title = clamp(`${s.name} — ${s.role} | Хорошее решение`, 90);
+  const description = clamp(`${s.name}${catName ? ' (' + catName + (s.exp ? ', опыт ' + s.exp : '') + ')' : ''} — профиль, портфолио и видео работ. Бронирование напрямую, ${s.price || 'цена по запросу'}, без агентской наценки.`, 200);
+  const url = `${origin}/specialist.html?id=${encodeURIComponent(s.id)}`;
+  return {
+    title, description, url,
+    ogTitle: clamp(`${s.name} — ${s.role}`, 90),
+    ogDescription: description,
+    ld: {
+      '@context': 'https://schema.org', '@type': 'Person', name: s.name, jobTitle: s.role,
+      description: s.about || undefined,
+      memberOf: { '@type': 'Organization', name: 'Объединение ивент-специалистов «Хорошее решение»' },
+      url,
+    },
+  };
+}
+
+function buildArticleSeo(a, origin) {
+  const title = clamp(`${a.title} — Блог «Хорошее решение»`, 90);
+  const description = clamp(a.lead || a.title, 200);
+  const url = `${origin}/blog.html?post=${encodeURIComponent(a.slug)}`;
+  return {
+    title, description, url,
+    ogTitle: clamp(a.title, 90),
+    ogDescription: description,
+    ld: {
+      '@context': 'https://schema.org', '@type': 'BlogPosting', headline: a.title,
+      datePublished: a.date, description: a.lead,
+      author: { '@type': 'Organization', name: 'Хорошее решение' },
+      url,
+    },
+  };
+}
+
+function servePageWithSeo(req, res, fileName, seo) {
+  fs.readFile(path.join(ROOT, fileName), 'utf8', (err, html) => {
+    if (err) return notFound(req, res);
+    if (seo) html = injectHead(html, seo);
+    send(req, res, 200, html, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+  });
+}
+
+function serveSpecialistPage(req, res, id) {
+  const d = readLiveData();
+  const s = d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id) : null;
+  const seo = s ? buildSpecialistSeo(s, d.categories, requestOrigin(req) || 'https://eventspecialists.ru') : null;
+  servePageWithSeo(req, res, 'specialist.html', seo);
+}
+
+function serveArticlePage(req, res, slug) {
+  const d = readLiveData();
+  const a = d && Array.isArray(d.articles) ? d.articles.find(x => x.slug === slug) : null;
+  const seo = a ? buildArticleSeo(a, requestOrigin(req) || 'https://eventspecialists.ru') : null;
+  servePageWithSeo(req, res, 'blog.html', seo);
+}
+
+// Карта сайта собирается на лету: базовые страницы + каждый специалист и каждая статья
+// блога из живых данных — так новые карточки из админки сами попадают в sitemap.
+function serveSitemap(req, res) {
+  const origin = requestOrigin(req) || 'https://eventspecialists.ru';
+  const d = readLiveData();
+  const today = new Date().toISOString().slice(0, 10);
+  const urls = [
+    { loc: origin + '/', priority: '1.0' },
+    { loc: origin + '/specialists.html', priority: '0.9' },
+    { loc: origin + '/cases.html', priority: '0.8' },
+    { loc: origin + '/blog.html', priority: '0.7' },
+  ];
+  if (d && Array.isArray(d.specialists)) d.specialists.forEach(s => urls.push({ loc: origin + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' }));
+  if (d && Array.isArray(d.articles)) d.articles.forEach(a => urls.push({ loc: origin + '/blog.html?post=' + encodeURIComponent(a.slug), priority: '0.6' }));
+  const body = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    + urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc><lastmod>${today}</lastmod><priority>${u.priority}</priority></url>`).join('\n')
+    + '\n</urlset>\n';
+  send(req, res, 200, body, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'no-cache' });
+}
+
 // Читает тело запроса целиком, обрывая соединение при превышении лимита.
 function readBody(req, maxBytes) {
   return new Promise((resolve, reject) => {
@@ -218,20 +338,32 @@ function handleLead(req, res) {
 }
 
 http.createServer((req, res) => {
-  let urlPath;
+  let urlObj, urlPath;
   try {
-    urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    urlObj = new URL(req.url, 'http://x');
+    urlPath = decodeURIComponent(urlObj.pathname);
   } catch {
     return send(req, res, 400, 'Bad request', { 'Content-Type': 'text/plain; charset=utf-8' });
   }
 
   if (urlPath === '/api/lead') return handleLead(req, res);
   if (urlPath === '/api/data') return handleData(req, res);
+  if (urlPath === '/sitemap.xml') return serveSitemap(req, res);
 
   // Дубли главной склеиваем 301-редиректом на «/» — для SEO
   if (urlPath === '/index.html' || urlPath === '/index') {
     res.writeHead(301, { Location: '/' });
     return res.end();
+  }
+
+  // Профиль специалиста / статья блога с ?id=/?post= — отдаём с уже подставленными
+  // title/description/canonical/og-тегами конкретной карточки (см. injectHead выше),
+  // чтобы соцсети и поисковики видели их без выполнения JS.
+  if ((urlPath === '/specialist.html' || urlPath === '/specialist') && urlObj.searchParams.get('id')) {
+    return serveSpecialistPage(req, res, urlObj.searchParams.get('id'));
+  }
+  if ((urlPath === '/blog.html' || urlPath === '/blog') && urlObj.searchParams.get('post')) {
+    return serveArticlePage(req, res, urlObj.searchParams.get('post'));
   }
   // На некоторых хостингах (например, Beget) файлы, физически лежащие в отдаваемой
   // папке, веб-сервер может отдать напрямую в обход Node — а значит, и в обход проверки
