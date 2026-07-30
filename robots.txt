@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
 
-Sitemap: https://grishka3002.github.io/event_good/sitemap.xml
+Sitemap: https://eventspecialists.ru/sitemap.xml
