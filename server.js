@@ -38,6 +38,13 @@ const ADMIN_HTML_PATH = process.env.ADMIN_HTML_PATH || path.join(__dirname, '_ad
 // Живые данные сайта (специалисты, кейсы и т.д.), которые правят через админку.
 // По тем же причинам, что и ADMIN_HTML_PATH, лучше держать вне публичной папки.
 const LIVE_DATA_PATH = process.env.LIVE_DATA_PATH || path.join(__dirname, '.live-data.json');
+// Шаблоны страницы специалиста и блога — сервер подставляет в них SEO-теги конкретной
+// карточки (title/description/canonical/og/JSON-LD) перед отдачей. На хостингах со
+// статической раздачей файлов в обход Node (см. ADMIN_HTML_PATH выше) физического файла
+// specialist.html/blog.html в публичной папке быть не должно — иначе запрос до Node
+// не доходит и подстановка не срабатывает; путь к «настоящему» файлу — в этих переменных.
+const SPECIALIST_HTML_PATH = process.env.SPECIALIST_HTML_PATH || path.join(__dirname, 'specialist.html');
+const BLOG_HTML_PATH = process.env.BLOG_HTML_PATH || path.join(__dirname, 'blog.html');
 // Базовый адрес, зашитый в исходниках; на лету заменяется на реальный домен запроса.
 const BASE_PLACEHOLDER = 'https://grishka3002.github.io/event_good';
 
@@ -199,26 +206,28 @@ function buildArticleSeo(a, origin) {
   };
 }
 
-function servePageWithSeo(req, res, fileName, seo) {
-  fs.readFile(path.join(ROOT, fileName), 'utf8', (err, html) => {
+function servePageWithSeo(req, res, filePath, seo) {
+  fs.readFile(filePath, 'utf8', (err, html) => {
     if (err) return notFound(req, res);
     if (seo) html = injectHead(html, seo);
     send(req, res, 200, html, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
   });
 }
 
+// Отдаём безусловно (с id и без) — не только чтобы подставить SEO-теги, но и чтобы
+// путь гарантированно шёл через Node, а не через возможную статическую раздачу файла.
 function serveSpecialistPage(req, res, id) {
   const d = readLiveData();
-  const s = d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id) : null;
+  const s = id && d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id) : null;
   const seo = s ? buildSpecialistSeo(s, d.categories, requestOrigin(req) || 'https://eventspecialists.ru') : null;
-  servePageWithSeo(req, res, 'specialist.html', seo);
+  servePageWithSeo(req, res, SPECIALIST_HTML_PATH, seo);
 }
 
 function serveArticlePage(req, res, slug) {
   const d = readLiveData();
-  const a = d && Array.isArray(d.articles) ? d.articles.find(x => x.slug === slug) : null;
+  const a = slug && d && Array.isArray(d.articles) ? d.articles.find(x => x.slug === slug) : null;
   const seo = a ? buildArticleSeo(a, requestOrigin(req) || 'https://eventspecialists.ru') : null;
-  servePageWithSeo(req, res, 'blog.html', seo);
+  servePageWithSeo(req, res, BLOG_HTML_PATH, seo);
 }
 
 // Карта сайта собирается на лету: базовые страницы + каждый специалист и каждая статья
@@ -356,13 +365,13 @@ http.createServer((req, res) => {
     return res.end();
   }
 
-  // Профиль специалиста / статья блога с ?id=/?post= — отдаём с уже подставленными
-  // title/description/canonical/og-тегами конкретной карточки (см. injectHead выше),
-  // чтобы соцсети и поисковики видели их без выполнения JS.
-  if ((urlPath === '/specialist.html' || urlPath === '/specialist') && urlObj.searchParams.get('id')) {
+  // Профиль специалиста / статья блога — всегда через Node (см. SPECIALIST_HTML_PATH/
+  // BLOG_HTML_PATH выше), с id/post подставляем title/description/canonical/og-теги
+  // конкретной карточки (см. injectHead), чтобы соцсети и поисковики видели их без JS.
+  if (urlPath === '/specialist.html' || urlPath === '/specialist') {
     return serveSpecialistPage(req, res, urlObj.searchParams.get('id'));
   }
-  if ((urlPath === '/blog.html' || urlPath === '/blog') && urlObj.searchParams.get('post')) {
+  if (urlPath === '/blog.html' || urlPath === '/blog') {
     return serveArticlePage(req, res, urlObj.searchParams.get('post'));
   }
   // На некоторых хостингах (например, Beget) файлы, физически лежащие в отдаваемой
