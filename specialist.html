@@ -97,7 +97,8 @@ a:hover{color:var(--acc)}
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:30px;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase">
       <a href="./specialists.html" style="color:#97A3B0">← Специалисты</a>
       <span style="color:#39434E">/</span>
-      <a href="{{ catHref }}" style="color:var(--acc)">{{ catName }}</a>
+      <a href="{{ catHref }}" style="color:{{ catLinkColor }}">{{ catName }}</a>
+      <sc-if value="{{ hasSubcat }}" hint-placeholder-val="{{ false }}"><span style="color:#39434E">/</span><a href="{{ subcatHref }}" style="color:var(--acc)">{{ subcatName }}</a></sc-if>
     </div>
     <div style="display:grid;grid-template-columns:{{ profCols }};gap:46px;align-items:start">
       <div style="position:relative;aspect-ratio:3/4;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.09);filter:var(--pf);background:#121A26">
@@ -278,6 +279,7 @@ class Component extends DCLogic {
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const s = this.spec();
     const cat = s ? (C.find(c => c.slug === s.cat) || null) : null;
+    const subcat = (s && s.subcat && cat && Array.isArray(cat.subcats)) ? (cat.subcats.find(sc => sc.slug === s.subcat) || null) : null;
     const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
     const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
     const pcfg = s ? (portfolioCfg[s.cat] || defPortfolioCfg) : defPortfolioCfg;
@@ -318,6 +320,9 @@ class Component extends DCLogic {
       photoAlt: s ? s.name + ' — ' + s.role : '',
       name: s ? s.name : '', role: s ? s.role : '', exp: s ? s.exp : '', price: s ? s.price : '',
       catName: cat ? cat.name : '', catHref: cat ? './specialists.html?cat=' + cat.slug : './specialists.html',
+      catLinkColor: subcat ? '#97A3B0' : 'var(--acc)',
+      hasSubcat: !!subcat, subcatName: subcat ? subcat.name : '',
+      subcatHref: (cat && subcat) ? './specialists.html?cat=' + cat.slug + '&sub=' + subcat.slug : '',
       about: s ? (s.about || 'Описание появится в ближайшее время. А пока напишите нам в Telegram — расскажем о специалисте, пришлём примеры работ и проверим свободные даты.') : '',
       hasFeats: feats.length > 0, feats,
       groups, showVideoHint: !!s && allV.length === 0 && pcfg.video !== 'none',

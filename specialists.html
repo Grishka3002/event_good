@@ -107,6 +107,18 @@ a:hover{color:var(--acc)}
   </div>
 </section>
 
+<sc-if value="{{ hasSubcats }}" hint-placeholder-val="{{ false }}">
+<section data-screen-label="Фильтр подгрупп" style="position:sticky;top:127px;z-index:39;background:rgba(10,14,19,.85);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.06);padding:12px 0">
+  <div style="max-width:1240px;margin:0 auto;padding:0 28px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <span style="font-size:10.5px;color:#56626F;letter-spacing:.1em;text-transform:uppercase;margin-right:2px">Подгруппа</span>
+    <button onClick="{{ pickSubAll }}" style="background:{{ subAllBg }};color:{{ subAllColor }};border:1px solid {{ subAllBorder }};border-radius:999px;padding:10px 15px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc)">Все</button>
+    <sc-for list="{{ subChips }}" as="sc" hint-placeholder-count="3">
+      <button onClick="{{ sc.pick }}" style="background:{{ sc.bg }};color:{{ sc.color }};border:1px solid {{ sc.border }};border-radius:999px;padding:10px 15px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;font-family:inherit;display:inline-flex;gap:6px;align-items:center" style-hover="border-color:var(--acc)"><span>{{ sc.name }}</span><span style="opacity:.55;font-weight:600">{{ sc.count }}</span></button>
+    </sc-for>
+  </div>
+</section>
+</sc-if>
+
 <section data-screen-label="Каталог специалистов" style="padding:52px 0 90px;min-height:50vh">
   <div style="max-width:1240px;margin:0 auto;padding:0 28px">
     <div style="display:flex;align-items:baseline;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:28px">
@@ -123,6 +135,7 @@ a:hover{color:var(--acc)}
           <div style="padding:20px;display:flex;flex-direction:column;gap:9px;flex:1">
             <div style="font-weight:800;font-size:17px;line-height:1.25">{{ s.name }}</div>
             <div style="font-size:13px;color:#9AA6B2;line-height:1.5">{{ s.role }}</div>
+            <sc-if value="{{ s.hasSubcatBadge }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:var(--acc);font-weight:700;letter-spacing:.04em">{{ s.subcatName }}</div></sc-if>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">
               <span style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:5px 11px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#C7D0D9">{{ s.exp }}</span>
               <span style="border:1px solid color-mix(in oklab,var(--acc) 55%,transparent);color:var(--acc);border-radius:999px;padding:5px 11px;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase">{{ s.price }}</span>
@@ -166,14 +179,17 @@ a:hover{color:var(--acc)}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;}}">
 class Component extends DCLogic {
-  state = { d: null, cat: 'all' };
+  state = { d: null, cat: 'all', sub: 'all' };
   componentDidMount() {
-    const q = new URLSearchParams(location.search).get('cat');
+    const qp = new URLSearchParams(location.search);
+    const q = qp.get('cat'), qs = qp.get('sub');
     import('./data.js').then(m => {
       this.mod = m;
       m.loadData().then(d => {
         const valid = q && d.categories.some(c => c.slug === q);
-        this.setState({ d, cat: valid ? q : 'all' });
+        const catObj = valid ? d.categories.find(c => c.slug === q) : null;
+        const validSub = !!(catObj && qs && Array.isArray(catObj.subcats) && catObj.subcats.some(sc => sc.slug === qs));
+        this.setState({ d, cat: valid ? q : 'all', sub: validSub ? qs : 'all' });
       });
     });
     this.applyVars();
@@ -190,7 +206,7 @@ class Component extends DCLogic {
     r.setProperty('--pf', (this.props.grayscalePhotos ?? true) ? 'grayscale(1) contrast(1.05)' : 'none');
   }
   renderVals() {
-    const { d, cat } = this.state;
+    const { d, cat, sub } = this.state;
     const C = (d && d.categories) || [];
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
@@ -200,9 +216,16 @@ class Component extends DCLogic {
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const all = d ? d.specialists : [];
     const cur = C.find(c => c.slug === cat);
-    const list = (cat === 'all' ? all : all.filter(s => s.cat === cat)).map(s => {
-      const cn = (C.find(c => c.slug === s.cat) || {}).name || '';
+    const subcats = (cur && Array.isArray(cur.subcats)) ? cur.subcats : [];
+    const curSub = sub !== 'all' ? subcats.find(sc => sc.slug === sub) : null;
+    const byCat = cat === 'all' ? all : all.filter(s => s.cat === cat);
+    const shown = (sub === 'all' || !curSub) ? byCat : byCat.filter(s => (s.subcat || '') === sub);
+    const list = shown.map(s => {
+      const cObj = C.find(c => c.slug === s.cat) || {};
+      const cn = cObj.name || '';
+      const subcatName = (s.subcat && Array.isArray(cObj.subcats)) ? ((cObj.subcats.find(x => x.slug === s.subcat) || {}).name || '') : '';
       return { ...s, slotId: 'spec-' + s.id, ph: 'Портрет · ' + cn.toLowerCase(), profHref: './specialist.html?id=' + s.id, hasPhoto: !!s.photo, noPhoto: !s.photo, photoAlt: s.name + ' — ' + s.role,
+        subcatName, hasSubcatBadge: !!subcatName,
         book: () => {
           const msg = 'Здравствуйте! Хочу забронировать специалиста с сайта «Хорошее решение»: ' + s.name + ' (' + s.role + '). Подскажите свободные даты и цену.';
           try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch (e) {}
@@ -211,7 +234,10 @@ class Component extends DCLogic {
     });
     const mk = c => ({ ...c, count: all.filter(s => s.cat === c.slug).length,
       bg: cat === c.slug ? 'var(--acc)' : 'transparent', color: cat === c.slug ? '#0C1117' : '#C7D0D9', border: cat === c.slug ? 'var(--acc)' : 'rgba(255,255,255,.16)',
-      pick: () => { this.setState({ cat: c.slug }); history.replaceState(null, '', '?cat=' + c.slug); } });
+      pick: () => { this.setState({ cat: c.slug, sub: 'all' }); history.replaceState(null, '', '?cat=' + c.slug); } });
+    const mkSub = sc => ({ ...sc, count: byCat.filter(s => (s.subcat || '') === sc.slug).length,
+      bg: sub === sc.slug ? 'var(--acc)' : 'transparent', color: sub === sc.slug ? '#0C1117' : '#C7D0D9', border: sub === sc.slug ? 'var(--acc)' : 'rgba(255,255,255,.16)',
+      pick: () => { this.setState({ sub: sc.slug }); history.replaceState(null, '', '?cat=' + cat + '&sub=' + sc.slug); } });
     return {
       person: cts.person, phone: cts.phone, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''), tgHref, maxHref, hasMax: !!maxHref, mainHref, mainLabel,
       deskNav: !this.state.mobile, mobNav: !!this.state.mobile,
@@ -222,8 +248,12 @@ class Component extends DCLogic {
       totalLabel: d ? 'Сейчас на сайте ' + all.length + ' карточек — состав пополняется.' : '',
       chips: C.map(mk),
       allBg: cat === 'all' ? 'var(--acc)' : 'transparent', allColor: cat === 'all' ? '#0C1117' : '#C7D0D9', allBorder: cat === 'all' ? 'var(--acc)' : 'rgba(255,255,255,.16)',
-      pickAll: () => { this.setState({ cat: 'all' }); history.replaceState(null, '', location.pathname); },
-      groupTitle: cat === 'all' ? 'Все специалисты' : (cur ? cur.name : ''),
+      pickAll: () => { this.setState({ cat: 'all', sub: 'all' }); history.replaceState(null, '', location.pathname); },
+      hasSubcats: cat !== 'all' && subcats.length > 0,
+      subChips: subcats.map(mkSub),
+      subAllBg: sub === 'all' ? 'var(--acc)' : 'transparent', subAllColor: sub === 'all' ? '#0C1117' : '#C7D0D9', subAllBorder: sub === 'all' ? 'var(--acc)' : 'rgba(255,255,255,.16)',
+      pickSubAll: () => { this.setState({ sub: 'all' }); history.replaceState(null, '', '?cat=' + cat); },
+      groupTitle: cat === 'all' ? 'Все специалисты' : (curSub ? cur.name + ' · ' + curSub.name : (cur ? cur.name : '')),
       groupDesc: cat === 'all' ? C.length + ' направлений — от организаторов до артистов оригинального жанра' : (cur ? cur.desc : ''),
       list, isEmpty: !!d && list.length === 0
     };

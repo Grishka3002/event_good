@@ -64,6 +64,9 @@ option{background:#121A26;color:#F2F5F8}
         <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end">
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Имя</div><input value="{{ s.name }}" onInput="{{ s.uName }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Категория</div><select data-selval="{{ s.cat }}" onChange="{{ s.uCat }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;cursor:pointer"><sc-for list="{{ cats }}" as="c"><option value="{{ c.slug }}">{{ c.name }}</option></sc-for></select></div>
+          <sc-if value="{{ s.hasSubcats }}" hint-placeholder-val="{{ false }}">
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Подгруппа</div><select data-selval="{{ s.subcat }}" onChange="{{ s.uSubcat }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;cursor:pointer"><option value="">— без подгруппы —</option><sc-for list="{{ s.subOpts }}" as="sc"><option value="{{ sc.slug }}">{{ sc.name }}</option></sc-for></select></div>
+          </sc-if>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Роль / жанр</div><input value="{{ s.role }}" onInput="{{ s.uRole }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Опыт</div><input value="{{ s.exp }}" onInput="{{ s.uExp }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Цена</div><input value="{{ s.price }}" onInput="{{ s.uPrice }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
@@ -229,13 +232,31 @@ option{background:#121A26;color:#F2F5F8}
         <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Категории специалистов</h2>
         <button onClick="{{ addScat }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить</button>
       </div>
-      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Направления, по которым делится каталог специалистов (Ведущие, Фотографы…). Появляются в фильтре на сайте и в выпадающем списке «Категория» у каждого специалиста. Пока у категории есть хоть один специалист — удалить её нельзя, сначала переназначьте их.</div>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Направления, по которым делится каталог специалистов (Ведущие, Фотографы…). Появляются в фильтре на сайте и в выпадающем списке «Категория» у каждого специалиста. Пока у категории есть хоть один специалист — удалить её нельзя, сначала переназначьте их. Внутри категории можно завести подгруппы (например, у «Прокатчиков» — «Прокат мультимедиа», «Прокат звука и света») — раскройте «Подгруппы» у нужной категории.</div>
       <sc-for list="{{ scatRows }}" as="c" hint-placeholder-count="4">
-        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:grid;grid-template-columns:1fr 1.6fr auto auto;gap:12px;align-items:end">
-          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Название</div><input value="{{ c.name }}" onInput="{{ c.uName }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
-          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Описание (короткое, для карточки на главной)</div><input value="{{ c.desc }}" onInput="{{ c.uDesc }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
-          <div style="font-size:11.5px;color:#56626F;padding:11px 0;white-space:nowrap">{{ c.usage }}</div>
-          <button onClick="{{ c.del }}" title="{{ c.delTitle }}" style="background:transparent;border:1px solid {{ c.delBorder }};color:{{ c.delColor }};border-radius:8px;padding:11px 16px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+        <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:grid;grid-template-columns:1fr 1.6fr auto auto;gap:12px;align-items:end">
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Название</div><input value="{{ c.name }}" onInput="{{ c.uName }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Описание (короткое, для карточки на главной)</div><input value="{{ c.desc }}" onInput="{{ c.uDesc }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div style="font-size:11.5px;color:#56626F;padding:11px 0;white-space:nowrap">{{ c.usage }}</div>
+            <button onClick="{{ c.del }}" title="{{ c.delTitle }}" style="background:transparent;border:1px solid {{ c.delBorder }};color:{{ c.delColor }};border-radius:8px;padding:11px 16px;font-size:14px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+          </div>
+          <details style="border-top:1px dashed rgba(255,255,255,.1);padding-top:12px">
+            <summary style="cursor:pointer;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#97A3B0">Подгруппы <span style="color:#56626F">{{ c.subcatCount }}</span></summary>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+              <sc-if value="{{ c.hasSubcats }}" hint-placeholder-val="{{ true }}">
+                <sc-for list="{{ c.subcatRows }}" as="sc" hint-placeholder-count="2">
+                  <div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center">
+                    <input value="{{ sc.name }}" onInput="{{ sc.uName }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+                    <div style="font-size:11px;color:#56626F;white-space:nowrap">{{ sc.usage }}</div>
+                    <button onClick="{{ sc.del }}" title="{{ sc.delTitle }}" style="background:transparent;border:1px solid {{ sc.delBorder }};color:{{ sc.delColor }};border-radius:8px;padding:9px 13px;font-size:13px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+                  </div>
+                </sc-for>
+              </sc-if>
+              <sc-if value="{{ c.noSubcats }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#56626F">Подгрупп пока нет.</div></sc-if>
+              <button onClick="{{ c.addSubcat }}" style="align-self:flex-start;background:transparent;border:1px dashed rgba(255,255,255,.25);color:#C7D0D9;border-radius:8px;padding:9px 14px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">+ Подгруппа</button>
+            </div>
+          </details>
         </div>
       </sc-for>
     </div>
@@ -368,11 +389,18 @@ class Component extends DCLogic {
     const dup = (arr, item, idp) => () => { const i = arr.indexOf(item); arr.splice(i + 1, 0, { ...item, id: idp + Date.now() }); this.save(); };
     const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
     const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
+    const selOrder = [];
     const specs = d.specialists.filter(s => (fcat === 'all' || s.cat === fcat) && (!q || (s.name + ' ' + s.role).toLowerCase().includes(q))).map(s => {
       const pcfg = portfolioCfg[s.cat] || defPortfolioCfg;
+      const catObj = C.find(x => x.slug === s.cat);
+      const subOpts = (catObj && Array.isArray(catObj.subcats)) ? catObj.subcats : [];
+      const hasSubcats = subOpts.length > 0;
+      selOrder.push(s.cat);
+      if (hasSubcats) selOrder.push(s.subcat || '');
       return { ...s,
       uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
-      uCat: e => { s.cat = e.target.value; this.save(); },
+      uCat: e => { s.cat = e.target.value; s.subcat = ''; this.save(); },
+      subOpts, hasSubcats, uSubcat: e => { s.subcat = e.target.value; this.save(); },
       hasPhoto: !!s.photo, photoSrc: s.photo || '', photoLabel: s.photo ? 'Заменить' : 'Загрузить',
       uPhotoFile: this.photoTo(s), delPhoto: () => { s.photo = ''; this.save(); },
       profHref: './specialist.html?id=' + s.id,
@@ -412,7 +440,7 @@ class Component extends DCLogic {
       uSlug: e => { a.slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'); this.save(); },
       up: () => this.mv(d.articles, a, -1), down: () => this.mv(d.articles, a, 1),
       del: () => { d.articles = d.articles.filter(x => x !== a); this.save(); } }));
-    this._selOrder = specs.map(s => s.cat);
+    this._selOrder = selOrder;
     this._selFcat = fcat;
     return {
       tabs,
@@ -427,7 +455,7 @@ class Component extends DCLogic {
       noSpecs: specs.length === 0,
       q: this.state.q || '', uQ: e => this.setState({ q: e.target.value }),
       fcat, uFcat: e => this.setState({ fcat: e.target.value }),
-      addSpec: () => { d.specialists.unshift({ id: 's' + Date.now(), cat: 'vedushchie', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '' }); this.save(); },
+      addSpec: () => { d.specialists.unshift({ id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '' }); this.save(); },
       caseRows, caseCount: d.cases.length + ' шт.',
       addCase: () => { d.cases.unshift({ id: 'c' + Date.now(), title: 'Новый кейс', format: '', guests: '', city: '', year: '2026', desc: '', video: '', team: '' }); this.save(); },
       packRows, revRows, revCount: d.reviews.length + ' шт.',
@@ -438,8 +466,27 @@ class Component extends DCLogic {
       scatRows: C.map(c => {
         const n = d.specialists.filter(s => s.cat === c.slug).length;
         const canDel = n === 0;
+        const subcats = Array.isArray(c.subcats) ? c.subcats : [];
+        const subcatRows = subcats.map(sc => {
+          const sn = d.specialists.filter(s => s.cat === c.slug && s.subcat === sc.slug).length;
+          const canDelSub = sn === 0;
+          return { ...sc, usage: sn ? 'у ' + sn + ' спец.' : 'не используется',
+            uName: this.bind(sc, 'name'),
+            delTitle: canDelSub ? 'Удалить подгруппу' : 'Сначала снимите эту подгруппу у специалистов',
+            delColor: canDelSub ? '#E5533C' : '#56626F', delBorder: canDelSub ? 'rgba(229,83,60,.45)' : 'rgba(255,255,255,.14)',
+            del: canDelSub
+              ? () => { c.subcats = c.subcats.filter(x => x !== sc); this.save(); }
+              : () => alert('У подгруппы «' + sc.name + '» ещё ' + sn + ' специалист(ов). Снимите её в карточках во вкладке «Специалисты».') };
+        });
         return { ...c, usage: n ? 'у ' + n + ' спец.' : 'не используется',
           uName: this.bind(c, 'name'), uDesc: this.bind(c, 'desc'),
+          subcatRows, subcatCount: subcats.length + ' шт.', hasSubcats: subcats.length > 0, noSubcats: subcats.length === 0,
+          addSubcat: () => {
+            if (!Array.isArray(c.subcats)) c.subcats = [];
+            const slug = this.mod.slugify('Новая подгруппа', c.subcats.map(x => x.slug));
+            c.subcats.push({ slug, name: 'Новая подгруппа' });
+            this.save();
+          },
           delTitle: canDel ? 'Удалить категорию' : 'Сначала переназначьте специалистов этой категории',
           delColor: canDel ? '#E5533C' : '#56626F', delBorder: canDel ? 'rgba(229,83,60,.45)' : 'rgba(255,255,255,.14)',
           del: canDel
@@ -449,7 +496,7 @@ class Component extends DCLogic {
       addScat: () => {
         if (!Array.isArray(d.categories)) d.categories = [];
         const slug = this.mod.slugify('Новая категория', d.categories.map(c => c.slug));
-        d.categories.push({ slug, name: 'Новая категория', desc: '' });
+        d.categories.push({ slug, name: 'Новая категория', desc: '', subcats: [] });
         this.save();
       },
       cPerson: d.contacts.person || '', cPhone: d.contacts.phone || '', cTg: d.contacts.tg || '', cEmail: d.contacts.email || '',

@@ -1,19 +1,21 @@
 // «Хорошее решение» — данные сайта. Правки: через Admin.dc.html (localStorage) или прямо здесь.
 // Порядковый номер (num) не хранится — считается по позиции в списке при отображении,
 // чтобы при добавлении/удалении категорий в админке нумерация всегда оставалась 01..N.
+// subcats — необязательные подгруппы внутри категории (например, у «Прокатчиков»:
+// «Прокат мультимедиа», «Прокат звука и света»); управляются в админке, по умолчанию пусто.
 export const CATEGORIES = [
-  { slug: 'organizatory', name: 'Организаторы', desc: 'Продюсируют событие целиком: идея, смета, площадка, тайминг' },
-  { slug: 'fotografy', name: 'Фотографы', desc: 'Репортаж и постановка; снимали концерты российских и зарубежных звёзд' },
-  { slug: 'videografy', name: 'Видеографы', desc: 'Операторы федеральных каналов, режиссёры и гаферы' },
-  { slug: 'vedushchie', name: 'Ведущие', desc: 'Актёры, КВНщики, стендап-комики, теле- и радиоведущие' },
-  { slug: 'didzhei', name: 'Диджеи', desc: 'Танцпол любого формата: от гала-ужина до фестиваля' },
-  { slug: 'muzykanty', name: 'Музыканты', desc: 'Кавер-группы, вокалисты, инструменталисты' },
-  { slug: 'dekoratory', name: 'Декораторы', desc: 'Оформление площадок, флористика, свет и сцена' },
-  { slug: 'animatory', name: 'Аниматоры', desc: 'Детские и взрослые интерактивы, welcome-зоны' },
-  { slug: 'stilisty', name: 'Стилисты', desc: 'Образы для героев события и команд' },
-  { slug: 'vizazhisty', name: 'Визажисты', desc: 'Макияж и укладки на площадке в любое время' },
-  { slug: 'prokatchiki', name: 'Прокатчики', desc: 'Звук, свет, экраны, сцены и спецэффекты' },
-  { slug: 'artisty', name: 'Артисты оригинального жанра', desc: 'Шоу-номера, цирк, иллюзия, перформансы' },
+  { slug: 'organizatory', name: 'Организаторы', desc: 'Продюсируют событие целиком: идея, смета, площадка, тайминг', subcats: [] },
+  { slug: 'fotografy', name: 'Фотографы', desc: 'Репортаж и постановка; снимали концерты российских и зарубежных звёзд', subcats: [] },
+  { slug: 'videografy', name: 'Видеографы', desc: 'Операторы федеральных каналов, режиссёры и гаферы', subcats: [] },
+  { slug: 'vedushchie', name: 'Ведущие', desc: 'Актёры, КВНщики, стендап-комики, теле- и радиоведущие', subcats: [] },
+  { slug: 'didzhei', name: 'Диджеи', desc: 'Танцпол любого формата: от гала-ужина до фестиваля', subcats: [] },
+  { slug: 'muzykanty', name: 'Музыканты', desc: 'Кавер-группы, вокалисты, инструменталисты', subcats: [] },
+  { slug: 'dekoratory', name: 'Декораторы', desc: 'Оформление площадок, флористика, свет и сцена', subcats: [] },
+  { slug: 'animatory', name: 'Аниматоры', desc: 'Детские и взрослые интерактивы, welcome-зоны', subcats: [] },
+  { slug: 'stilisty', name: 'Стилисты', desc: 'Образы для героев события и команд', subcats: [] },
+  { slug: 'vizazhisty', name: 'Визажисты', desc: 'Макияж и укладки на площадке в любое время', subcats: [] },
+  { slug: 'prokatchiki', name: 'Прокатчики', desc: 'Звук, свет, экраны, сцены и спецэффекты', subcats: [] },
+  { slug: 'artisty', name: 'Артисты оригинального жанра', desc: 'Шоу-номера, цирк, иллюзия, перформансы', subcats: [] },
 ];
 
 // Транслитерация имени категории в URL-слаг; при коллизии добавляется числовой суффикс.
@@ -131,9 +133,10 @@ function mergeWithDefaults(saved) {
   if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
   if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
   if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
-  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
+  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], subcat: '', ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
   if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
   if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));
+  else d.categories = d.categories.map(c => ({ subcats: [], ...c }));
   return d;
 }
 
