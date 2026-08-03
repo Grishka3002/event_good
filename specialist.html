@@ -184,9 +184,8 @@ a:hover{color:var(--acc)}
       </div>
     </sc-for>
     <sc-if value="{{ showVideoHint }}" hint-placeholder-val="{{ false }}">
-      <div style="border:1px dashed rgba(255,255,255,.18);border-radius:16px;padding:34px 28px;text-align:center;color:#9AA6B2;font-size:14.5px;line-height:1.7;margin-bottom:16px">Видео появятся здесь — добавьте ссылки YouTube / VK / Rutube в <a href="{{ adminHref }}" style="color:var(--acc);font-weight:700">админ-панели</a> (карточка специалиста → «Профиль»).</div>
+      <div style="border:1px dashed rgba(255,255,255,.18);border-radius:16px;padding:34px 28px;text-align:center;color:#9AA6B2;font-size:14.5px;line-height:1.7;margin-bottom:16px">Видео появятся здесь позже.</div>
     </sc-if>
-    <div style="margin-top:8px;font-size:12.5px;color:#56626F;line-height:1.6">Перетащите фотографии работ прямо в ячейки — они сохранятся для этого специалиста. Категории (Свадьбы, Корпоративы…) настраиваются в <a href="{{ adminHref }}" style="color:#97A3B0;border-bottom:1px dashed #56626F">админ-панели</a>.</div>
   </div>
 </section>
 
@@ -341,7 +340,6 @@ class Component extends DCLogic {
       hasFeats: feats.length > 0, feats,
       groups, showVideoHint: !!s && allV.length === 0 && pcfg.video !== 'none',
       links, hasLinks: links.length > 0,
-      adminHref: './admin.html',
       hasRelated: related.length > 0, noRelated: !!s && related.length === 0, related,
       book: () => {
         if (!s) return;
