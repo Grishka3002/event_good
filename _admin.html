@@ -395,7 +395,9 @@ class Component extends DCLogic {
     }, 700);
   }
   bind(obj, field) { return e => { obj[field] = e.target.value; this.save(); }; }
-  // Фото профиля: ужимаем до 900px по ширине в JPEG, чтобы уместиться в localStorage/экспорт
+  // Фото профиля: ужимаем до 900px по ширине в JPEG на клиенте, затем грузим на сервер
+  // как обычный файл (не base64 в данные сайта — иначе каждое фото раздувает /api/data,
+  // который целиком грузит любая страница сайта). В s.photo кладём ссылку на файл.
   photoTo(s) { return e => {
     const f = e.target.files && e.target.files[0];
     const input = e.target;
@@ -409,12 +411,30 @@ class Component extends DCLogic {
       cv.getContext('2d').drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
       input.value = '';
-      try { s.photo = cv.toDataURL('image/jpeg', 0.85); this.save(); }
-      catch (err) { alert('Не получилось сохранить фото — возможно, заполнено хранилище браузера. Удалите неиспользуемые фото и попробуйте снова.'); }
+      let dataUrl;
+      try { dataUrl = cv.toDataURL('image/jpeg', 0.85); }
+      catch (err) { alert('Не получилось обработать фото.'); return; }
+      const prevPhoto = s.photo;
+      s.photoUploading = true; this.setState({});
+      fetch('/api/upload-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl }) })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(j => {
+          if (!j || !j.ok) throw new Error('upload-failed');
+          delete s.photoUploading;
+          s.photo = j.url;
+          this.save();
+          this.deletePhotoFile(prevPhoto);
+        })
+        .catch(() => { delete s.photoUploading; this.setState({}); alert('Не получилось загрузить фото на сервер. Проверьте подключение и попробуйте снова.'); });
     };
     img.onerror = () => { URL.revokeObjectURL(url); input.value = ''; alert('Файл не похож на изображение.'); };
     img.src = url;
   }; }
+  // Чистит старый файл при замене/удалении фото — не блокирует сохранение, если не выйдет.
+  deletePhotoFile(url) {
+    if (!url || !String(url).startsWith('/uploads/')) return;
+    fetch('/api/delete-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) }).catch(() => {});
+  }
   mv(arr, item, delta) { const i = arr.indexOf(item); const j = i + delta; if (i < 0 || j < 0 || j >= arr.length) return; arr.splice(i, 1); arr.splice(j, 0, item); this.save(); }
   renderVals() {
     const { d, tab } = this.state;
@@ -441,8 +461,8 @@ class Component extends DCLogic {
       uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
       uCat: e => { s.cat = e.target.value; s.subcat = ''; this.save(); },
       subOpts, hasSubcats, uSubcat: e => { s.subcat = e.target.value; this.save(); },
-      hasPhoto: !!s.photo, photoSrc: s.photo || '', photoLabel: s.photo ? 'Заменить' : 'Загрузить',
-      uPhotoFile: this.photoTo(s), delPhoto: () => { s.photo = ''; this.save(); },
+      hasPhoto: !!s.photo, photoSrc: s.photo || '', photoLabel: s.photoUploading ? 'Загрузка…' : (s.photo ? 'Заменить' : 'Загрузить'),
+      uPhotoFile: this.photoTo(s), delPhoto: () => { const old = s.photo; s.photo = ''; this.save(); this.deletePhotoFile(old); },
       profHref: './specialist.html?id=' + s.id,
       aboutText: s.about || '', uAbout: this.bind(s, 'about'),
       featsText: (s.feats || []).join('\n'),

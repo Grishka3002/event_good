@@ -45,6 +45,13 @@ const LIVE_DATA_PATH = process.env.LIVE_DATA_PATH || path.join(__dirname, '.live
 // не доходит и подстановка не срабатывает; путь к «настоящему» файлу — в этих переменных.
 const SPECIALIST_HTML_PATH = process.env.SPECIALIST_HTML_PATH || path.join(__dirname, 'specialist.html');
 const BLOG_HTML_PATH = process.env.BLOG_HTML_PATH || path.join(__dirname, 'blog.html');
+// Загруженные фото специалистов — обычные файлы на диске, а не base64 внутри /api/data
+// (как раньше): каждое фото весило ~200КБ и раздувало JSON, который целиком грузила
+// каждая страница сайта. Держим вне публичной папки по той же причине, что и выше —
+// иначе на хостингах со статической раздачей файлов в обход Node (см. ADMIN_HTML_PATH)
+// удаление/подмену файла мимо пароля админки было бы не проконтролировать; отдаём их
+// сами через /uploads/… (см. ниже).
+const UPLOADS_DIR = path.resolve(process.env.UPLOADS_DIR || path.join(__dirname, 'uploads'));
 // Базовый адрес, зашитый в исходниках; на лету заменяется на реальный домен запроса.
 const BASE_PLACEHOLDER = 'https://grishka3002.github.io/event_good';
 
@@ -341,6 +348,76 @@ async function handleData(req, res) {
   }
 }
 
+const IMAGE_EXT_BY_MIME = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
+
+// Имя файла из /uploads/<name> — только базовое имя, без переходов по каталогам.
+function safeUploadPath(name) {
+  const base = path.basename(String(name || ''));
+  if (!base || base === '.' || base === '..') return null;
+  const full = path.join(UPLOADS_DIR, base);
+  if (!full.startsWith(UPLOADS_DIR + path.sep)) return null;
+  return full;
+}
+
+// Принимает то же самое, что раньше клали прямо в s.photo (data:image/...;base64,...),
+// но теперь сохраняет как файл и отдаёт короткую ссылку — её и кладут в s.photo.
+async function handleUploadPhoto(req, res) {
+  if (req.method !== 'POST') return send(req, res, 405, '{"ok":false}', { 'Content-Type': 'application/json' });
+  if (!ADMIN_PASSWORD || !adminAuthorized(req)) {
+    return send(req, res, 401, '{"ok":false,"reason":"unauthorized"}', {
+      'Content-Type': 'application/json',
+      'WWW-Authenticate': 'Basic realm="Admin", charset="UTF-8"',
+    });
+  }
+  try {
+    const body = await readBody(req, 8 * 1024 * 1024); // сжатое на клиенте фото — с большим запасом
+    const parsed = JSON.parse(body);
+    const m = /^data:(image\/[a-z0-9+.-]+);base64,(.+)$/i.exec(String(parsed.dataUrl || ''));
+    if (!m) throw new Error('bad-data-url');
+    const buf = Buffer.from(m[2], 'base64');
+    if (!buf.length || buf.length > 6 * 1024 * 1024) throw new Error('bad-size');
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    const ext = IMAGE_EXT_BY_MIME[m[1].toLowerCase()] || '.jpg';
+    const name = 'p' + Date.now() + Math.random().toString(36).slice(2, 8) + ext;
+    fs.writeFileSync(path.join(UPLOADS_DIR, name), buf);
+    return send(req, res, 200, JSON.stringify({ ok: true, url: '/uploads/' + name }), { 'Content-Type': 'application/json' });
+  } catch (e) {
+    return send(req, res, 400, '{"ok":false}', { 'Content-Type': 'application/json' });
+  }
+}
+
+// Чистит файл при замене/удалении фото в админке — некритично, если файла уже нет.
+async function handleDeletePhoto(req, res) {
+  if (req.method !== 'POST') return send(req, res, 405, '{"ok":false}', { 'Content-Type': 'application/json' });
+  if (!ADMIN_PASSWORD || !adminAuthorized(req)) {
+    return send(req, res, 401, '{"ok":false,"reason":"unauthorized"}', {
+      'Content-Type': 'application/json',
+      'WWW-Authenticate': 'Basic realm="Admin", charset="UTF-8"',
+    });
+  }
+  try {
+    const body = await readBody(req, 4096);
+    const parsed = JSON.parse(body);
+    const u = String(parsed.url || '');
+    if (!u.startsWith('/uploads/')) throw new Error('bad-url');
+    const full = safeUploadPath(u.slice('/uploads/'.length));
+    if (!full) throw new Error('bad-path');
+    fs.unlink(full, () => {});
+    return send(req, res, 200, '{"ok":true}', { 'Content-Type': 'application/json' });
+  } catch (e) {
+    return send(req, res, 400, '{"ok":false}', { 'Content-Type': 'application/json' });
+  }
+}
+
+function serveUpload(req, res, urlPath) {
+  const full = safeUploadPath(urlPath.slice('/uploads/'.length));
+  if (!full) return notFound(req, res);
+  fs.stat(full, (err, st) => {
+    if (err || !st.isFile()) return notFound(req, res);
+    sendFile(req, res, full);
+  });
+}
+
 async function tgSend(chatId, text) {
   const r = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
@@ -403,6 +480,9 @@ http.createServer((req, res) => {
   if (urlPath === '/api/lead') return handleLead(req, res);
   if (urlPath === '/api/data') return handleData(req, res);
   if (urlPath === '/api/video-thumb') return handleVideoThumb(req, res, urlObj.searchParams.get('url'));
+  if (urlPath === '/api/upload-photo') return handleUploadPhoto(req, res);
+  if (urlPath === '/api/delete-photo') return handleDeletePhoto(req, res);
+  if (urlPath.startsWith('/uploads/')) return serveUpload(req, res, urlPath);
   if (urlPath === '/sitemap.xml') return serveSitemap(req, res);
 
   // Дубли главной склеиваем 301-редиректом на «/» — для SEO
