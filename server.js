@@ -477,6 +477,16 @@ http.createServer((req, res) => {
     return send(req, res, 400, 'Bad request', { 'Content-Type': 'text/plain; charset=utf-8' });
   }
 
+  // www.домен и домен без www отдавали один и тот же контент как два разных адреса —
+  // для поисковиков это дубли; склеиваем 301-редиректом на версию без www (она везде
+  // и так прописана как канонический адрес в canonical/og/sitemap).
+  const hostHeader = (req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+  if (hostHeader.toLowerCase().startsWith('www.')) {
+    const proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+    res.writeHead(301, { Location: `${proto}://${hostHeader.slice(4)}${req.url}` });
+    return res.end();
+  }
+
   if (urlPath === '/api/lead') return handleLead(req, res);
   if (urlPath === '/api/data') return handleData(req, res);
   if (urlPath === '/api/video-thumb') return handleVideoThumb(req, res, urlObj.searchParams.get('url'));
