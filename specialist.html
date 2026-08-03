@@ -226,6 +226,7 @@ a:hover{color:var(--acc)}
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;}}">
 class Component extends DCLogic {
   state = { d: null, id: null };
+  _thumbCache = {};
   componentDidMount() {
     this._qid = new URLSearchParams(location.search).get('id');
     import('./data.js').then(m => { this.mod = m; m.loadData().then(d => this.setState({ d, id: this._qid })); });
@@ -263,10 +264,23 @@ class Component extends DCLogic {
     if (!el) { el = document.createElement('script'); el.type = 'application/ld+json'; el.id = 'ld-person'; document.head.appendChild(el); }
     el.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', name: s.name, jobTitle: s.role, description: s.about || undefined, memberOf: { '@type': 'Organization', name: 'Объединение ивент-специалистов «Хорошее решение»' } });
   }
-  ytThumb(url) {
+  // Превью видео: YouTube — сразу (без сети), остальное (Vimeo, Rutube) — через сервер,
+  // с перерисовкой карточки, когда превью придёт. См. data.js: ytThumbSync/resolveVideoThumb.
+  thumbFor(url) {
     url = String(url || '').trim();
-    const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([\w-]{6,})/);
-    return m ? 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg' : null;
+    return (url && this._thumbCache[url]) || '';
+  }
+  resolveThumb(url) {
+    url = String(url || '').trim();
+    if (!url || !this.mod || Object.prototype.hasOwnProperty.call(this._thumbCache, url)) return;
+    const sync = this.mod.ytThumbSync(url);
+    if (sync) { this._thumbCache[url] = sync; return; }
+    this._thumbCache[url] = null;
+    this.mod.resolveVideoThumb(url).then(thumb => {
+      if (!thumb) return;
+      this._thumbCache[url] = thumb;
+      this.forceUpdate();
+    });
   }
   renderVals() {
     const { d } = this.state;
@@ -286,7 +300,8 @@ class Component extends DCLogic {
     const feats = ((s && Array.isArray(s.feats)) ? s.feats : []).filter(x => x && x.trim());
     const vids = (s && pcfg.video !== 'none' && Array.isArray(s.videos)) ? s.videos : [];
     const allV = vids.map((v, i) => {
-      const thumb = this.ytThumb(v.url);
+      this.resolveThumb(v.url);
+      const thumb = this.thumbFor(v.url);
       return { url: v.url, cat: v.cat || '', thumb: thumb || '', hasThumb: !!thumb, caption: v.title || 'Видео ' + (i + 1) };
     }).filter(v => v.url);
     const links = (s && pcfg.links && Array.isArray(s.links) ? s.links : []).map((l, i) => ({ url: l.url, caption: l.title || 'Портфолио ' + (i + 1) })).filter(l => l.url);

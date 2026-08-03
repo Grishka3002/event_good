@@ -118,6 +118,51 @@ function adminAuthorized(req) {
   return password === ADMIN_PASSWORD;
 }
 
+// Превью для ссылок на видео (YouTube — напрямую по предсказуемому адресу картинки,
+// Vimeo/Rutube — через их официальный oEmbed; у VK публичного oEmbed нет, поэтому для
+// vk.com превью не получить — ссылка всё равно сохранится, просто без картинки).
+// Запрос идёт с сервера (не из браузера), поэтому CORS не мешает; ответы кэшируем
+// в памяти на сутки, чтобы не дёргать чужой API на каждое открытие админки.
+const VIDEO_THUMB_TTL = 24 * 60 * 60 * 1000;
+const videoThumbCache = new Map();
+
+function oembedUrlFor(videoUrl) {
+  let host;
+  try { host = new URL(videoUrl).hostname.replace(/^www\./, ''); } catch { return null; }
+  const u = encodeURIComponent(videoUrl);
+  if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtu.be') return 'https://www.youtube.com/oembed?format=json&url=' + u;
+  if (host === 'vimeo.com') return 'https://vimeo.com/api/oembed.json?url=' + u;
+  if (host === 'rutube.ru') return 'https://rutube.ru/api/oembed/?format=json&url=' + u;
+  return null;
+}
+
+async function resolveVideoThumb(videoUrl) {
+  const cached = videoThumbCache.get(videoUrl);
+  if (cached && Date.now() - cached.ts < VIDEO_THUMB_TTL) return cached.thumb;
+  const endpoint = oembedUrlFor(videoUrl);
+  let thumb = null;
+  if (endpoint) {
+    try {
+      const r = await fetch(endpoint, { signal: AbortSignal.timeout(6000) });
+      if (r.ok) {
+        const j = await r.json();
+        thumb = (j && j.thumbnail_url) || null;
+      }
+    } catch { /* провайдер недоступен/не поддерживает — просто без превью */ }
+  }
+  videoThumbCache.set(videoUrl, { thumb, ts: Date.now() });
+  if (videoThumbCache.size > 3000) videoThumbCache.clear();
+  return thumb;
+}
+
+async function handleVideoThumb(req, res, videoUrl) {
+  if (!videoUrl || !/^https?:\/\//i.test(videoUrl)) {
+    return send(req, res, 400, '{"ok":false}', { 'Content-Type': 'application/json' });
+  }
+  const thumb = await resolveVideoThumb(videoUrl);
+  send(req, res, 200, JSON.stringify({ ok: !!thumb, thumb }), { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+}
+
 // Дополнительные получатели заявок — из живых данных (contacts.leadIds, через запятую),
 // а не из data.js: правки в админке должны работать сразу, без пересборки кода.
 function extraLeadIds() {
@@ -357,6 +402,7 @@ http.createServer((req, res) => {
 
   if (urlPath === '/api/lead') return handleLead(req, res);
   if (urlPath === '/api/data') return handleData(req, res);
+  if (urlPath === '/api/video-thumb') return handleVideoThumb(req, res, urlObj.searchParams.get('url'));
   if (urlPath === '/sitemap.xml') return serveSitemap(req, res);
 
   // Дубли главной склеиваем 301-редиректом на «/» — для SEO

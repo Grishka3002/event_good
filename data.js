@@ -181,3 +181,23 @@ export async function syncData(d) {
 }
 
 export function tgUrl(handle) { return 'https://t.me/' + String(handle || '').replace(/^@/, ''); }
+
+// Превью для видео-ссылки. YouTube — сразу и без сети (предсказуемый адрес картинки
+// по id ролика). Остальное (Vimeo, Rutube) — через сервер (/api/video-thumb, см.
+// server.js): у него нет проблем с CORS и ответы кэшируются. У VK публичного oEmbed
+// нет — для vk.com превью получить не получится, ссылка при этом всё равно рабочая.
+export function ytThumbSync(url) {
+  const m = String(url || '').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([\w-]{6,})/);
+  return m ? 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg' : null;
+}
+
+export async function resolveVideoThumb(url) {
+  const sync = ytThumbSync(url);
+  if (sync) return sync;
+  try {
+    const r = await fetch('/api/video-thumb?url=' + encodeURIComponent(url));
+    if (!r.ok) return null;
+    const j = await r.json();
+    return (j && j.thumb) || null;
+  } catch (e) { return null; }
+}
