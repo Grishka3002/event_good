@@ -29,7 +29,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap&subset=cyrillic" rel="stylesheet">
 <style>
-:root{--acc:#EE7F2D;--pf:grayscale(1) contrast(1.05)}
+:root{--acc:#EE7F2D;--pf:none}
 html{scroll-behavior:smooth}
 body{margin:0;background:#0C1117;color:#F2F5F8;font-family:'Montserrat',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:#F2F5F8;text-decoration:none}
@@ -63,7 +63,6 @@ a:hover{color:var(--acc)}
       <a href="./index.html#faq" style="color:#C7D0D9">FAQ</a>
     </div>
     <div style="display:flex;align-items:center;gap:18px">
-      <a href="{{ phoneHref }}" style="font-weight:700;font-size:14px;letter-spacing:.04em">{{ phone }}</a>
       <a href="{{ mainHref }}" target="_blank" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="filter:brightness(1.1);color:#0C1117">{{ mainLabel }}</a>
       <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="border-color:var(--acc);color:var(--acc)">Telegram</a></sc-if>
     </div>
@@ -177,7 +176,7 @@ a:hover{color:var(--acc)}
 </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;}}">
 class Component extends DCLogic {
   state = { d: null, cat: 'all', sub: 'all' };
   componentDidMount() {
@@ -203,7 +202,7 @@ class Component extends DCLogic {
   applyVars() {
     const r = document.documentElement.style;
     r.setProperty('--acc', this.props.accent ?? '#EE7F2D');
-    r.setProperty('--pf', (this.props.grayscalePhotos ?? true) ? 'grayscale(1) contrast(1.05)' : 'none');
+    r.setProperty('--pf', (this.props.grayscalePhotos ?? false) ? 'grayscale(1) contrast(1.05)' : 'none');
   }
   renderVals() {
     const { d, cat, sub } = this.state;
