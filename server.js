@@ -317,14 +317,30 @@ function readBody(req, maxBytes) {
   });
 }
 
+// Версия файла данных — mtime; используется для защиты от гонки, когда два человека
+// одновременно открыли админку (см. ниже).
+function currentDataRev() {
+  try { return '"' + fs.statSync(LIVE_DATA_PATH).mtimeMs + '"'; } catch { return '"0"'; }
+}
+
 // Живые данные сайта: GET отдаёт всем (то же самое, что раньше было в data.js
 // через localStorage), POST — только с паролем админки, пишет атомарно (через
 // временный файл + переименование), чтобы не повредить файл при обрыве записи.
+//
+// Защита от гонки при двух одновременных редакторах: раньше каждая вкладка админки
+// держала свою копию ВСЕХ данных сайта и при сохранении целиком перезаписывала файл —
+// если два человека открывали админку одновременно, тот, кто сохранял последним,
+// незаметно стирал правки другого (даже в чужих, не тронутых им разделах). Теперь GET
+// отдаёт версию файла (ETag = время изменения), клиент присылает её обратно в If-Match
+// при сохранении, и если файл на сервере с тех пор кто-то другой уже поменял — сервер
+// отвечает 409, а не переписывает поверх; админка показывает предупреждение обновить
+// страницу вместо того, чтобы молча потерять чужие изменения.
 async function handleData(req, res) {
   if (req.method === 'GET') {
+    const rev = currentDataRev();
     fs.readFile(LIVE_DATA_PATH, 'utf8', (err, data) => {
-      if (err) return send(req, res, 200, '{}', { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
-      send(req, res, 200, data, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+      if (err) return send(req, res, 200, '{}', { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', 'ETag': rev });
+      send(req, res, 200, data, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', 'ETag': rev });
     });
     return;
   }
@@ -335,14 +351,23 @@ async function handleData(req, res) {
       'WWW-Authenticate': 'Basic realm="Admin", charset="UTF-8"',
     });
   }
+  const clientRev = req.headers['if-match'];
+  if (clientRev && clientRev !== currentDataRev()) {
+    return send(req, res, 409, '{"ok":false,"reason":"conflict"}', { 'Content-Type': 'application/json' });
+  }
   try {
     const body = await readBody(req, 20 * 1024 * 1024); // до 20 МБ — с запасом на фото
     const parsed = JSON.parse(body);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('bad-shape');
+    // Перепроверяем версию прямо перед записью — на случай, если кто-то сохранил,
+    // пока мы читали и парсили тело этого запроса (узкое, но настоящее окно гонки).
+    if (clientRev && clientRev !== currentDataRev()) {
+      return send(req, res, 409, '{"ok":false,"reason":"conflict"}', { 'Content-Type': 'application/json' });
+    }
     const tmpPath = LIVE_DATA_PATH + '.tmp';
     fs.writeFileSync(tmpPath, JSON.stringify(parsed));
     fs.renameSync(tmpPath, LIVE_DATA_PATH);
-    return send(req, res, 200, '{"ok":true}', { 'Content-Type': 'application/json' });
+    return send(req, res, 200, JSON.stringify({ ok: true, rev: currentDataRev() }), { 'Content-Type': 'application/json' });
   } catch (e) {
     return send(req, res, 400, '{"ok":false,"reason":"bad-body"}', { 'Content-Type': 'application/json' });
   }

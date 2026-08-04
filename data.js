@@ -140,6 +140,13 @@ function mergeWithDefaults(saved) {
   return d;
 }
 
+// Версия последних загруженных с сервера данных (ETag ответа /api/data) — нужна только
+// админке, чтобы при сохранении сервер мог заметить, что кто-то другой уже поменял
+// данные с момента открытия страницы, и не дать молча перезаписать его правки поверх
+// (см. handleData/If-Match в server.js). Публичным страницам не нужна — они не пишут.
+let lastRev = null;
+export function getLastRev() { return lastRev; }
+
 // Данные общие для всех посетителей теперь хранятся на сервере (/api/data) —
 // так правки из админки видят все, а не только тот браузер, где их сделали.
 // localStorage остаётся резервной копией: если сервер недоступен (например,
@@ -148,6 +155,7 @@ export async function loadData() {
   let saved = null;
   try {
     const r = await fetch('/api/data', { cache: 'no-store' });
+    lastRev = r.headers.get('ETag') || lastRev;
     if (r.ok) {
       const j = await r.json();
       if (j && typeof j === 'object' && Object.keys(j).length) saved = j;
@@ -171,13 +179,24 @@ export async function loadData() {
 // сервер — через syncData (её вызывающий код обычно откладывает на паузу в вводе).
 export function saveData(d) { try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e) {} }
 
-// Отправляет данные на сервер. Возвращает true/false — успех/неуспех, чтобы
-// вызывающий код (админка) мог показать статус сохранения.
+// Отправляет данные на сервер. If-Match — версия данных на момент их загрузки в этой
+// вкладке; если сервер видит, что с тех пор данные уже поменял кто-то другой (другая
+// открытая вкладка/другой человек), он отвечает 409 вместо того, чтобы дать переписать
+// чужие правки поверх. Возвращает { ok, conflict, rev } — вызывающий код (админка)
+// по этому отличает «не сохранилось из-за конфликта» от обычной сетевой ошибки.
 export async function syncData(d) {
   try {
-    const r = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
-    return r.ok;
-  } catch (e) { return false; }
+    const r = await fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(lastRev ? { 'If-Match': lastRev } : {}) },
+      body: JSON.stringify(d),
+    });
+    if (r.status === 409) return { ok: false, conflict: true };
+    if (!r.ok) return { ok: false, conflict: false };
+    const j = await r.json().catch(() => ({}));
+    if (j && j.rev) lastRev = j.rev;
+    return { ok: true, conflict: false };
+  } catch (e) { return { ok: false, conflict: false }; }
 }
 
 export function tgUrl(handle) { return 'https://t.me/' + String(handle || '').replace(/^@/, ''); }

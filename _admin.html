@@ -42,6 +42,12 @@ option{background:#121A26;color:#F2F5F8}
 
 <div style="max-width:1180px;margin:0 auto;padding:26px 28px 80px">
   <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Изменения сохраняются на сервере и сразу видны всем посетителям сайта — не только в этом браузере. Фотографии добавляются перетаскиванием прямо на карточки сайта. Статус сохранения — в правом верхнем углу.</div>
+  <sc-if value="{{ hasConflict }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid rgba(229,83,60,.5);background:rgba(229,83,60,.12);border-radius:12px;padding:16px 20px;font-size:13px;line-height:1.6;color:#F2A79A;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <span>⚠ Пока вы редактировали, данные на сервере изменил кто-то другой (другая открытая вкладка или другой человек). Дальнейшие правки могут не сохраниться — обновите страницу, чтобы получить актуальные данные, и повторите последние изменения.</span>
+      <button onClick="{{ reloadPage }}" style="flex:none;background:#E5533C;color:#fff;border:none;border-radius:8px;padding:11px 18px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit">Обновить страницу</button>
+    </div>
+  </sc-if>
 
   <div data-screen-label="Вкладки" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">
     <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="7">
@@ -388,9 +394,13 @@ class Component extends DCLogic {
     clearTimeout(this._hideT);
     this.setState({ d: data, syncState: 'pending', ...(extra || {}) });
     this._syncT = setTimeout(() => {
-      this.mod.syncData(data).then(ok => {
-        this.setState({ syncState: ok ? 'ok' : 'error' });
-        if (ok) this._hideT = setTimeout(() => this.setState({ syncState: null }), 1800);
+      this.mod.syncData(data).then(res => {
+        this.setState({ syncState: res.ok ? 'ok' : (res.conflict ? 'conflict' : 'error') });
+        // 'conflict' и 'error' оставляем висеть — иначе можно не заметить, что правки
+        // не сохранились. 'conflict' значит, что данные с сервера в этой вкладке уже
+        // устарели (их поменяли в другом месте) — дальше сохранять нельзя, пока не
+        // обновить страницу, иначе следующее же сохранение сотрёт чужие правки.
+        if (res.ok) this._hideT = setTimeout(() => this.setState({ syncState: null }), 1800);
       });
     }, 700);
   }
@@ -520,8 +530,12 @@ class Component extends DCLogic {
       artRows, artCount: d.articles.length + ' шт.',
       addArt: () => { d.articles.unshift({ id: 'a' + Date.now(), slug: 'novaya-statya-' + (d.articles.length + 1), title: 'Новая статья', date: new Date().toISOString().slice(0, 10), minutes: '5', tag: 'Советы', lead: '', body: 'Первый раздел|Текст раздела.' }); this.save(); },
       hasSyncStatus: !!this.state.syncState,
-      syncLabel: this.state.syncState === 'pending' ? 'Сохраняю…' : this.state.syncState === 'error' ? 'Не сохранилось на сервере ⚠' : 'Сохранено ✓',
-      syncColor: this.state.syncState === 'error' ? '#E5533C' : this.state.syncState === 'pending' ? '#97A3B0' : '#7CC46B',
+      hasConflict: this.state.syncState === 'conflict',
+      reloadPage: () => location.reload(),
+      syncLabel: this.state.syncState === 'pending' ? 'Сохраняю…'
+        : this.state.syncState === 'conflict' ? 'Кто-то ещё изменил данные — обновите страницу ⚠'
+        : this.state.syncState === 'error' ? 'Не сохранилось на сервере ⚠' : 'Сохранено ✓',
+      syncColor: (this.state.syncState === 'error' || this.state.syncState === 'conflict') ? '#E5533C' : this.state.syncState === 'pending' ? '#97A3B0' : '#7CC46B',
       cats: C,
       specs, specCount: (fcat === 'all' && !q) ? d.specialists.length + ' шт.' : specs.length + ' из ' + d.specialists.length,
       noSpecs: specs.length === 0,
