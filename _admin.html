@@ -41,13 +41,7 @@ option{background:#121A26;color:#F2F5F8}
 </div>
 
 <div style="max-width:1180px;margin:0 auto;padding:26px 28px 80px">
-  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Изменения сохраняются на сервере и сразу видны всем посетителям сайта — не только в этом браузере. Фотографии добавляются перетаскиванием прямо на карточки сайта. Статус сохранения — в правом верхнем углу.</div>
-  <sc-if value="{{ hasConflict }}" hint-placeholder-val="{{ false }}">
-    <div style="border:1px solid rgba(229,83,60,.5);background:rgba(229,83,60,.12);border-radius:12px;padding:16px 20px;font-size:13px;line-height:1.6;color:#F2A79A;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-      <span>⚠ Пока вы редактировали, данные на сервере изменил кто-то другой (другая открытая вкладка или другой человек). Дальнейшие правки могут не сохраниться — обновите страницу, чтобы получить актуальные данные, и повторите последние изменения.</span>
-      <button onClick="{{ reloadPage }}" style="flex:none;background:#E5533C;color:#fff;border:none;border-radius:8px;padding:11px 18px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit">Обновить страницу</button>
-    </div>
-  </sc-if>
+  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Изменения сохраняются на сервере и сразу видны всем посетителям сайта — не только в этом браузере. Можно редактировать одновременно с другого устройства: разные карточки не мешают друг другу, сервер сам сливает правки. Фотографии добавляются перетаскиванием прямо на карточки сайта. Статус сохранения — в правом верхнем углу.</div>
 
   <div data-screen-label="Вкладки" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">
     <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="7">
@@ -345,7 +339,10 @@ class Component extends DCLogic {
   jsonRef = null;
   _thumbCache = {}; // url -> превью-URL | null (ещё грузится/не нашлось), см. resolveThumb/thumbFor
   componentDidMount() {
-    import('./data.js').then(m => { this.mod = m; m.loadData().then(d => this.setState({ d })); });
+    import('./data.js').then(m => {
+      this.mod = m;
+      m.loadData().then(d => { this._baseData = JSON.parse(JSON.stringify(d)); this.setState({ d }); });
+    });
     this._selT = setInterval(() => this.syncSelects(), 400);
   }
   thumbFor(url) {
@@ -383,23 +380,31 @@ class Component extends DCLogic {
   }
   componentDidUpdate() { this.syncSelects(); }
   // Мгновенно сохраняет локально (кэш на случай обрыва связи) и с паузой в 700мс
-  // после последней правки отправляет данные на сервер — так набор текста не
-  // шлёт запрос на каждую букву. dataOverride — для импорта/сброса, где данные
-  // подставляются целиком и не гарантированно успевают попасть в this.state к
-  // моменту вызова.
-  save(extra, dataOverride) {
+  // после последней правки отправляет данные на сервер — так набор текста не шлёт
+  // запрос на каждую букву. dataOverride — для импорта/сброса, где данные подставляются
+  // целиком и не гарантированно успевают попасть в this.state к моменту вызова.
+  // forceOverwrite — тоже только для импорта/сброса: заменить всё без слияния (это и
+  // есть их смысл), в отличие от обычного редактирования, где сервер сливает карточки
+  // по отдельности с тем, что уже сохранил кто-то другой (см. syncData в data.js) —
+  // именно это позволяет двум админкам одновременно править разные карточки.
+  save(extra, dataOverride, forceOverwrite) {
     const data = dataOverride || this.state.d;
     this.mod.saveData(data);
     clearTimeout(this._syncT);
     clearTimeout(this._hideT);
     this.setState({ d: data, syncState: 'pending', ...(extra || {}) });
     this._syncT = setTimeout(() => {
-      this.mod.syncData(data).then(res => {
-        this.setState({ syncState: res.ok ? 'ok' : (res.conflict ? 'conflict' : 'error') });
-        // 'conflict' и 'error' оставляем висеть — иначе можно не заметить, что правки
-        // не сохранились. 'conflict' значит, что данные с сервера в этой вкладке уже
-        // устарели (их поменяли в другом месте) — дальше сохранять нельзя, пока не
-        // обновить страницу, иначе следующее же сохранение сотрёт чужие правки.
+      const p = forceOverwrite ? this.mod.overwriteData(data) : this.mod.syncData(this._baseData || data, data);
+      p.then(res => {
+        if (res.ok && res.merged) {
+          // merged может содержать чужие правки, добавленные, пока мы редактировали —
+          // подхватываем их сразу, чтобы обе админки видели актуальную картину, не дожидаясь
+          // перезагрузки страницы. Это и есть база для следующего сравнения при сохранении.
+          this._baseData = JSON.parse(JSON.stringify(res.merged));
+          this.setState({ d: res.merged, syncState: 'ok' });
+        } else {
+          this.setState({ syncState: res.ok ? 'ok' : 'error' });
+        }
         if (res.ok) this._hideT = setTimeout(() => this.setState({ syncState: null }), 1800);
       });
     }, 700);
@@ -530,12 +535,8 @@ class Component extends DCLogic {
       artRows, artCount: d.articles.length + ' шт.',
       addArt: () => { d.articles.unshift({ id: 'a' + Date.now(), slug: 'novaya-statya-' + (d.articles.length + 1), title: 'Новая статья', date: new Date().toISOString().slice(0, 10), minutes: '5', tag: 'Советы', lead: '', body: 'Первый раздел|Текст раздела.' }); this.save(); },
       hasSyncStatus: !!this.state.syncState,
-      hasConflict: this.state.syncState === 'conflict',
-      reloadPage: () => location.reload(),
-      syncLabel: this.state.syncState === 'pending' ? 'Сохраняю…'
-        : this.state.syncState === 'conflict' ? 'Кто-то ещё изменил данные — обновите страницу ⚠'
-        : this.state.syncState === 'error' ? 'Не сохранилось на сервере ⚠' : 'Сохранено ✓',
-      syncColor: (this.state.syncState === 'error' || this.state.syncState === 'conflict') ? '#E5533C' : this.state.syncState === 'pending' ? '#97A3B0' : '#7CC46B',
+      syncLabel: this.state.syncState === 'pending' ? 'Сохраняю…' : this.state.syncState === 'error' ? 'Не сохранилось на сервере ⚠' : 'Сохранено ✓',
+      syncColor: this.state.syncState === 'error' ? '#E5533C' : this.state.syncState === 'pending' ? '#97A3B0' : '#7CC46B',
       cats: C,
       specs, specCount: (fcat === 'all' && !q) ? d.specialists.length + ' шт.' : specs.length + ' из ' + d.specialists.length,
       noSpecs: specs.length === 0,
@@ -598,7 +599,7 @@ class Component extends DCLogic {
           const parsed = JSON.parse(this.jsonRef ? this.jsonRef.value : '');
           if (!parsed || !Array.isArray(parsed.specialists)) throw new Error('bad');
           this.setState({ impErr: null });
-          this.save(null, parsed);
+          this.save(null, parsed, true);
         } catch (e) { this.setState({ impErr: 'Не получилось разобрать JSON — проверьте, что вставлен весь текст без изменений.' }); }
       },
       hasImpErr: !!this.state.impErr, impErr: this.state.impErr || '',
@@ -607,7 +608,7 @@ class Component extends DCLogic {
         if (!this.state.resetArmed) { this.setState({ resetArmed: true }); return; }
         localStorage.removeItem(this.mod.STORE_KEY);
         this.setState({ resetArmed: false });
-        this.save(null, JSON.parse(JSON.stringify(this.mod.DEFAULTS)));
+        this.save(null, JSON.parse(JSON.stringify(this.mod.DEFAULTS)), true);
       }
     };
   }
