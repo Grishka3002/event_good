@@ -390,6 +390,25 @@ function mergeLiveData(base, data, current) {
   return result;
 }
 
+// Подстраховка: перед каждой записью данных сайта копируем то, что было ДО нее, в папку
+// с бэкапами (внутри private/, наружу не отдаётся). Это не история версий и не отменяет
+// правки в один клик — но если когда-нибудь снова случится непредвиденная потеря данных
+// (баг, чужая случайная перезапись и т.п.), нужное состояние можно будет найти в одном из
+// последних файлов и восстановить вручную. Храним последние 500 снимков — при типичном
+// размере файла данных (десятки КБ, фото теперь отдельно) это единицы мегабайт на диске.
+const DATA_BACKUPS_DIR = path.join(path.dirname(LIVE_DATA_PATH), 'backups');
+const MAX_DATA_BACKUPS = 500;
+function backupLiveData() {
+  try {
+    if (!fs.existsSync(LIVE_DATA_PATH)) return;
+    fs.mkdirSync(DATA_BACKUPS_DIR, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6);
+    fs.copyFileSync(LIVE_DATA_PATH, path.join(DATA_BACKUPS_DIR, `data-${stamp}.json`));
+    const files = fs.readdirSync(DATA_BACKUPS_DIR).filter(f => f.startsWith('data-')).sort();
+    while (files.length > MAX_DATA_BACKUPS) fs.unlinkSync(path.join(DATA_BACKUPS_DIR, files.shift()));
+  } catch (e) { /* бэкап — это подстраховка, не должен ронять само сохранение */ }
+}
+
 // Живые данные сайта: GET отдаёт всем (то же самое, что раньше было в data.js через
 // localStorage). POST — только с паролем админки; обычный режим — «merge» (см. выше,
 // так оба админа могут одновременно править разные карточки без потери чужих правок),
@@ -416,21 +435,26 @@ async function handleData(req, res) {
   try {
     const body = await readBody(req, 20 * 1024 * 1024); // до 20 МБ — с запасом на фото
     const parsed = JSON.parse(body);
-    // Совместимость со старой вкладкой админки, открытой ещё до обновления сервера (у неё
-    // в памяти старый JS, который шлёт данные сайта прямо телом запроса, без обёртки
-    // {mode,data}) — иначе после каждого такого обновления сервера её сохранения ловили бы
-    // 400 и человек видел бы «не сохранилось», не понимая, что просто нужно обновить страницу.
-    const isLegacyPayload = parsed && typeof parsed === 'object' && !Array.isArray(parsed) && !('data' in parsed) && ('specialists' in parsed || 'contacts' in parsed);
-    const incoming = isLegacyPayload ? parsed : (parsed && parsed.data);
+    // ВАЖНО: раньше здесь было автопринятие старого формата (без обёртки {mode,data}) как
+    // «полная замена данных» — это оказалось опасно. У вкладки со старой закэшированной
+    // версией data.js (баг статической раздачи, см. DATA_JS_PATH выше) старая функция
+    // syncData принимает один аргумент; свежая admin.html вызывает её с двумя — и в старую
+    // функцию попадает только ПЕРВЫЙ (это устаревший снимок данных на момент открытия
+    // вкладки, а не текущие правки), который она без обёртки и отправляла. Сервер трактовал
+    // это как «полностью заменить данные» и тихо откатывал базу к старому снимку, стирая
+    // всё добавленное другими с тех пор. Теперь при таком формате — явная ошибка вместо
+    // тихой потери чужих данных; лечится обновлением страницы админки.
+    const incoming = parsed && parsed.data;
     if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) throw new Error('bad-shape');
     let merged;
-    if (isLegacyPayload || parsed.mode === 'overwrite') {
+    if (parsed.mode === 'overwrite') {
       merged = incoming;
     } else {
       let current = {};
       try { current = JSON.parse(fs.readFileSync(LIVE_DATA_PATH, 'utf8')); } catch { /* первое сохранение — файла ещё нет */ }
       merged = mergeLiveData(parsed.base, incoming, current);
     }
+    backupLiveData();
     const tmpPath = LIVE_DATA_PATH + '.tmp';
     fs.writeFileSync(tmpPath, JSON.stringify(merged));
     fs.renameSync(tmpPath, LIVE_DATA_PATH);
