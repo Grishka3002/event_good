@@ -408,10 +408,15 @@ async function handleData(req, res) {
   try {
     const body = await readBody(req, 20 * 1024 * 1024); // до 20 МБ — с запасом на фото
     const parsed = JSON.parse(body);
-    const incoming = parsed && parsed.data;
+    // Совместимость со старой вкладкой админки, открытой ещё до обновления сервера (у неё
+    // в памяти старый JS, который шлёт данные сайта прямо телом запроса, без обёртки
+    // {mode,data}) — иначе после каждого такого обновления сервера её сохранения ловили бы
+    // 400 и человек видел бы «не сохранилось», не понимая, что просто нужно обновить страницу.
+    const isLegacyPayload = parsed && typeof parsed === 'object' && !Array.isArray(parsed) && !('data' in parsed) && ('specialists' in parsed || 'contacts' in parsed);
+    const incoming = isLegacyPayload ? parsed : (parsed && parsed.data);
     if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) throw new Error('bad-shape');
     let merged;
-    if (parsed.mode === 'overwrite') {
+    if (isLegacyPayload || parsed.mode === 'overwrite') {
       merged = incoming;
     } else {
       let current = {};
