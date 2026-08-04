@@ -45,6 +45,14 @@ const LIVE_DATA_PATH = process.env.LIVE_DATA_PATH || path.join(__dirname, '.live
 // не доходит и подстановка не срабатывает; путь к «настоящему» файлу — в этих переменных.
 const SPECIALIST_HTML_PATH = process.env.SPECIALIST_HTML_PATH || path.join(__dirname, 'specialist.html');
 const BLOG_HTML_PATH = process.env.BLOG_HTML_PATH || path.join(__dirname, 'blog.html');
+// data.js — общий модуль с данными и логикой сайта, его правят чуть ли не в каждой
+// новой фиче. По той же причине, что и specialist.html/blog.html выше, на хостингах со
+// статической раздачей файлов в обход Node запрос до него не доходит — а значит, не
+// доходит и заголовок Cache-Control: no-cache, и раздающий слой отдаёт файл со своим
+// собственным (многодневным!) кэшем: у части посетителей/админов долго держится старая
+// версия файла, рассинхронизированная с остальным кодом сайта — вплоть до ошибок вида
+// «функция не найдена». Путь к «настоящему» файлу — здесь же, вне публичной папки.
+const DATA_JS_PATH = process.env.DATA_JS_PATH || path.join(__dirname, 'data.js');
 // Загруженные фото специалистов — обычные файлы на диске, а не base64 внутри /api/data
 // (как раньше): каждое фото весило ~200КБ и раздувало JSON, который целиком грузила
 // каждая страница сайта. Держим вне публичной папки по той же причине, что и выше —
@@ -502,6 +510,13 @@ function serveUpload(req, res, urlPath) {
   });
 }
 
+function serveDataJs(req, res) {
+  fs.readFile(DATA_JS_PATH, (err, data) => {
+    if (err) return notFound(req, res);
+    send(req, res, 200, data, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
+  });
+}
+
 async function tgSend(chatId, text) {
   const r = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
     method: 'POST',
@@ -577,6 +592,7 @@ http.createServer((req, res) => {
   if (urlPath === '/api/upload-photo') return handleUploadPhoto(req, res);
   if (urlPath === '/api/delete-photo') return handleDeletePhoto(req, res);
   if (urlPath.startsWith('/uploads/')) return serveUpload(req, res, urlPath);
+  if (urlPath === '/data.js') return serveDataJs(req, res);
   if (urlPath === '/sitemap.xml') return serveSitemap(req, res);
 
   // Дубли главной склеиваем 301-редиректом на «/» — для SEO
