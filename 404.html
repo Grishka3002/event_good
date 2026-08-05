@@ -72,7 +72,7 @@ a:hover{color:var(--acc)}
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = { d: null };
-  componentDidMount() { import('./data.js').then(m => m.loadData().then(d => this.setState({ d }))); }
+  componentDidMount() { import('./data.js?v=2').then(m => m.loadData().then(d => this.setState({ d }))); }
   renderVals() {
     const cts = (this.state.d || {}).contacts || { tg: 'sazelenskiy' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');

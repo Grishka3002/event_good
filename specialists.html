@@ -194,7 +194,7 @@ class Component extends DCLogic {
   componentDidMount() {
     const qp = new URLSearchParams(location.search);
     const q = qp.get('cat'), qs = qp.get('sub');
-    import('./data.js').then(m => {
+    import('./data.js?v=2').then(m => {
       this.mod = m;
       m.loadData().then(d => {
         const valid = q && d.categories.some(c => c.slug === q);

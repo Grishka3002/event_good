@@ -339,7 +339,7 @@ class Component extends DCLogic {
   jsonRef = null;
   _thumbCache = {}; // url -> превью-URL | null (ещё грузится/не нашлось), см. resolveThumb/thumbFor
   componentDidMount() {
-    import('./data.js').then(m => {
+    import('./data.js?v=2').then(m => {
       this.mod = m;
       m.loadData().then(d => { this._baseData = JSON.parse(JSON.stringify(d)); this.setState({ d }); });
     });
