@@ -311,15 +311,22 @@ function serveSitemap(req, res) {
 }
 
 // Читает тело запроса целиком, обрывая соединение при превышении лимита.
+// ВАЖНО: копим сырые Buffer-куски и собираем строку ОДНИМ вызовом toString('utf8') в
+// самом конце — а не через body += chunk на каждый кусок. Русские буквы в UTF-8 занимают
+// по 2 байта; если такая буква попадает ровно на границу двух сетевых пакетов, а куски
+// декодируются в текст по отдельности, каждый байт превращается в свой «битый» символ —
+// одна буква на глазах становится двумя «?». Именно так портился текст в данных сайта.
 function readBody(req, maxBytes) {
   return new Promise((resolve, reject) => {
-    let body = '';
+    const chunks = [];
+    let total = 0;
     let tooBig = false;
     req.on('data', chunk => {
-      body += chunk;
-      if (body.length > maxBytes) { tooBig = true; req.destroy(); }
+      total += chunk.length;
+      if (total > maxBytes) { tooBig = true; req.destroy(); return; }
+      chunks.push(chunk);
     });
-    req.on('end', () => { if (!tooBig) resolve(body); });
+    req.on('end', () => { if (!tooBig) resolve(Buffer.concat(chunks).toString('utf8')); });
     req.on('error', reject);
     req.on('close', () => { if (tooBig) reject(new Error('too-large')); });
   });
@@ -569,12 +576,15 @@ function handleLead(req, res) {
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
   if (rateLimited(ip)) return send(req, res, 429, '{"ok":false,"reason":"rate-limit"}', { 'Content-Type': 'application/json' });
 
-  let body = '';
+  const chunks = [];
+  let total = 0;
   req.on('data', chunk => {
-    body += chunk;
-    if (body.length > 8192) { req.destroy(); }
+    total += chunk.length;
+    if (total > 8192) { req.destroy(); return; }
+    chunks.push(chunk);
   });
   req.on('end', async () => {
+    const body = Buffer.concat(chunks).toString('utf8'); // см. readBody выше — то же самое, одним куском
     let text;
     try { text = String(JSON.parse(body).text || '').trim(); } catch { text = ''; }
     if (!text || text.length > 3500) return send(req, res, 400, '{"ok":false,"reason":"bad-text"}', { 'Content-Type': 'application/json' });
