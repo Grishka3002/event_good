@@ -112,6 +112,23 @@ option{background:#121A26;color:#F2F5F8}
                 </sc-for>
               </div>
             </sc-if>
+            <div style="margin-top:14px">
+              <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">Фото портфолио</div>
+              <sc-for list="{{ s.photoGroups }}" as="pg" hint-placeholder-count="1">
+                <div style="margin-bottom:14px">
+                  <div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:8px">{{ pg.name }}</div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">
+                    <sc-for list="{{ pg.rows }}" as="row" hint-placeholder-count="2">
+                      <div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0C141D">
+                        <img src="{{ row.url }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                        <button onClick="{{ row.del }}" title="Удалить фото" style="position:absolute;top:5px;right:5px;background:rgba(10,14,19,.75);border:1px solid rgba(229,83,60,.5);color:#E5533C;border-radius:6px;width:22px;height:22px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.25)">✕</button>
+                      </div>
+                    </sc-for>
+                    <label style="aspect-ratio:4/3;border:1px dashed rgba(255,255,255,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;color:#C7D0D9;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px" style-hover="border-color:var(--acc);color:var(--acc)">+ Фото<input type="file" accept="image/*" onChange="{{ pg.addPhoto }}" style="display:none"></label>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
             <div style="margin-top:14px"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">Категории портфолио (фото и видео группируются по ним)</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <sc-for list="{{ s.mcatChips }}" as="mc" hint-placeholder-count="4">
@@ -119,7 +136,7 @@ option{background:#121A26;color:#F2F5F8}
                 </sc-for>
               </div>
             </div>
-            <div style="margin-top:12px;font-size:12px;color:#7C8894;line-height:1.6">Отмеченные категории появятся на <a href="{{ s.profHref }}" style="color:#97A3B0;border-bottom:1px dashed #56626F">странице профиля</a> отдельными блоками: 4 фото-ячейки (заполняются перетаскиванием там же) + видео своей категории. Без отметок — общая галерея на 6 фото. Видео показываются превью-карточкой (для YouTube — с настоящим кадром), клик уводит на само видео — плеер на сайт не грузится. Поля «Видео»/«Ссылки на портфолио» показываются не у всех — набор подобран под специальность (например, декораторам видео не нужно, а фотографам полезны ссылки на портфолио). Общий список категорий — во вкладке «Медиа-категории».</div>
+            <div style="margin-top:12px;font-size:12px;color:#7C8894;line-height:1.6">Отмеченные категории появятся на <a href="{{ s.profHref }}" style="color:#97A3B0;border-bottom:1px dashed #56626F">странице профиля</a> отдельными блоками — фото (см. выше) и видео своей категории. Без отметок — все фото и видео одним общим блоком. Группа, где нет ни одного фото или видео, на странице профиля просто не показывается. Видео показываются превью-карточкой (для YouTube — с настоящим кадром), клик уводит на само видео — плеер на сайт не грузится. Поля «Видео»/«Ссылки на портфолио» показываются не у всех — набор подобран под специальность (например, декораторам видео не нужно, а фотографам полезны ссылки на портфолио). Общий список категорий — во вкладке «Медиа-категории».</div>
           </details>
           <div style="display:flex;gap:6px">
             <button onClick="{{ s.up }}" title="Переместить выше" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↑</button>
@@ -450,6 +467,38 @@ class Component extends DCLogic {
     if (!url || !String(url).startsWith('/uploads/')) return;
     fetch('/api/delete-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) }).catch(() => {});
   }
+  // Фото портфолио — несколько штук на специалиста, по медиа-категориям (та же сжатие +
+  // загрузка на сервер, что и для фото профиля выше, только результат копится в s.photos,
+  // а не заменяет единственное значение).
+  addPortfolioPhoto(s, catId) { return e => {
+    const f = e.target.files && e.target.files[0];
+    const input = e.target;
+    if (!f) return;
+    const img = new Image();
+    const url = URL.createObjectURL(f);
+    img.onload = () => {
+      const k = Math.min(1, 1200 / img.width);
+      const w = Math.round(img.width * k), h = Math.round(img.height * k);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      input.value = '';
+      let dataUrl;
+      try { dataUrl = cv.toDataURL('image/jpeg', 0.85); }
+      catch (err) { alert('Не получилось обработать фото.'); return; }
+      fetch('/api/upload-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl }) })
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(j => {
+          if (!j || !j.ok) throw new Error('upload-failed');
+          if (!Array.isArray(s.photos)) s.photos = [];
+          s.photos.push({ url: j.url, cat: catId });
+          this.save();
+        })
+        .catch(() => alert('Не получилось загрузить фото на сервер. Проверьте подключение и попробуйте снова.'));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); input.value = ''; alert('Файл не похож на изображение.'); };
+    img.src = url;
+  }; }
   mv(arr, item, delta) { const i = arr.indexOf(item); const j = i + delta; if (i < 0 || j < 0 || j >= arr.length) return; arr.splice(i, 1); arr.splice(j, 0, item); this.save(); }
   renderVals() {
     const { d, tab } = this.state;
@@ -504,6 +553,17 @@ class Component extends DCLogic {
             };
           }),
           addVideo: () => { if (!Array.isArray(s.videos)) s.videos = []; s.videos.push({ title: '', url: '', cat: g.id }); this.save(); },
+        };
+      }),
+      photoGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все фото' }]).map(g => {
+        const groupPhotos = (s.photos || []).filter(p => (p.cat || '') === g.id);
+        return {
+          name: g.name,
+          rows: groupPhotos.map(p => ({
+            url: p.url,
+            del: () => { s.photos = s.photos.filter(x => x !== p); this.save(); this.deletePhotoFile(p.url); },
+          })),
+          addPhoto: this.addPortfolioPhoto(s, g.id),
         };
       }),
       up: () => this.mv(d.specialists, s, -1), down: () => this.mv(d.specialists, s, 1), dup: dup(d.specialists, s, 's'),
