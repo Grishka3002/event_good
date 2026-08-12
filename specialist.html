@@ -317,7 +317,11 @@ class Component extends DCLogic {
       const thumb = this.thumbFor(v.url);
       return { url: v.url, cat: v.cat || '', thumb: thumb || '', hasThumb: !!thumb, caption: v.title || 'Видео ' + (i + 1) };
     }).filter(v => v.url);
-    const links = (s && pcfg.links && Array.isArray(s.links) ? s.links : []).map((l, i) => ({ url: l.url, caption: l.title || 'Портфолио ' + (i + 1) })).filter(l => l.url);
+    const links = (s && pcfg.links && Array.isArray(s.links) ? s.links : []).map((l, i) => {
+      let url = (l.url || '').trim();
+      if (url && !/^(https?:)?\/\//i.test(url)) url = 'https://' + url;
+      return { url, caption: l.title || 'Портфолио ' + (i + 1) };
+    }).filter(l => l.url);
     const mediaCats = (d && Array.isArray(d.mediaCats)) ? d.mediaCats : [];
     const selCats = s ? mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)) : [];
     const allP = (s && Array.isArray(s.photos) ? s.photos : []).filter(p => p && p.url);
