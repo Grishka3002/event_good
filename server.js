@@ -45,6 +45,12 @@ const LIVE_DATA_PATH = process.env.LIVE_DATA_PATH || path.join(__dirname, '.live
 // не доходит и подстановка не срабатывает; путь к «настоящему» файлу — в этих переменных.
 const SPECIALIST_HTML_PATH = process.env.SPECIALIST_HTML_PATH || path.join(__dirname, 'specialist.html');
 const BLOG_HTML_PATH = process.env.BLOG_HTML_PATH || path.join(__dirname, 'blog.html');
+// По той же причине (см. выше) — иначе подстановка контактных ссылок (см.
+// injectContactHrefs) на статической раздаче в обход Node не сработает.
+const INDEX_HTML_PATH = process.env.INDEX_HTML_PATH || path.join(__dirname, 'index.html');
+const SPECIALISTS_HTML_PATH = process.env.SPECIALISTS_HTML_PATH || path.join(__dirname, 'specialists.html');
+const CASES_HTML_PATH = process.env.CASES_HTML_PATH || path.join(__dirname, 'cases.html');
+const PRIVACY_HTML_PATH = process.env.PRIVACY_HTML_PATH || path.join(__dirname, 'privacy.html');
 // data.js — общий модуль с данными и логикой сайта, его правят чуть ли не в каждой
 // новой фиче. По той же причине, что и specialist.html/blog.html выше, на хостингах со
 // статической раздачей файлов в обход Node запрос до него не доходит — а значит, не
@@ -310,6 +316,16 @@ function buildArticleSeo(a, origin) {
       url,
     },
   };
+}
+
+// Статические страницы без per-request SEO (у них уже свои корректные title/description
+// в самом файле) — но всё равно через Node, чтобы сработала подстановка контактных ссылок.
+function servePlainPage(req, res, filePath) {
+  fs.readFile(filePath, 'utf8', (err, html) => {
+    if (err) return notFound(req, res);
+    html = injectContactHrefs(html);
+    send(req, res, 200, html, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+  });
 }
 
 function servePageWithSeo(req, res, filePath, seo) {
@@ -704,6 +720,22 @@ http.createServer((req, res) => {
     res.writeHead(301, { Location: '/' });
     return res.end();
   }
+  // Главная и другие статические страницы — тоже всегда через Node (см. INDEX_HTML_PATH и
+  // соседние константы выше): физических файлов в публичной папке больше нет, иначе на
+  // хостингах со статической раздачей в обход Node (см. ADMIN_HTML_PATH) не сработает
+  // подстановка контактных ссылок (см. injectContactHrefs).
+  if (urlPath === '/') {
+    return servePlainPage(req, res, INDEX_HTML_PATH);
+  }
+  if (urlPath === '/specialists.html' || urlPath === '/specialists') {
+    return servePlainPage(req, res, SPECIALISTS_HTML_PATH);
+  }
+  if (urlPath === '/cases.html' || urlPath === '/cases') {
+    return servePlainPage(req, res, CASES_HTML_PATH);
+  }
+  if (urlPath === '/privacy.html') {
+    return servePlainPage(req, res, PRIVACY_HTML_PATH);
+  }
 
   // Профиль специалиста / статья блога — всегда через Node (см. SPECIALIST_HTML_PATH/
   // BLOG_HTML_PATH выше), с id/post подставляем title/description/canonical/og-теги
@@ -718,7 +750,7 @@ http.createServer((req, res) => {
   // specialist.html: они сами распознают свадебный контекст по location.pathname), просто
   // отдана по другому пути и (для профиля) с подставленными свадебными SEO-тегами.
   if (urlPath === '/svadby' || urlPath === '/svadby/') {
-    return servePageWithSeo(req, res, path.join(ROOT, 'specialists.html'), weddingCatalogSeo(requestOrigin(req)));
+    return servePageWithSeo(req, res, SPECIALISTS_HTML_PATH, weddingCatalogSeo(requestOrigin(req)));
   }
   if (urlPath === '/svadby/specialist.html' || urlPath === '/svadby/specialist') {
     return serveSpecialistPage(req, res, urlObj.searchParams.get('id'), { wedding: true });
@@ -750,7 +782,7 @@ http.createServer((req, res) => {
 
   const filePath = path.join(ROOT, urlPath);
   if (!filePath.startsWith(ROOT + path.sep)) return notFound(req, res); // защита от ../
-  const forbidden = new Set(['server.js', '_admin.html', '.live-data.json', '.env']);
+  const forbidden = new Set(['server.js', '_admin.html', '.live-data.json', '.env', 'index.html', 'specialists.html', 'cases.html', 'privacy.html']);
   if (forbidden.has(path.basename(filePath))) return notFound(req, res);
 
   fs.stat(filePath, (err, st) => {
