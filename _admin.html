@@ -70,6 +70,7 @@ option{background:#121A26;color:#F2F5F8}
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Роль / жанр</div><input value="{{ s.role }}" onInput="{{ s.uRole }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Опыт</div><input value="{{ s.exp }}" onInput="{{ s.uExp }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Цена</div><input value="{{ s.price }}" onInput="{{ s.uPrice }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Свадьбы</div><button onClick="{{ s.toggleWedding }}" title="Показывать в разделе /svadby" style="width:100%;box-sizing:border-box;background:{{ s.weddingChipBg }};color:{{ s.weddingChipColor }};border:1px solid {{ s.weddingChipBorder }};border-radius:8px;padding:11px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc)">{{ s.weddingChipLabel }}</button></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Фото профиля</div>
             <div style="display:flex;gap:8px;align-items:center">
               <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ s.photoSrc }}" alt="" style="width:42px;height:54px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.15);flex:none"></sc-if>
@@ -151,6 +152,76 @@ option{background:#121A26;color:#F2F5F8}
               </div>
             </div>
             <div style="margin-top:12px;font-size:12px;color:#7C8894;line-height:1.6">Отмеченные категории появятся на <a href="{{ s.profHref }}" style="color:#97A3B0;border-bottom:1px dashed #56626F">странице профиля</a> отдельными блоками — фото (см. выше) и видео своей категории. Без отметок — все фото и видео одним общим блоком. Группа, где нет ни одного фото или видео, на странице профиля просто не показывается. Видео показываются превью-карточкой (для YouTube — с настоящим кадром), клик уводит на само видео — плеер на сайт не грузится. Поля «Видео»/«Ссылки на портфолио» показываются не у всех — набор подобран под специальность (например, декораторам видео не нужно, а фотографам полезны ссылки на портфолио). Общий список категорий — во вкладке «Медиа-категории».</div>
+            <sc-if value="{{ s.isWedding }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:22px;padding-top:18px;border-top:1px dashed rgba(255,255,255,.15)">
+                <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:4px">Свадебный профиль (для /svadby)</div>
+                <div style="font-size:11.5px;color:#7C8894;margin-bottom:14px;line-height:1.6">Отдельные описание, фишки, ссылки, видео и фото для страницы в разделе «Свадьбы». Пустое поле — на свадебной странице подставится значение из общего профиля выше.</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+                  <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Описание для свадеб</div><textarea rows="5" value="{{ s.wAboutText }}" onInput="{{ s.wUAbout }}" placeholder="Чем силён именно на свадьбах…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+                  <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Фишки для свадеб (с новой строки)</div><textarea rows="5" value="{{ s.wFeatsText }}" onInput="{{ s.wUFeats }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+                </div>
+                <sc-if value="{{ s.wShowLinksField }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:14px">
+                    <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">Ссылки на портфолио (свадьбы)</div>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                      <sc-for list="{{ s.wLinkRows }}" as="row" hint-placeholder-count="1">
+                        <div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px;display:flex;gap:9px;align-items:center;background:#0C141D">
+                          <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+                            <input value="{{ row.title }}" onInput="{{ row.uTitle }}" placeholder="Название (например «Свадьбы»)" style="width:100%;box-sizing:border-box;background:#0A0E13;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 8px;color:#F2F5F8;font-size:11.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+                            <input value="{{ row.url }}" onInput="{{ row.uUrl }}" placeholder="https://…" style="width:100%;box-sizing:border-box;background:#0A0E13;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 8px;color:#F2F5F8;font-size:11.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+                          </div>
+                          <button onClick="{{ row.del }}" title="Удалить ссылку" style="flex:none;background:transparent;border:1px solid rgba(229,83,60,.4);color:#E5533C;border-radius:6px;width:24px;height:24px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <button onClick="{{ s.wAddLink }}" style="margin-top:8px;background:transparent;border:1px dashed rgba(255,255,255,.25);color:#C7D0D9;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">+ Ссылка</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ s.wShowVideoField }}" hint-placeholder-val="{{ true }}">
+                  <div style="margin-top:14px">
+                    <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">{{ s.wVideoFieldLabel }} (свадьбы)</div>
+                    <sc-for list="{{ s.wVidGroups }}" as="vg" hint-placeholder-count="1">
+                      <div style="margin-bottom:14px">
+                        <div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:8px">{{ vg.name }}</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">
+                          <sc-for list="{{ vg.rows }}" as="row" hint-placeholder-count="1">
+                            <div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px;display:flex;gap:9px;align-items:flex-start;background:#0C141D">
+                              <div style="width:60px;height:34px;border-radius:6px;overflow:hidden;background:#121A26;flex:none;position:relative">
+                                <sc-if value="{{ row.hasThumb }}" hint-placeholder-val="{{ true }}"><img src="{{ row.thumb }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+                                <sc-if value="{{ row.noThumb }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#39434E;font-size:15px">▶</div></sc-if>
+                              </div>
+                              <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+                                <input value="{{ row.title }}" onInput="{{ row.uTitle }}" placeholder="Название (необязательно)" style="width:100%;box-sizing:border-box;background:#0A0E13;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 8px;color:#F2F5F8;font-size:11.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+                                <input value="{{ row.url }}" onInput="{{ row.uUrl }}" placeholder="https://…" style="width:100%;box-sizing:border-box;background:#0A0E13;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 8px;color:#F2F5F8;font-size:11.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+                              </div>
+                              <button onClick="{{ row.del }}" title="Удалить видео" style="flex:none;background:transparent;border:1px solid rgba(229,83,60,.4);color:#E5533C;border-radius:6px;width:24px;height:24px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
+                            </div>
+                          </sc-for>
+                        </div>
+                        <button onClick="{{ vg.addVideo }}" style="margin-top:8px;background:transparent;border:1px dashed rgba(255,255,255,.25);color:#C7D0D9;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">+ Видео</button>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="margin-top:14px">
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">Фото портфолио (свадьбы)</div>
+                  <sc-for list="{{ s.wPhotoGroups }}" as="pg" hint-placeholder-count="1">
+                    <div style="margin-bottom:14px">
+                      <div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:8px">{{ pg.name }}</div>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">
+                        <sc-for list="{{ pg.rows }}" as="row" hint-placeholder-count="2">
+                          <div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0C141D">
+                            <img src="{{ row.url }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                            <button onClick="{{ row.del }}" title="Удалить фото" style="position:absolute;top:5px;right:5px;background:rgba(10,14,19,.75);border:1px solid rgba(229,83,60,.5);color:#E5533C;border-radius:6px;width:22px;height:22px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.25)">✕</button>
+                          </div>
+                        </sc-for>
+                        <label style="aspect-ratio:4/3;border:1px dashed rgba(255,255,255,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;color:#C7D0D9;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px" style-hover="border-color:var(--acc);color:var(--acc)">+ Фото<input type="file" accept="image/*" onChange="{{ pg.addPhoto }}" style="display:none"></label>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
           </details>
           <div style="display:flex;gap:6px">
             <button onClick="{{ s.up }}" title="Переместить выше" style="flex:1;background:transparent;border:1px solid rgba(255,255,255,.16);color:#C7D0D9;border-radius:8px;padding:11px 0;font-size:14px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">↑</button>
@@ -514,6 +585,54 @@ class Component extends DCLogic {
     img.src = url;
   }; }
   mv(arr, item, delta) { const i = arr.indexOf(item); const j = i + delta; if (i < 0 || j < 0 || j >= arr.length) return; arr.splice(i, 1); arr.splice(j, 0, item); this.save(); }
+  // Общий редактор блока "описание/фишки/ссылки/видео/фото" — используется и для общего профиля
+  // специалиста (target=s), и для свадебного (target=s.weddingProfile), чтобы не дублировать логику.
+  // Группировка по медиа-категориям всегда идёт по s.mediaCats (выбор категорий общий для специалиста).
+  buildProfileBlock(s, target, pcfg, mediaCats) {
+    return {
+      aboutText: target.about || '', uAbout: this.bind(target, 'about'),
+      featsText: (target.feats || []).join('\n'),
+      uFeats: e => { target.feats = e.target.value.split('\n'); this.save(); },
+      showLinksField: !!pcfg.links,
+      linkRows: (Array.isArray(target.links) ? target.links : []).map(l => ({
+        title: l.title || '', url: l.url || '',
+        uTitle: this.bind(l, 'title'), uUrl: this.bind(l, 'url'),
+        del: () => { target.links = target.links.filter(x => x !== l); this.save(); },
+      })),
+      addLink: () => { if (!Array.isArray(target.links)) target.links = []; target.links.push({ title: '', url: '' }); this.save(); },
+      showVideoField: pcfg.video !== 'none',
+      videoFieldLabel: pcfg.video === 'reel' ? 'Видео-визитка (обычно достаточно одной ссылки)' : 'Видео',
+      vidGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все видео' }]).map(g => {
+        const groupVideos = (target.videos || []).filter(v => (v.cat || '') === g.id);
+        return {
+          name: g.name,
+          rows: groupVideos.map(v => {
+            this.resolveThumb(v.url);
+            const thumb = this.thumbFor(v.url);
+            return {
+              title: v.title || '', url: v.url || '',
+              uTitle: this.bind(v, 'title'),
+              uUrl: e => { v.url = e.target.value; this.save(); this.resolveThumb(v.url); },
+              thumb, hasThumb: !!thumb, noThumb: !thumb,
+              del: () => { target.videos = target.videos.filter(x => x !== v); this.save(); },
+            };
+          }),
+          addVideo: () => { if (!Array.isArray(target.videos)) target.videos = []; target.videos.push({ title: '', url: '', cat: g.id }); this.save(); },
+        };
+      }),
+      photoGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все фото' }]).map(g => {
+        const groupPhotos = (target.photos || []).filter(p => (p.cat || '') === g.id);
+        return {
+          name: g.name,
+          rows: groupPhotos.map(p => ({
+            url: p.url,
+            del: () => { target.photos = target.photos.filter(x => x !== p); this.save(); this.deletePhotoFile(p.url); },
+          })),
+          addPhoto: this.addPortfolioPhoto(target, g.id),
+        };
+      }),
+    };
+  }
   renderVals() {
     const { d, tab } = this.state;
     const tabDefs = [['spec', 'Специалисты'], ['cases', 'Кейсы'], ['pack', 'Пакеты'], ['rev', 'Отзывы'], ['vid', 'Видео'], ['blog', 'Блог'], ['scat', 'Категории специалистов'], ['mcat', 'Медиа-категории'], ['cont', 'Контакты'], ['exp', 'Экспорт']];
@@ -535,6 +654,9 @@ class Component extends DCLogic {
       const hasSubcats = subOpts.length > 0;
       selOrder.push(s.cat);
       if (hasSubcats) selOrder.push(s.subcat || '');
+      if (!s.weddingProfile) s.weddingProfile = { about: '', feats: [], links: [], videos: [], photos: [] };
+      const general = this.buildProfileBlock(s, s, pcfg, mediaCats);
+      const wedding = this.buildProfileBlock(s, s.weddingProfile, pcfg, mediaCats);
       return { ...s,
       uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
       uCat: e => { s.cat = e.target.value; s.subcat = ''; this.save(); },
@@ -542,48 +664,23 @@ class Component extends DCLogic {
       hasPhoto: !!s.photo, photoSrc: s.photo || '', photoLabel: s.photoUploading ? 'Загрузка…' : (s.photo ? 'Заменить' : 'Загрузить'),
       uPhotoFile: this.photoTo(s), delPhoto: () => { const old = s.photo; s.photo = ''; this.save(); this.deletePhotoFile(old); },
       profHref: './specialist.html?id=' + s.id,
-      aboutText: s.about || '', uAbout: this.bind(s, 'about'),
-      featsText: (s.feats || []).join('\n'),
-      uFeats: e => { s.feats = e.target.value.split('\n'); this.save(); },
-      showVideoField: pcfg.video !== 'none',
-      videoFieldLabel: pcfg.video === 'reel' ? 'Видео-визитка (обычно достаточно одной ссылки)' : 'Видео',
-      showLinksField: !!pcfg.links,
-      linkRows: (Array.isArray(s.links) ? s.links : []).map(l => ({
-        title: l.title || '', url: l.url || '',
-        uTitle: this.bind(l, 'title'), uUrl: this.bind(l, 'url'),
-        del: () => { s.links = s.links.filter(x => x !== l); this.save(); },
-      })),
-      addLink: () => { if (!Array.isArray(s.links)) s.links = []; s.links.push({ title: '', url: '' }); this.save(); },
+      isWedding: !!s.wedding,
+      toggleWedding: () => { s.wedding = !s.wedding; this.save(); },
+      weddingChipBg: s.wedding ? 'var(--acc)' : 'transparent', weddingChipColor: s.wedding ? '#0C1117' : '#C7D0D9', weddingChipBorder: s.wedding ? 'var(--acc)' : 'rgba(255,255,255,.25)',
+      weddingChipLabel: s.wedding ? 'Участвует ✓' : 'Не участвует',
+      aboutText: general.aboutText, uAbout: general.uAbout,
+      featsText: general.featsText, uFeats: general.uFeats,
+      showVideoField: general.showVideoField, videoFieldLabel: general.videoFieldLabel,
+      showLinksField: general.showLinksField, linkRows: general.linkRows, addLink: general.addLink,
+      vidGroups: general.vidGroups,
+      photoGroups: general.photoGroups,
+      wAboutText: wedding.aboutText, wUAbout: wedding.uAbout,
+      wFeatsText: wedding.featsText, wUFeats: wedding.uFeats,
+      wShowVideoField: wedding.showVideoField, wVideoFieldLabel: wedding.videoFieldLabel,
+      wShowLinksField: wedding.showLinksField, wLinkRows: wedding.linkRows, wAddLink: wedding.addLink,
+      wVidGroups: wedding.vidGroups,
+      wPhotoGroups: wedding.photoGroups,
       mcatChips: mediaCats.map(c => { const on = Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id); return { name: c.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.25)', toggle: () => { s.mediaCats = on ? s.mediaCats.filter(x => x !== c.id) : (Array.isArray(s.mediaCats) ? s.mediaCats : []).concat(c.id); this.save(); } }; }),
-      vidGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все видео' }]).map(g => {
-        const groupVideos = (s.videos || []).filter(v => (v.cat || '') === g.id);
-        return {
-          name: g.name,
-          rows: groupVideos.map(v => {
-            this.resolveThumb(v.url);
-            const thumb = this.thumbFor(v.url);
-            return {
-              title: v.title || '', url: v.url || '',
-              uTitle: this.bind(v, 'title'),
-              uUrl: e => { v.url = e.target.value; this.save(); this.resolveThumb(v.url); },
-              thumb, hasThumb: !!thumb, noThumb: !thumb,
-              del: () => { s.videos = s.videos.filter(x => x !== v); this.save(); },
-            };
-          }),
-          addVideo: () => { if (!Array.isArray(s.videos)) s.videos = []; s.videos.push({ title: '', url: '', cat: g.id }); this.save(); },
-        };
-      }),
-      photoGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все фото' }]).map(g => {
-        const groupPhotos = (s.photos || []).filter(p => (p.cat || '') === g.id);
-        return {
-          name: g.name,
-          rows: groupPhotos.map(p => ({
-            url: p.url,
-            del: () => { s.photos = s.photos.filter(x => x !== p); this.save(); this.deletePhotoFile(p.url); },
-          })),
-          addPhoto: this.addPortfolioPhoto(s, g.id),
-        };
-      }),
       up: () => this.mv(d.specialists, s, -1), down: () => this.mv(d.specialists, s, 1), dup: dup(d.specialists, s, 's'),
       del: () => { d.specialists = d.specialists.filter(x => x !== s); this.save(); } };
     });

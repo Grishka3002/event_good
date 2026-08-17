@@ -105,8 +105,8 @@ a:hover{color:var(--acc)}
 <header data-screen-label="Шапка каталога" style="padding:170px 0 46px;background:linear-gradient(118deg,#090D12 0%,#0C1117 46%,#111925 46.15%,#0C1117 100%)">
   <div style="max-width:1240px;margin:0 auto;padding:0 28px">
     <a href="./index.html" style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#97A3B0">← На главную</a>
-    <h1 style="margin:22px 0 16px;text-transform:uppercase;line-height:1.02"><span style="display:block;font-size:clamp(36px,5vw,68px);font-weight:900">Специалисты</span><span style="display:block;font-size:clamp(14px,1.8vw,24px);font-weight:500;letter-spacing:.32em;margin-top:10px;color:#DDE4EA">объединения</span></h1>
-    <p style="max-width:640px;font-size:16px;line-height:1.7;color:#9AA6B2;margin:0">Каждого можно позвать точечно или в составе команды. Цены — прямые, без наценки объединения. <b style="color:#F2F5F8">{{ totalLabel }}</b></p>
+    <h1 style="margin:22px 0 16px;text-transform:uppercase;line-height:1.02"><span style="display:block;font-size:clamp(36px,5vw,68px);font-weight:900">{{ heroTitle1 }}</span><span style="display:block;font-size:clamp(14px,1.8vw,24px);font-weight:500;letter-spacing:.32em;margin-top:10px;color:#DDE4EA">{{ heroTitle2 }}</span></h1>
+    <p style="max-width:640px;font-size:16px;line-height:1.7;color:#9AA6B2;margin:0">{{ heroLead }} <b style="color:#F2F5F8">{{ totalLabel }}</b></p>
   </div>
 </header>
 
@@ -197,7 +197,8 @@ class Component extends DCLogic {
     import('./data.js?v=2').then(m => {
       this.mod = m;
       m.loadData().then(d => {
-        const valid = q && d.categories.some(c => c.slug === q);
+        const wedding = location.pathname.startsWith('/svadby');
+        const valid = !wedding && q && d.categories.some(c => c.slug === q && !c.weddingOnly);
         const catObj = valid ? d.categories.find(c => c.slug === q) : null;
         const validSub = !!(catObj && qs && Array.isArray(catObj.subcats) && catObj.subcats.some(sc => sc.slug === qs));
         this.setState({ d, cat: valid ? q : 'all', sub: validSub ? qs : 'all' });
@@ -218,34 +219,43 @@ class Component extends DCLogic {
   }
   renderVals() {
     const { d, cat, sub } = this.state;
-    const C = (d && d.categories) || [];
+    // Свадебный раздел (/svadby) — та же страница и данные, но плитки строятся из
+    // WEDDING_CATALOG (переименование/объединение категорий только для этого раздела,
+    // см. data.js), а список сужен до специалистов с отмеченным в админке s.wedding.
+    const wedding = typeof location !== 'undefined' && location.pathname.startsWith('/svadby');
+    const weddingTiles = (this.mod && this.mod.WEDDING_CATALOG) || [];
+    const C = wedding
+      ? weddingTiles.map((t, i) => ({ slug: 'w' + i, name: t.name, desc: '', subcats: [], cats: t.cats }))
+      : ((d && d.categories) || []).filter(c => !c.weddingOnly);
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
     const maxRaw = String(cts.max || '').trim();
     const maxHref = maxRaw ? (maxRaw.startsWith('http') ? maxRaw : 'https://' + maxRaw.replace(/^\/+/, '')) : '';
     const mainHref = maxHref || tgHref;
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
-    const all = d ? d.specialists : [];
+    const allRaw = d ? d.specialists : [];
+    const all = wedding ? allRaw.filter(s => s.wedding === true) : allRaw;
     const cur = C.find(c => c.slug === cat);
-    const subcats = (cur && Array.isArray(cur.subcats)) ? cur.subcats : [];
+    const subcats = (!wedding && cur && Array.isArray(cur.subcats)) ? cur.subcats : [];
     const curSub = sub !== 'all' ? subcats.find(sc => sc.slug === sub) : null;
-    const byCat = cat === 'all' ? all : all.filter(s => s.cat === cat);
+    const inTile = s => wedding ? (cur ? cur.cats.includes(s.cat) : false) : (s.cat === cat);
+    const byCat = cat === 'all' ? all : all.filter(inTile);
     const shown = (sub === 'all' || !curSub) ? byCat : byCat.filter(s => (s.subcat || '') === sub);
     const list = shown.map(s => {
-      const cObj = C.find(c => c.slug === s.cat) || {};
+      const cObj = wedding ? { name: (weddingTiles.find(t => t.cats.includes(s.cat)) || {}).name || '' } : (((d && d.categories) || []).find(c => c.slug === s.cat) || {});
       const cn = cObj.name || '';
-      const subcatName = (s.subcat && Array.isArray(cObj.subcats)) ? ((cObj.subcats.find(x => x.slug === s.subcat) || {}).name || '') : '';
-      return { ...s, slotId: 'spec-' + s.id, ph: 'Портрет · ' + cn.toLowerCase(), profHref: './specialist.html?id=' + s.id, hasPhoto: !!s.photo, noPhoto: !s.photo, photoAlt: s.name + ' — ' + s.role,
+      const subcatName = (!wedding && s.subcat && Array.isArray(cObj.subcats)) ? ((cObj.subcats.find(x => x.slug === s.subcat) || {}).name || '') : '';
+      return { ...s, slotId: 'spec-' + s.id, ph: 'Портрет · ' + cn.toLowerCase(), profHref: (wedding ? '/svadby/specialist.html?id=' : './specialist.html?id=') + s.id, hasPhoto: !!s.photo, noPhoto: !s.photo, photoAlt: s.name + ' — ' + s.role,
         subcatName, hasSubcatBadge: !!subcatName,
         book: () => {
-          const msg = 'Здравствуйте! Хочу забронировать специалиста с сайта «Хорошее решение»: ' + s.name + ' (' + s.role + '). Подскажите свободные даты и цену.';
+          const msg = (wedding ? 'Здравствуйте! Нашёл(а) на странице свадебных специалистов сайта «Хорошее решение» и хочу забронировать: ' : 'Здравствуйте! Хочу забронировать специалиста с сайта «Хорошее решение»: ') + s.name + ' (' + s.role + '). Подскажите свободные даты и цену.';
           try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch (e) {}
           window.open(tgHref, '_blank');
         } };
     });
-    const mk = c => ({ ...c, count: all.filter(s => s.cat === c.slug).length,
+    const mk = c => ({ ...c, count: all.filter(wedding ? (s => c.cats.includes(s.cat)) : (s => s.cat === c.slug)).length,
       bg: cat === c.slug ? 'var(--acc)' : 'transparent', color: cat === c.slug ? '#0C1117' : '#C7D0D9', border: cat === c.slug ? 'var(--acc)' : 'rgba(255,255,255,.16)',
-      pick: () => { this.setState({ cat: c.slug, sub: 'all' }); history.replaceState(null, '', '?cat=' + c.slug); } });
+      pick: () => { this.setState({ cat: c.slug, sub: 'all' }); if (!wedding) history.replaceState(null, '', '?cat=' + c.slug); } });
     const mkSub = sc => ({ ...sc, count: byCat.filter(s => (s.subcat || '') === sc.slug).length,
       bg: sub === sc.slug ? 'var(--acc)' : 'transparent', color: sub === sc.slug ? '#0C1117' : '#C7D0D9', border: sub === sc.slug ? 'var(--acc)' : 'rgba(255,255,255,.16)',
       pick: () => { this.setState({ sub: sc.slug }); history.replaceState(null, '', '?cat=' + cat + '&sub=' + sc.slug); } });
@@ -264,8 +274,11 @@ class Component extends DCLogic {
       subChips: subcats.map(mkSub),
       subAllBg: sub === 'all' ? 'var(--acc)' : 'transparent', subAllColor: sub === 'all' ? '#0C1117' : '#C7D0D9', subAllBorder: sub === 'all' ? 'var(--acc)' : 'rgba(255,255,255,.16)',
       pickSubAll: () => { this.setState({ sub: 'all' }); history.replaceState(null, '', '?cat=' + cat); },
-      groupTitle: cat === 'all' ? 'Все специалисты' : (curSub ? cur.name + ' · ' + curSub.name : (cur ? cur.name : '')),
-      groupDesc: cat === 'all' ? C.length + ' направлений — от организаторов до артистов оригинального жанра' : (cur ? cur.desc : ''),
+      heroTitle1: wedding ? 'Специалисты' : 'Специалисты',
+      heroTitle2: wedding ? 'на свадьбу' : 'объединения',
+      heroLead: wedding ? 'Заточены именно под свадьбы — не берут корпоративы и дни рождения параллельно. Цены — прямые, без наценки объединения.' : 'Каждого можно позвать точечно или в составе команды. Цены — прямые, без наценки объединения.',
+      groupTitle: cat === 'all' ? (wedding ? 'Все свадебные специалисты' : 'Все специалисты') : (curSub ? cur.name + ' · ' + curSub.name : (cur ? cur.name : '')),
+      groupDesc: cat === 'all' ? (wedding ? C.length + ' направлений для свадьбы' : C.length + ' направлений — от организаторов до артистов оригинального жанра') : (cur ? cur.desc : ''),
       list, isEmpty: !!d && list.length === 0
     };
   }

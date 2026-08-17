@@ -230,12 +230,16 @@ function injectHead(html, seo) {
   return html;
 }
 
-function buildSpecialistSeo(s, categories, origin) {
+// ctx.wedding=true (и специалист сам отмечен s.wedding в админке) — заголовок/описание/url
+// подстраиваются под свадебный раздел (/svadby), см. роут /svadby/specialist.html ниже.
+function buildSpecialistSeo(s, categories, origin, ctx) {
+  const wedding = !!(ctx && ctx.wedding && s.wedding);
   const cat = (categories || []).find(c => c.slug === s.cat);
   const catName = cat ? cat.name : '';
-  const title = clamp(`${s.name} — ${s.role} | Хорошее решение`, 90);
-  const description = clamp(`${s.name}${catName ? ' (' + catName + (s.exp ? ', опыт ' + s.exp : '') + ')' : ''} — профиль, портфолио и видео работ. Бронирование напрямую, ${s.price || 'цена по запросу'}, без агентской наценки.`, 200);
-  const url = `${origin}/specialist.html?id=${encodeURIComponent(s.id)}`;
+  const titlePrefix = wedding ? 'Свадебный ' : '';
+  const title = clamp(`${titlePrefix}${s.name} — ${s.role} | Хорошее решение`, 90);
+  const description = clamp(`${s.name}${catName ? ' (' + catName + (s.exp ? ', опыт ' + s.exp : '') + ')' : ''}${wedding ? ' — специалист по свадьбам' : ''} — профиль, портфолио и видео работ. Бронирование напрямую, ${s.price || 'цена по запросу'}, без агентской наценки.`, 200);
+  const url = `${origin}/${wedding ? 'svadby/' : ''}specialist.html?id=${encodeURIComponent(s.id)}`;
   return {
     title, description, url,
     ogTitle: clamp(`${s.name} — ${s.role}`, 90),
@@ -276,11 +280,27 @@ function servePageWithSeo(req, res, filePath, seo) {
 
 // Отдаём безусловно (с id и без) — не только чтобы подставить SEO-теги, но и чтобы
 // путь гарантированно шёл через Node, а не через возможную статическую раздачу файла.
-function serveSpecialistPage(req, res, id) {
+// ctx — необязательный контекст (см. buildSpecialistSeo), напр. { wedding: true } для /svadby/specialist.html.
+function serveSpecialistPage(req, res, id, ctx) {
   const d = readLiveData();
   const s = id && d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id) : null;
-  const seo = s ? buildSpecialistSeo(s, d.categories, requestOrigin(req) || 'https://eventspecialists.ru') : null;
+  const seo = s ? buildSpecialistSeo(s, d.categories, requestOrigin(req) || 'https://eventspecialists.ru', ctx) : null;
   servePageWithSeo(req, res, SPECIALIST_HTML_PATH, seo);
+}
+
+// Свадебный каталог (/svadby) — та же страница specialists.html (она сама, по location.pathname,
+// переключается в свадебный режим — фильтр по s.wedding и плитки из WEDDING_CATALOG, см. data.js),
+// только заголовок/описание для соцсетей и поисковиков — под свадебную тематику.
+function weddingCatalogSeo(origin) {
+  const o = origin || 'https://eventspecialists.ru';
+  const description = 'Свадебные специалисты «Хорошего решения»: ведущие, фотографы, видеографы, декораторы и флористы, кейтеринг, кондитеры, визажисты и стилисты, площадки — заточены именно под свадьбы.';
+  return {
+    title: 'Специалисты на свадьбу | Хорошее решение',
+    description,
+    url: `${o}/svadby`,
+    ogTitle: 'Специалисты на свадьбу',
+    ogDescription: description,
+  };
 }
 
 function serveArticlePage(req, res, slug) {
@@ -299,10 +319,14 @@ function serveSitemap(req, res) {
   const urls = [
     { loc: origin + '/', priority: '1.0' },
     { loc: origin + '/specialists.html', priority: '0.9' },
+    { loc: origin + '/svadby', priority: '0.85' },
     { loc: origin + '/cases.html', priority: '0.8' },
     { loc: origin + '/blog.html', priority: '0.7' },
   ];
-  if (d && Array.isArray(d.specialists)) d.specialists.forEach(s => urls.push({ loc: origin + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' }));
+  if (d && Array.isArray(d.specialists)) d.specialists.forEach(s => {
+    urls.push({ loc: origin + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
+    if (s.wedding) urls.push({ loc: origin + '/svadby/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
+  });
   if (d && Array.isArray(d.articles)) d.articles.forEach(a => urls.push({ loc: origin + '/blog.html?post=' + encodeURIComponent(a.slug), priority: '0.6' }));
   const body = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc><lastmod>${today}</lastmod><priority>${u.priority}</priority></url>`).join('\n')
@@ -585,9 +609,12 @@ function handleLead(req, res) {
   });
   req.on('end', async () => {
     const body = Buffer.concat(chunks).toString('utf8'); // см. readBody выше — то же самое, одним куском
-    let text;
-    try { text = String(JSON.parse(body).text || '').trim(); } catch { text = ''; }
+    let text, source;
+    try { const j = JSON.parse(body); text = String(j.text || '').trim(); source = String(j.source || '').trim(); } catch { text = ''; source = ''; }
     if (!text || text.length > 3500) return send(req, res, 400, '{"ok":false,"reason":"bad-text"}', { 'Content-Type': 'application/json' });
+    // Помечаем заявки со свадебного раздела прямо в тексте сообщения — отдельного хранилища
+    // заявок нет, единственный канал их получения — телеграм (см. tgSend ниже).
+    if (source === 'wedding') text = '💍 Источник: Свадьбы\n' + text;
     try {
       const okMain = await tgSend(LEAD_MAIN_ID, text);
       for (const id of extraLeadIds()) {
@@ -643,6 +670,15 @@ http.createServer((req, res) => {
   }
   if (urlPath === '/blog.html' || urlPath === '/blog') {
     return serveArticlePage(req, res, urlObj.searchParams.get('post'));
+  }
+  // Свадебный раздел — та же страница-каталог/профиль, что и обычно (см. specialists.html/
+  // specialist.html: они сами распознают свадебный контекст по location.pathname), просто
+  // отдана по другому пути и (для профиля) с подставленными свадебными SEO-тегами.
+  if (urlPath === '/svadby' || urlPath === '/svadby/') {
+    return servePageWithSeo(req, res, path.join(ROOT, 'specialists.html'), weddingCatalogSeo(requestOrigin(req)));
+  }
+  if (urlPath === '/svadby/specialist.html' || urlPath === '/svadby/specialist') {
+    return serveSpecialistPage(req, res, urlObj.searchParams.get('id'), { wedding: true });
   }
   // На некоторых хостингах (например, Beget) файлы, физически лежащие в отдаваемой
   // папке, веб-сервер может отдать напрямую в обход Node — а значит, и в обход проверки

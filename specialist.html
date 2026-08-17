@@ -265,7 +265,8 @@ class Component extends DCLogic {
   syncSeo() {
     const s = this.spec();
     if (!s) return;
-    const title = s.name + ' — ' + s.role + ' | Хорошее решение';
+    const wedding = location.pathname.startsWith('/svadby') && s.wedding === true;
+    const title = (wedding ? 'Свадебный ' : '') + s.name + ' — ' + s.role + ' | Хорошее решение';
     if (document.title !== title) { document.title = title; setTimeout(() => { if (document.title !== title) document.title = title; }, 400); }
     if (this._seoFor === s.id) return;
     this._seoFor = s.id;
@@ -305,26 +306,37 @@ class Component extends DCLogic {
     const mainHref = maxHref || tgHref;
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const s = this.spec();
+    // Свадебный контекст (/svadby/specialist.html): если специалист сам не отмечен s.wedding
+    // в админке — молча показываем обычный профиль (не 404), чтобы расшаренная ссылка не
+    // упиралась в пустоту. Иначе описание/фишки/ссылки/видео/фото берём из s.weddingProfile,
+    // а по каждому пустому полю откатываемся на общее значение — так страница не пустует,
+    // пока свадебный профиль ещё не полностью заполнен.
+    const wedding = location.pathname.startsWith('/svadby') && !!s && s.wedding === true;
+    const wp = (wedding && s && s.weddingProfile) ? s.weddingProfile : {};
     const cat = s ? (C.find(c => c.slug === s.cat) || null) : null;
     const subcat = (s && s.subcat && cat && Array.isArray(cat.subcats)) ? (cat.subcats.find(sc => sc.slug === s.subcat) || null) : null;
     const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
     const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
     const pcfg = s ? (portfolioCfg[s.cat] || defPortfolioCfg) : defPortfolioCfg;
-    const feats = ((s && Array.isArray(s.feats)) ? s.feats : []).filter(x => x && x.trim());
-    const vids = (s && pcfg.video !== 'none' && Array.isArray(s.videos)) ? s.videos : [];
+    const featsSrc = (wedding && Array.isArray(wp.feats) && wp.feats.some(x => x && x.trim())) ? wp.feats : (s ? s.feats : []);
+    const feats = (Array.isArray(featsSrc) ? featsSrc : []).filter(x => x && x.trim());
+    const videosSrc = (wedding && Array.isArray(wp.videos) && wp.videos.length) ? wp.videos : (s ? s.videos : []);
+    const vids = (s && pcfg.video !== 'none' && Array.isArray(videosSrc)) ? videosSrc : [];
     const allV = vids.map((v, i) => {
       this.resolveThumb(v.url);
       const thumb = this.thumbFor(v.url);
       return { url: v.url, cat: v.cat || '', thumb: thumb || '', hasThumb: !!thumb, caption: v.title || 'Видео ' + (i + 1) };
     }).filter(v => v.url);
-    const links = (s && pcfg.links && Array.isArray(s.links) ? s.links : []).map((l, i) => {
+    const linksSrc = (wedding && Array.isArray(wp.links) && wp.links.length) ? wp.links : (s ? s.links : []);
+    const links = (s && pcfg.links && Array.isArray(linksSrc) ? linksSrc : []).map((l, i) => {
       let url = (l.url || '').trim();
       if (url && !/^(https?:)?\/\//i.test(url)) url = 'https://' + url;
       return { url, caption: l.title || 'Портфолио ' + (i + 1) };
     }).filter(l => l.url);
     const mediaCats = (d && Array.isArray(d.mediaCats)) ? d.mediaCats : [];
     const selCats = s ? mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)) : [];
-    const allP = (s && Array.isArray(s.photos) ? s.photos : []).filter(p => p && p.url);
+    const photosSrc = (wedding && Array.isArray(wp.photos) && wp.photos.length) ? wp.photos : (s ? s.photos : []);
+    const allP = (Array.isArray(photosSrc) ? photosSrc : []).filter(p => p && p.url);
     let groups = [];
     if (s && selCats.length) {
       groups = selCats.map(c => ({ name: c.name,
@@ -344,7 +356,8 @@ class Component extends DCLogic {
       photos: g.photos.map(p => ({ url: p.url, alt: s.name + ' — ' + g.name })),
       hasPhotos: g.photos.length > 0, hasVideos: g.videos.length > 0 }))
       .filter(g => g.hasPhotos || g.hasVideos);
-    const related = s && d ? d.specialists.filter(x => x.cat === s.cat && x.id !== s.id).slice(0, 4).map(x => ({ ...x, href: './specialist.html?id=' + x.id })) : [];
+    const related = s && d ? d.specialists.filter(x => x.cat === s.cat && x.id !== s.id && (!wedding || x.wedding === true)).slice(0, 4).map(x => ({ ...x, href: (wedding ? '/svadby/specialist.html?id=' : './specialist.html?id=') + x.id })) : [];
+    const aboutSrc = wedding ? (wp.about || (s && s.about)) : (s && s.about);
     return {
       person: cts.person, phone: cts.phone, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''),
       tgHref, tgAt: '@' + String(cts.tg || '').replace(/^@/, ''), maxHref, hasMax: !!maxHref, mainHref, mainLabel,
@@ -360,11 +373,11 @@ class Component extends DCLogic {
       photoSrc: (s && s.photo) || '', hasPhoto: !!(s && s.photo), noPhoto: !(s && s.photo),
       photoAlt: s ? s.name + ' — ' + s.role : '',
       name: s ? s.name : '', role: s ? s.role : '', exp: s ? s.exp : '', price: s ? s.price : '',
-      catName: cat ? cat.name : '', catHref: cat ? './specialists.html?cat=' + cat.slug : './specialists.html',
+      catName: cat ? cat.name : '', catHref: wedding ? '/svadby' : (cat ? './specialists.html?cat=' + cat.slug : './specialists.html'),
       catLinkColor: subcat ? '#97A3B0' : 'var(--acc)',
-      hasSubcat: !!subcat, subcatName: subcat ? subcat.name : '',
+      hasSubcat: !wedding && !!subcat, subcatName: subcat ? subcat.name : '',
       subcatHref: (cat && subcat) ? './specialists.html?cat=' + cat.slug + '&sub=' + subcat.slug : '',
-      about: s ? (s.about || 'Описание появится в ближайшее время. А пока напишите нам в Telegram — расскажем о специалисте, пришлём примеры работ и проверим свободные даты.') : '',
+      about: s ? (aboutSrc || 'Описание появится в ближайшее время. А пока напишите нам в Telegram — расскажем о специалисте, пришлём примеры работ и проверим свободные даты.') : '',
       hasFeats: feats.length > 0, feats,
       groups, showVideoHint: !!s && allV.length === 0 && pcfg.video !== 'none',
       links, hasLinks: links.length > 0,
@@ -372,7 +385,10 @@ class Component extends DCLogic {
       hasRelated: related.length > 0, noRelated: !!s && related.length === 0, related,
       book: () => {
         if (!s) return;
-        const msg = 'Здравствуйте! Хочу забронировать специалиста с сайта «Хорошее решение»: ' + s.name + ' (' + s.role + '). Подскажите свободные даты и цену.';
+        // "Бронь" не идёт через /api/lead — это сразу диалог в Telegram, поэтому источник
+        // (обычный сайт / свадебный раздел) помечаем прямо в тексте сообщения, иначе его
+        // негде увидеть на другой стороне.
+        const msg = (wedding ? 'Здравствуйте! Нашёл(а) на странице свадебных специалистов сайта «Хорошее решение» и хочу забронировать: ' : 'Здравствуйте! Хочу забронировать специалиста с сайта «Хорошее решение»: ') + s.name + ' (' + s.role + '). Подскажите свободные даты и цену.';
         try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch (e) {}
         window.open(tgHref, '_blank');
       }

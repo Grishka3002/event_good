@@ -16,6 +16,24 @@ export const CATEGORIES = [
   { slug: 'vizazhisty', name: 'Визажисты', desc: 'Макияж и укладки на площадке в любое время', subcats: [] },
   { slug: 'prokatchiki', name: 'Прокатчики', desc: 'Звук, свет, экраны, сцены и спецэффекты', subcats: [] },
   { slug: 'artisty', name: 'Артисты оригинального жанра', desc: 'Шоу-номера, цирк, иллюзия, перформансы', subcats: [] },
+  // weddingOnly — категории только для свадебного раздела (/svadby), не показываются в общем каталоге
+  { slug: 'keitering', name: 'Кейтеринг', desc: 'Банкетное меню и обслуживание на площадке', subcats: [], weddingOnly: true },
+  { slug: 'konditery', name: 'Кондитеры', desc: 'Свадебные торты и десертные столы', subcats: [], weddingOnly: true },
+  { slug: 'ploshchadki', name: 'Площадки', desc: 'Локации для свадебной церемонии и банкета', subcats: [], weddingOnly: true },
+];
+
+// Свадебный каталог (/svadby) — какие плитки показывать и какие категории специалистов в них входят
+// (используется вместо CATEGORIES, чтобы переименовать/объединить категории только для этого раздела,
+// не трогая общий каталог; напр. «Создание образа» объединяет визажистов и стилистов)
+export const WEDDING_CATALOG = [
+  { name: 'Ведущие', cats: ['vedushchie'] },
+  { name: 'Фотографы', cats: ['fotografy'] },
+  { name: 'Видеографы и мобилографы', cats: ['videografy'] },
+  { name: 'Декораторы и флористы', cats: ['dekoratory'] },
+  { name: 'Кейтеринг', cats: ['keitering'] },
+  { name: 'Кондитеры', cats: ['konditery'] },
+  { name: 'Создание образа', cats: ['vizazhisty', 'stilisty'] },
+  { name: 'Площадки', cats: ['ploshchadki'] },
 ];
 
 // Транслитерация имени категории в URL-слаг; при коллизии добавляется числовой суффикс.
@@ -46,6 +64,9 @@ export const CATEGORY_PORTFOLIO = {
   vizazhisty: { video: 'few', links: false },
   prokatchiki: { video: 'none', links: false },
   artisty: { video: 'few', links: false },
+  keitering: { video: 'none', links: false },
+  konditery: { video: 'none', links: false },
+  ploshchadki: { video: 'few', links: true },
 };
 export const DEFAULT_PORTFOLIO_CFG = { video: 'few', links: false };
 
@@ -133,10 +154,15 @@ function mergeWithDefaults(saved) {
   if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
   if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
   if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
-  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], subcat: '', ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s }));
+  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], subcat: '', wedding: false, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [] }, ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [], ...(s.weddingProfile || {}) } }));
   if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
   if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));
-  else d.categories = d.categories.map(c => ({ subcats: [], ...c }));
+  else {
+    d.categories = d.categories.map(c => ({ subcats: [], ...c }));
+    // добавляем новые категории из DEFAULTS (напр. weddingOnly), которых ещё нет в ранее сохранённых данных
+    const haveSlugs = new Set(d.categories.map(c => c.slug));
+    DEFAULTS.categories.forEach(c => { if (!haveSlugs.has(c.slug)) d.categories.push({ ...c }); });
+  }
   return d;
 }
 

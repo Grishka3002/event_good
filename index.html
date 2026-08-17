@@ -80,6 +80,7 @@ option{background:#121A26;color:#F2F5F8}
     <div style="display:flex;align-items:center;gap:26px;flex-wrap:wrap;font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase">
       <a href="#about" style="color:#C7D0D9">О нас</a>
       <a href="./specialists.html" style="color:#C7D0D9">Специалисты</a>
+      <a href="/svadby" style="color:#C7D0D9">Свадьбы</a>
       <a href="./cases.html" style="color:#C7D0D9">Кейсы</a>
       <a href="./blog.html" style="color:#C7D0D9">Блог</a>
       <a href="#packages" style="color:#C7D0D9">Пакеты</a>
@@ -98,6 +99,7 @@ option{background:#121A26;color:#F2F5F8}
     <div data-screen-label="Мобильное меню" style="border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;padding:6px 28px 24px;max-height:calc(100vh - 70px);overflow:auto">
       <a href="#about" onClick="{{ closeMenu }}" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">О нас</a>
       <a href="./specialists.html" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Специалисты</a>
+      <a href="/svadby" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Свадьбы</a>
       <a href="./cases.html" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Кейсы</a>
       <a href="./blog.html" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Блог</a>
       <a href="#packages" onClick="{{ closeMenu }}" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Пакеты</a>
@@ -681,7 +683,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const d = this.state.d;
-    const C = (d && d.categories) || [];
+    const C = ((d && d.categories) || []).filter(c => !c.weddingOnly);
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
     const maxRaw = String(cts.max || '').trim();
