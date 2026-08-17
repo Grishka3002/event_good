@@ -82,8 +82,18 @@ const MIME = {
 const TEXT_EXT = new Set(['.html', '.js', '.css', '.svg', '.xml', '.txt', '.json']);
 const REWRITE_EXT = new Set(['.html', '.xml', '.txt']);
 
+// Базовые security-заголовки — на все ответы сразу, независимо от типа контента.
+// Не влияют напрямую на позиции в выдаче, но входят в общую оценку доверия к сайту
+// у поисковиков и убирают предупреждения браузеров про небезопасные заголовки.
+const SECURITY_HEADERS = {
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+};
+
 function send(req, res, code, body, headers) {
-  headers = headers || {};
+  headers = { ...SECURITY_HEADERS, ...(headers || {}) };
   if (typeof body === 'string') body = Buffer.from(body, 'utf8');
   const accepts = (req.headers['accept-encoding'] || '').includes('gzip');
   if (accepts && body.length > 512) {
@@ -112,6 +122,7 @@ function sendFile(req, res, filePath, code) {
       const origin = requestOrigin(req);
       if (origin) data = Buffer.from(data.toString('utf8').split(BASE_PLACEHOLDER).join(origin), 'utf8');
     }
+    if (ext === '.html') data = Buffer.from(injectContactHrefs(data.toString('utf8')), 'utf8');
     const cache = TEXT_EXT.has(ext) && ext !== '.svg'
       ? 'no-cache'                      // html/js/xml/txt — всегда свежие после деплоя
       : 'public, max-age=86400';        // картинки, шрифты, favicon — сутки
@@ -198,6 +209,37 @@ function readLiveData() {
   } catch { return null; }
 }
 
+// Ссылки на контакты (шапка, футер, кнопки "Написать") на всех страницах — вида
+// href="{{ mainHref }}" — подставляются только клиентским JS после загрузки данных.
+// Поисковый бот при первом обходе видит СЫРОЙ HTML (без выполнения JS) и буквально
+// находит там ссылку на несуществующую страницу "/{{ mainHref }}" — переходит по ней,
+// получает 404, и это тратит краулинговый бюджет впустую. Подставляем реальные
+// значения прямо на сервере — та же логика, что дублируется в renderVals() каждой
+// страницы (specialists.html, specialist.html и т.д.), только на стороне Node.
+const DEFAULT_CONTACTS = { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru', max: '' };
+function readContacts() {
+  const d = readLiveData();
+  return (d && d.contacts) ? { ...DEFAULT_CONTACTS, ...d.contacts } : DEFAULT_CONTACTS;
+}
+function contactHrefs(contacts) {
+  const tgHref = 'https://t.me/' + String(contacts.tg || '').replace(/^@/, '');
+  const maxRaw = String(contacts.max || '').trim();
+  const maxHref = maxRaw ? (maxRaw.startsWith('http') ? maxRaw : 'https://' + maxRaw.replace(/^\/+/, '')) : '';
+  const mainHref = maxHref || tgHref;
+  const phoneHref = 'tel:' + String(contacts.phone || '').replace(/[^+\d]/g, '');
+  const mailHref = 'mailto:' + (contacts.email || '');
+  return { mainHref, tgHref, phoneHref, mailHref, maxHref };
+}
+function injectContactHrefs(html) {
+  const hrefs = contactHrefs(readContacts());
+  return html
+    .split('href="{{ mainHref }}"').join(`href="${escapeHtml(hrefs.mainHref)}"`)
+    .split('href="{{ tgHref }}"').join(`href="${escapeHtml(hrefs.tgHref)}"`)
+    .split('href="{{ phoneHref }}"').join(`href="${escapeHtml(hrefs.phoneHref)}"`)
+    .split('href="{{ mailHref }}"').join(`href="${escapeHtml(hrefs.mailHref)}"`)
+    .split('href="{{ maxHref }}"').join(`href="${escapeHtml(hrefs.maxHref)}"`);
+}
+
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -274,6 +316,7 @@ function servePageWithSeo(req, res, filePath, seo) {
   fs.readFile(filePath, 'utf8', (err, html) => {
     if (err) return notFound(req, res);
     if (seo) html = injectHead(html, seo);
+    html = injectContactHrefs(html);
     send(req, res, 200, html, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
   });
 }
