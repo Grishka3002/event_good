@@ -107,7 +107,7 @@ a:hover{color:var(--acc)}
 <section data-screen-label="Список статей" style="padding:56px 0 90px">
   <div style="max-width:1240px;margin:0 auto;padding:0 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:18px">
     <sc-for list="{{ posts }}" as="p" hint-placeholder-count="3">
-      <a href="{{ p.href }}" style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:30px;display:flex;flex-direction:column;gap:14px;color:#F2F5F8;transition:all .22s" style-hover="border-color:var(--acc);transform:translateY(-4px);color:#F2F5F8">
+      <a href="{{ p.href }}" rel="nofollow" style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:30px;display:flex;flex-direction:column;gap:14px;color:#F2F5F8;transition:all .22s" style-hover="border-color:var(--acc);transform:translateY(-4px);color:#F2F5F8">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <span style="border:1px solid var(--acc);color:var(--acc);font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;border-radius:999px;padding:5px 12px">{{ p.tag }}</span>
           <span style="font-size:11.5px;color:#56626F;letter-spacing:.06em">{{ p.dateLabel }} · {{ p.minutes }} мин</span>
@@ -155,7 +155,7 @@ a:hover{color:var(--acc)}
       <div style="font-size:11px;font-weight:700;letter-spacing:.38em;color:#56626F;text-transform:uppercase;margin-bottom:20px">Читайте также</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px">
         <sc-for list="{{ more }}" as="m" hint-placeholder-count="2">
-          <a href="{{ m.href }}" style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:10px;color:#F2F5F8" style-hover="border-color:var(--acc);color:#F2F5F8">
+          <a href="{{ m.href }}" rel="nofollow" style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:10px;color:#F2F5F8" style-hover="border-color:var(--acc);color:#F2F5F8">
             <span style="font-size:11px;color:#56626F;letter-spacing:.06em">{{ m.tag }} · {{ m.minutes }} мин</span>
             <span style="font-weight:800;font-size:15.5px;line-height:1.35">{{ m.title }}</span>
           </a>
