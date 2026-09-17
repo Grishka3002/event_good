@@ -174,9 +174,9 @@ a:hover{color:var(--acc)}
         <sc-if value="{{ g.hasPhotos }}" hint-placeholder-val="{{ true }}">
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
             <sc-for list="{{ g.photos }}" as="p" hint-placeholder-count="4">
-              <div style="position:relative;aspect-ratio:4/3;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.07);background:#121A26">
+              <button type="button" onClick="{{ p.open }}" aria-label="{{ p.label }}" style="position:relative;display:block;width:100%;padding:0;margin:0;font:inherit;cursor:zoom-in;aspect-ratio:4/3;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.07);background:#121A26" style-hover="border-color:var(--acc)">
                 <img src="{{ p.url }}" loading="lazy" alt="{{ p.alt }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:var(--pf)">
-              </div>
+              </button>
             </sc-for>
           </div>
         </sc-if>
@@ -184,8 +184,11 @@ a:hover{color:var(--acc)}
           <div style="display:grid;grid-template-columns:{{ vidCols }};gap:18px;margin-top:16px">
             <sc-for list="{{ g.videos }}" as="v" hint-placeholder-count="2">
               <div style="display:flex;flex-direction:column;gap:12px">
-                <a href="{{ v.url }}" target="_blank" rel="nofollow noopener" style="position:relative;display:block;aspect-ratio:16/9;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#121A26" style-hover="border-color:var(--acc)">
-                  <sc-if value="{{ v.hasThumb }}" hint-placeholder-val="{{ true }}"><img src="{{ v.thumb }}" loading="lazy" alt="{{ v.caption }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:var(--pf)"></sc-if>
+                <a href="{{ v.url }}" target="_blank" rel="nofollow noopener" style="position:relative;display:block;aspect-ratio:{{ v.ratio }};border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#121A26" style-hover="border-color:var(--acc)">
+                  <!-- Превью вписываем целиком (contain), а пустые поля закрываем размытой копией того же кадра:
+                       вертикальные ролики (Rutube/Shorts/Reels) больше не обрезаются до «торса», и авторам
+                       не нужно перезаливать видео под горизонтальный формат. -->
+                  <sc-if value="{{ v.hasThumb }}" hint-placeholder-val="{{ true }}"><img src="{{ v.thumb }}" loading="lazy" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(22px) brightness(.5);transform:scale(1.25)"><img src="{{ v.thumb }}" loading="lazy" alt="{{ v.caption }}" onLoad="{{ v.onThumbLoad }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:var(--pf)"></sc-if>
                   <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,14,19,.32)">
                     <span style="width:56px;height:56px;border-radius:50%;background:color-mix(in oklab,var(--acc) 22%,rgba(10,14,19,.55));border:1.5px solid var(--acc);display:inline-flex;align-items:center;justify-content:center"><span style="width:0;height:0;border-left:14px solid var(--acc);border-top:9px solid transparent;border-bottom:9px solid transparent;display:inline-block;margin-left:4px"></span></span>
                   </span>
@@ -228,6 +231,18 @@ a:hover{color:var(--acc)}
 </section>
 </sc-if>
 
+<sc-if value="{{ lbOpen }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Просмотр фото" role="dialog" aria-modal="true" aria-label="Просмотр фото" onClick="{{ lbClose }}" onTouchStart="{{ lbTouchStart }}" onTouchEnd="{{ lbTouchEnd }}" style="position:fixed;inset:0;z-index:200;background:rgba(6,9,13,.97);display:flex;align-items:center;justify-content:center;padding:60px 12px 52px;box-sizing:border-box;cursor:zoom-out">
+  <img src="{{ lbSrc }}" loading="lazy" alt="{{ lbAlt }}" onClick="{{ lbStop }}" style="display:block;max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;box-shadow:0 24px 70px rgba(0,0,0,.55);cursor:default;user-select:none;-webkit-user-drag:none">
+  <button type="button" onClick="{{ lbClose }}" aria-label="Закрыть" style="position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(12,17,23,.7);color:#F2F5F8;font-size:18px;line-height:1;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--acc);color:var(--acc)">✕</button>
+  <sc-if value="{{ lbMulti }}" hint-placeholder-val="{{ false }}">
+    <button type="button" onClick="{{ lbPrev }}" aria-label="Предыдущее фото" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(12,17,23,.7);color:#F2F5F8;font-size:26px;line-height:1;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0 0 3px" style-hover="border-color:var(--acc);color:var(--acc)">‹</button>
+    <button type="button" onClick="{{ lbNext }}" aria-label="Следующее фото" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(12,17,23,.7);color:#F2F5F8;font-size:26px;line-height:1;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0 0 3px" style-hover="border-color:var(--acc);color:var(--acc)">›</button>
+    <div style="position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:12.5px;font-weight:700;letter-spacing:.14em;color:#97A3B0;pointer-events:none">{{ lbCounter }}</div>
+  </sc-if>
+</div>
+</sc-if>
+
 <footer data-screen-label="Футер" style="background:#080B0F;padding:34px 0">
   <div style="max-width:1240px;margin:0 auto;padding:0 28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:#56626F">
     <span>© 2026 «Хорошее решение» · {{ person }} · <a href="{{ phoneHref }}" style="color:#7C8894;white-space:nowrap">{{ phone }}</a></span>
@@ -238,8 +253,9 @@ a:hover{color:var(--acc)}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;}}">
 class Component extends DCLogic {
-  state = { d: null, id: null };
+  state = { d: null, id: null, lb: null };
   _thumbCache = {};
+  _thumbPortrait = {};
   componentDidMount() {
     this._qid = new URLSearchParams(location.search).get('id');
     import('/data.js?v=2').then(m => { this.mod = m; m.loadData().then(d => this.setState({ d, id: this._qid })); });
@@ -296,6 +312,39 @@ class Component extends DCLogic {
       this.forceUpdate();
     });
   }
+  // Просмотр фото портфолио на весь экран: фото в сетке обрезаны под 4:3, здесь — целиком.
+  // Листание стрелками/свайпом в пределах своей группы, закрытие — ✕, клик по фону, Esc
+  // и системная кнопка «Назад» (на телефоне её жмут первой — не должна уводить со страницы).
+  openLb(photos, i) {
+    if (!this.state.lb) {
+      this._lbKey = e => {
+        if (e.key === 'Escape') this.closeLb();
+        else if (e.key === 'ArrowLeft') this.lbGo(-1);
+        else if (e.key === 'ArrowRight') this.lbGo(1);
+      };
+      this._lbPop = () => { this._lbPushed = false; this.closeLb(); };
+      document.addEventListener('keydown', this._lbKey);
+      window.addEventListener('popstate', this._lbPop);
+      try { history.pushState({ evLb: 1 }, ''); this._lbPushed = true; } catch (e) { this._lbPushed = false; }
+      this._lbOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    }
+    this.setState({ lb: { photos, i } });
+  }
+  closeLb() {
+    if (!this.state.lb) return;
+    document.removeEventListener('keydown', this._lbKey);
+    window.removeEventListener('popstate', this._lbPop);
+    document.body.style.overflow = this._lbOverflow || '';
+    this.setState({ lb: null });
+    if (this._lbPushed) { this._lbPushed = false; history.back(); }
+  }
+  lbGo(step) {
+    const lb = this.state.lb;
+    if (!lb || lb.photos.length < 2) return;
+    const n = lb.photos.length;
+    this.setState({ lb: { photos: lb.photos, i: (lb.i + step + n) % n } });
+  }
   renderVals() {
     const { d } = this.state;
     const C = (d && d.categories) || [];
@@ -325,7 +374,17 @@ class Component extends DCLogic {
     const allV = vids.map((v, i) => {
       this.resolveThumb(v.url);
       const thumb = this.thumbFor(v.url);
-      return { url: v.url, cat: v.cat || '', thumb: thumb || '', hasThumb: !!thumb, caption: v.title || 'Видео ' + (i + 1) };
+      const key = String(v.url || '').trim();
+      // вертикальное превью на телефоне показываем в более высокой карточке — лицо крупнее;
+      // ориентацию узнаём по самой картинке, когда она загрузится (провайдеры её не отдают надёжно)
+      const portrait = !!this._thumbPortrait[key];
+      return { url: v.url, cat: v.cat || '', thumb: thumb || '', hasThumb: !!thumb, caption: v.title || 'Видео ' + (i + 1),
+        ratio: (portrait && this.state.mobile) ? '4/5' : '16/9',
+        onThumbLoad: e => {
+          const im = e.currentTarget;
+          const p = !!im && im.naturalHeight > im.naturalWidth;
+          if (!!this._thumbPortrait[key] !== p) { this._thumbPortrait[key] = p; this.forceUpdate(); }
+        } };
     }).filter(v => v.url);
     const linksSrc = (wedding && Array.isArray(wp.links) && wp.links.length) ? wp.links : (s ? s.links : []);
     const links = (s && pcfg.links && Array.isArray(linksSrc) ? linksSrc : []).map((l, i) => {
@@ -352,10 +411,14 @@ class Component extends DCLogic {
     // были декоративные пустые ячейки для перетаскивания фото, но они никогда не работали
     // на боевом сайте (сработали бы только внутри дизайн-инструмента, которым собирали
     // сайт); теперь фото грузятся по-настоящему через админку, и пустое просто не рисуем.
-    groups = groups.map(g => ({ ...g,
-      photos: g.photos.map(p => ({ url: p.url, alt: s.name + ' — ' + g.name })),
-      hasPhotos: g.photos.length > 0, hasVideos: g.videos.length > 0 }))
-      .filter(g => g.hasPhotos || g.hasVideos);
+    groups = groups.map(g => {
+      const ph = g.photos.map(p => ({ url: p.url, alt: s.name + ' — ' + g.name }));
+      return { ...g,
+        photos: ph.map((p, i) => ({ ...p, open: () => this.openLb(ph, i), label: 'Открыть фото ' + (i + 1) + ' из ' + ph.length })),
+        hasPhotos: g.photos.length > 0, hasVideos: g.videos.length > 0 };
+    }).filter(g => g.hasPhotos || g.hasVideos);
+    const lb = this.state.lb;
+    const lbPhoto = lb ? lb.photos[lb.i] : null;
     const related = s && d ? d.specialists.filter(x => x.cat === s.cat && x.id !== s.id && (!wedding || x.wedding === true)).slice(0, 4).map(x => ({ ...x, href: (wedding ? '/svadby/specialist.html?id=' : '/specialist.html?id=') + x.id })) : [];
     const aboutSrc = wedding ? (wp.about || (s && s.about)) : (s && s.about);
     return {
@@ -383,6 +446,21 @@ class Component extends DCLogic {
       links, hasLinks: links.length > 0,
       hasPortfolioContent: links.length > 0 || groups.length > 0 || (!!s && allV.length === 0 && pcfg.video !== 'none'),
       hasRelated: related.length > 0, noRelated: !!s && related.length === 0, related,
+      lbOpen: !!lbPhoto, lbSrc: lbPhoto ? lbPhoto.url : '', lbAlt: lbPhoto ? lbPhoto.alt : '',
+      lbMulti: !!lb && lb.photos.length > 1, lbCounter: lb ? (lb.i + 1) + ' / ' + lb.photos.length : '',
+      lbClose: () => this.closeLb(),
+      lbStop: e => e.stopPropagation(),
+      lbPrev: e => { e.stopPropagation(); this.lbGo(-1); },
+      lbNext: e => { e.stopPropagation(); this.lbGo(1); },
+      lbTouchStart: e => { const t = e.touches && e.touches[0]; this._lbTouch = t ? { x: t.clientX, y: t.clientY } : null; },
+      lbTouchEnd: e => {
+        const st = this._lbTouch, t = e.changedTouches && e.changedTouches[0];
+        this._lbTouch = null;
+        if (!st || !t) return;
+        const dx = t.clientX - st.x, dy = t.clientY - st.y;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) this.lbGo(dx < 0 ? 1 : -1);
+        else if (dy > 90 && Math.abs(dy) > Math.abs(dx) * 1.5) this.closeLb();
+      },
       book: () => {
         if (!s) return;
         // "Бронь" не идёт через /api/lead — это сразу диалог в Telegram, поэтому источник
