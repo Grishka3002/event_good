@@ -184,7 +184,17 @@ a:hover{color:var(--acc)}
           <div style="display:grid;grid-template-columns:{{ vidCols }};gap:18px;margin-top:16px">
             <sc-for list="{{ g.videos }}" as="v" hint-placeholder-count="2">
               <div style="display:flex;flex-direction:column;gap:12px">
-                <a href="{{ v.url }}" target="_blank" rel="nofollow noopener" style="position:relative;display:block;aspect-ratio:{{ v.ratio }};border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#121A26" style-hover="border-color:var(--acc)">
+                <!-- Rutube/YouTube/VK/Vimeo проигрываются прямо здесь: по нажатию на превью
+                     подставляем плеер сервиса вместо картинки, посетитель остаётся на сайте.
+                     Для ссылок на другие сервисы плеера нет — там карточка работает как
+                     обычная ссылка и открывает видео в новой вкладке, как раньше. -->
+                <sc-if value="{{ v.playing }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;aspect-ratio:{{ v.ratio }};border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#000">
+                    <iframe src="{{ v.embed }}" title="{{ v.caption }}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ v.cover }}" hint-placeholder-val="{{ true }}">
+                <a href="{{ v.url }}" onClick="{{ v.play }}" target="_blank" rel="nofollow noopener" style="position:relative;display:block;aspect-ratio:{{ v.ratio }};border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#121A26;cursor:pointer" style-hover="border-color:var(--acc)">
                   <!-- Превью вписываем целиком (contain), а пустые поля закрываем размытой копией того же кадра:
                        вертикальные ролики (Rutube/Shorts/Reels) больше не обрезаются до «торса», и авторам
                        не нужно перезаливать видео под горизонтальный формат. -->
@@ -193,7 +203,8 @@ a:hover{color:var(--acc)}
                     <span style="width:56px;height:56px;border-radius:50%;background:color-mix(in oklab,var(--acc) 22%,rgba(10,14,19,.55));border:1.5px solid var(--acc);display:inline-flex;align-items:center;justify-content:center"><span style="width:0;height:0;border-left:14px solid var(--acc);border-top:9px solid transparent;border-bottom:9px solid transparent;display:inline-block;margin-left:4px"></span></span>
                   </span>
                 </a>
-                <div style="font-size:13px;font-weight:600;color:#97A3B0">{{ v.caption }} ↗</div>
+                </sc-if>
+                <div style="font-size:13px;font-weight:600;color:#97A3B0">{{ v.caption }}{{ v.captionMark }}</div>
               </div>
             </sc-for>
           </div>
@@ -206,6 +217,87 @@ a:hover{color:var(--acc)}
   </div>
 </section>
 </sc-if>
+
+<section data-screen-label="Отзывы" style="padding:0 0 90px">
+  <div style="max-width:1240px;margin:0 auto;padding:0 28px">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div style="width:34px;height:3px;background:var(--acc)"></div><div style="font-size:11px;font-weight:700;letter-spacing:.38em;color:#97A3B0;text-transform:uppercase">Отзывы</div></div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:30px">
+      <h2 style="margin:0;font-size:clamp(26px,3vw,40px);font-weight:900;text-transform:uppercase;line-height:1.08">Что говорят о работе</h2>
+      <sc-if value="{{ hasRevs }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:30px;font-weight:900;color:var(--acc);line-height:1">{{ revAvg }}</span>
+          <span style="font-size:13px;color:#97A3B0;line-height:1.5">из 5<br>{{ revCountLabel }}</span>
+        </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ hasRevs }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:14px;margin-bottom:26px">
+        <sc-for list="{{ revs }}" as="r" hint-placeholder-count="2">
+          <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:12px">
+            <div style="letter-spacing:.18em;font-size:14px;color:var(--acc)">{{ r.stars }}</div>
+            <p style="margin:0;font-size:14.5px;line-height:1.7;color:#C7D0D9;white-space:pre-wrap">{{ r.text }}</p>
+            <div style="margin-top:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:baseline">
+              <span style="font-size:14px;font-weight:800">{{ r.author }}</span>
+              <span style="font-size:12px;color:#7C8894">{{ r.meta }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ noRevs }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px dashed rgba(255,255,255,.18);border-radius:16px;padding:34px 28px;text-align:center;color:#9AA6B2;font-size:14.5px;line-height:1.7;margin-bottom:26px">Отзывов пока нет. Если вы были на событии — расскажите, как всё прошло: ваш отзыв будет первым.</div>
+    </sc-if>
+
+    <sc-if value="{{ revFormClosed }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ openRevForm }}" style="background:transparent;border:1px solid var(--acc);color:var(--acc);font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 28px;border-radius:11px;cursor:pointer;font-family:inherit" style-hover="background:var(--acc);color:#0C1117">Оставить отзыв</button>
+    </sc-if>
+
+    <sc-if value="{{ revFormOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="background:#121A26;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:24px;max-width:720px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:14px">
+          <div style="font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.06em">Ваш отзыв</div>
+          <button onClick="{{ closeRevForm }}" aria-label="Закрыть форму" style="background:transparent;border:1px solid rgba(255,255,255,.18);color:#C7D0D9;border-radius:9px;width:38px;height:38px;font-size:15px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:7px">Как вас зовут</div>
+            <input value="{{ rvName }}" onInput="{{ uRvName }}" placeholder="Имя" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:13px 14px;color:#F2F5F8;font-size:14px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:7px">Событие — необязательно</div>
+            <input value="{{ rvEvent }}" onInput="{{ uRvEvent }}" placeholder="Например: свадьба, июль 2026" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:13px 14px;color:#F2F5F8;font-size:14px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:7px">Оценка</div>
+          <div style="display:flex;gap:6px">
+            <sc-for list="{{ rvStars }}" as="st" hint-placeholder-count="5">
+              <button onClick="{{ st.pick }}" aria-label="{{ st.label }}" style="background:transparent;border:none;color:{{ st.color }};font-size:30px;line-height:1;padding:2px 3px;cursor:pointer;font-family:inherit" style-hover="transform:scale(1.12)">{{ st.icon }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:7px">Отзыв</div>
+          <textarea rows="5" value="{{ rvText }}" onInput="{{ uRvText }}" placeholder="Как прошло событие, что понравилось" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:13px 14px;color:#F2F5F8;font-size:14px;line-height:1.6;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea>
+        </div>
+        <!-- Поле-ловушка: люди его не видят и не заполняют, а спам-боты заполняют все поля подряд. -->
+        <input value="{{ rvHp }}" onInput="{{ uRvHp }}" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <sc-if value="{{ hasRvErr }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:13.5px;color:#E5533C;line-height:1.6">{{ rvErr }}</div>
+        </sc-if>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <button onClick="{{ sendRev }}" disabled="{{ rvSending }}" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 30px;border-radius:11px;border:none;cursor:pointer;font-family:inherit;opacity:{{ rvBtnOpacity }}" style-hover="filter:brightness(1.1)">{{ rvBtnLabel }}</button>
+          <span style="font-size:12px;color:#56626F;line-height:1.6;max-width:360px">Отзыв появится на странице после проверки — обычно в течение дня.</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ revThanks }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid color-mix(in oklab,var(--acc) 55%,transparent);border-radius:16px;padding:26px 28px;max-width:720px;color:#C7D0D9;font-size:14.5px;line-height:1.7">Спасибо! Отзыв отправлен и появится на странице после проверки.</div>
+    </sc-if>
+  </div>
+</section>
 
 <section data-screen-label="Другие специалисты" style="padding:70px 0;background:#0A0E13;border-top:1px solid rgba(255,255,255,.06)">
   <div style="max-width:1240px;margin:0 auto;padding:0 28px">
@@ -253,7 +345,8 @@ a:hover{color:var(--acc)}
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#EE7F2D&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#EE7F2D&quot;,&quot;#E2B33C&quot;,&quot;#DD5A36&quot;,&quot;#4E9CF5&quot;],&quot;section&quot;:&quot;Стиль&quot;},&quot;grayscalePhotos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Стиль&quot;}}">
 class Component extends DCLogic {
-  state = { d: null, id: null, lb: null };
+  state = { d: null, id: null, lb: null, playing: '',
+    rvOpen: false, rvName: '', rvEvent: '', rvRating: 5, rvText: '', rvHp: '', rvState: 'idle', rvErr: '' };
   _thumbCache = {};
   _thumbPortrait = {};
   componentDidMount() {
@@ -339,6 +432,47 @@ class Component extends DCLogic {
     this.setState({ lb: null });
     if (this._lbPushed) { this._lbPushed = false; history.back(); }
   }
+  // Отзывы о специалисте: показываем только одобренные (сервер неодобренные и не отдаёт),
+  // новые сверху. Форма ниже отправляет отзыв на модерацию — см. sendReview в data.js.
+  plural(n, one, two, many) {
+    const a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return many;
+    if (b > 1 && b < 5) return two;
+    if (b === 1) return one;
+    return many;
+  }
+  stars(n) { n = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return '★'.repeat(n) + '☆'.repeat(5 - n); }
+  reviewDate(iso) {
+    const m = /^(\d{4})-(\d{2})/.exec(String(iso || ''));
+    if (!m) return '';
+    const months = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+    return (months[+m[2] - 1] || '') + ' ' + m[1];
+  }
+  submitReview(s) {
+    if (!s || this.state.rvState === 'sending') return;
+    const name = String(this.state.rvName || '').trim();
+    const text = String(this.state.rvText || '').trim();
+    const rating = Number(this.state.rvRating) || 0;
+    if (name.length < 2) return this.setState({ rvErr: 'Напишите, как вас зовут.' });
+    if (text.length < 10) return this.setState({ rvErr: 'Расскажите чуть подробнее — хотя бы пару предложений.' });
+    if (text.length > 2000) return this.setState({ rvErr: 'Слишком длинный отзыв — уместите в 2000 знаков.' });
+    if (!(rating >= 1 && rating <= 5)) return this.setState({ rvErr: 'Поставьте оценку от 1 до 5.' });
+    this.setState({ rvState: 'sending', rvErr: '' });
+    this.mod.sendReview({
+      specId: s.id, author: name, event: String(this.state.rvEvent || '').trim(),
+      rating, text, website: this.state.rvHp,
+    }).then(res => {
+      if (res.ok) {
+        return this.setState({ rvState: 'done', rvOpen: false, rvName: '', rvEvent: '', rvText: '', rvRating: 5, rvErr: '' });
+      }
+      const msg = res.reason === 'rate-limit'
+        ? 'Слишком много отзывов подряд с этого устройства. Попробуйте позже.'
+        : res.reason === 'network'
+          ? 'Не получилось отправить — проверьте интернет и попробуйте ещё раз.'
+          : 'Не получилось отправить отзыв. Попробуйте ещё раз чуть позже.';
+      this.setState({ rvState: 'idle', rvErr: msg });
+    });
+  }
   lbGo(step) {
     const lb = this.state.lb;
     if (!lb || lb.photos.length < 2) return;
@@ -378,7 +512,13 @@ class Component extends DCLogic {
       // вертикальное превью на телефоне показываем в более высокой карточке — лицо крупнее;
       // ориентацию узнаём по самой картинке, когда она загрузится (провайдеры её не отдают надёжно)
       const portrait = !!this._thumbPortrait[key];
+      // Ссылка на плеер сервиса — если он нам знаком (Rutube/YouTube/VK/Vimeo). Тогда по
+      // нажатию на превью видео играет прямо в карточке; иначе карточка остаётся ссылкой.
+      const embed = (this.mod && this.mod.videoEmbedUrl) ? this.mod.videoEmbedUrl(v.url) : '';
+      const playing = !!embed && this.state.playing === key;
       return { url: v.url, cat: v.cat || '', thumb: thumb || '', hasThumb: !!thumb, caption: v.title || 'Видео ' + (i + 1),
+        embed, playing, cover: !playing, captionMark: embed ? '' : ' ↗',
+        play: embed ? (e => { e.preventDefault(); this.setState({ playing: key }); }) : null,
         ratio: (portrait && this.state.mobile) ? '4/5' : '16/9',
         onThumbLoad: e => {
           const im = e.currentTarget;
@@ -419,6 +559,9 @@ class Component extends DCLogic {
     }).filter(g => g.hasPhotos || g.hasVideos);
     const lb = this.state.lb;
     const lbPhoto = lb ? lb.photos[lb.i] : null;
+    const revsRaw = (s && this.mod && this.mod.specReviewsFor) ? this.mod.specReviewsFor(d, s.id) : [];
+    const revSum = revsRaw.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+    const revAvg = revsRaw.length ? (revSum / revsRaw.length) : 0;
     const related = s && d ? d.specialists.filter(x => x.cat === s.cat && x.id !== s.id && (!wedding || x.wedding === true)).slice(0, 4).map(x => ({ ...x, href: (wedding ? '/svadby/specialist.html?id=' : '/specialist.html?id=') + x.id })) : [];
     const aboutSrc = wedding ? (wp.about || (s && s.about)) : (s && s.about);
     return {
@@ -446,6 +589,34 @@ class Component extends DCLogic {
       links, hasLinks: links.length > 0,
       hasPortfolioContent: links.length > 0 || groups.length > 0 || (!!s && allV.length === 0 && pcfg.video !== 'none'),
       hasRelated: related.length > 0, noRelated: !!s && related.length === 0, related,
+      hasRevs: revsRaw.length > 0, noRevs: revsRaw.length === 0,
+      revAvg: revsRaw.length ? revAvg.toFixed(1).replace('.', ',') : '',
+      revCountLabel: revsRaw.length + ' ' + this.plural(revsRaw.length, 'отзыв', 'отзыва', 'отзывов'),
+      revs: revsRaw.map(r => ({
+        author: r.author || 'Гость', text: r.text || '', stars: this.stars(r.rating),
+        // в «событии» почти всегда уже есть месяц и год («свадьба, июль 2026») — тогда
+        // дату отдельно не показываем, чтобы не было «июль 2026 · июль 2026»
+        meta: r.event ? r.event : this.reviewDate(r.date),
+      })),
+      revFormOpen: !!this.state.rvOpen, revFormClosed: !this.state.rvOpen && this.state.rvState !== 'done',
+      revThanks: this.state.rvState === 'done',
+      openRevForm: () => this.setState({ rvOpen: true, rvState: 'idle', rvErr: '' }),
+      closeRevForm: () => this.setState({ rvOpen: false, rvErr: '' }),
+      rvName: this.state.rvName, uRvName: e => this.setState({ rvName: e.target.value }),
+      rvEvent: this.state.rvEvent, uRvEvent: e => this.setState({ rvEvent: e.target.value }),
+      rvText: this.state.rvText, uRvText: e => this.setState({ rvText: e.target.value }),
+      rvHp: this.state.rvHp, uRvHp: e => this.setState({ rvHp: e.target.value }),
+      rvStars: [1, 2, 3, 4, 5].map(n => ({
+        icon: n <= (Number(this.state.rvRating) || 0) ? '★' : '☆',
+        color: n <= (Number(this.state.rvRating) || 0) ? 'var(--acc)' : '#56626F',
+        label: 'Оценка ' + n + ' из 5',
+        pick: () => this.setState({ rvRating: n, rvErr: '' }),
+      })),
+      hasRvErr: !!this.state.rvErr, rvErr: this.state.rvErr,
+      rvSending: this.state.rvState === 'sending',
+      rvBtnLabel: this.state.rvState === 'sending' ? 'Отправляю…' : 'Отправить отзыв',
+      rvBtnOpacity: this.state.rvState === 'sending' ? '.6' : '1',
+      sendRev: () => this.submitReview(s),
       lbOpen: !!lbPhoto, lbSrc: lbPhoto ? lbPhoto.url : '', lbAlt: lbPhoto ? lbPhoto.alt : '',
       lbMulti: !!lb && lb.photos.length > 1, lbCounter: lb ? (lb.i + 1) + ' / ' + lb.photos.length : '',
       lbClose: () => this.closeLb(),

@@ -36,12 +36,13 @@ option{background:#121A26;color:#F2F5F8}
       <div><div style="font-weight:900;font-size:14px;letter-spacing:.14em">АДМИН-ПАНЕЛЬ</div><div style="font-size:11px;color:#97A3B0;margin-top:2px">Хорошее решение · контент сайта</div></div>
     </div>
     <sc-if value="{{ hasSyncStatus }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{{ syncColor }}">{{ syncLabel }}</span></sc-if>
+    <button onClick="{{ doSave }}" disabled="{{ saveDisabled }}" title="Сохранить изменения на сайте (Ctrl+S)" style="background:{{ saveBg }};color:{{ saveColor }};border:1px solid {{ saveBorder }};border-radius:9px;padding:12px 22px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:{{ saveCursor }};font-family:inherit" style-hover="filter:brightness(1.1)">{{ saveLabel }}</button>
     <a href="./index.html" style="border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:11px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase" style-hover="border-color:var(--acc);color:var(--acc)">Открыть сайт →</a>
   </div>
 </div>
 
 <div style="max-width:1180px;margin:0 auto;padding:26px 28px 80px">
-  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Изменения сохраняются на сервере и сразу видны всем посетителям сайта — не только в этом браузере. Можно редактировать одновременно с другого устройства: разные карточки не мешают друг другу, сервер сам сливает правки. Фотографии добавляются перетаскиванием прямо на карточки сайта. Статус сохранения — в правом верхнем углу.</div>
+  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Правки становятся видны на сайте только после нажатия кнопки «Сохранить» в правом верхнем углу (или Ctrl+S) — до этого спокойно правьте текст, ничего никуда не уходит. Если закрыть вкладку с несохранёнными правками, браузер предупредит. Можно редактировать одновременно с другого устройства: разные карточки не мешают друг другу, сервер сам сливает правки. Фотографии сохраняются сразу при загрузке.</div>
 
   <div data-screen-label="Вкладки" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">
     <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="7">
@@ -304,6 +305,51 @@ option{background:#121A26;color:#F2F5F8}
     </div>
   </sc-if>
 
+  <sc-if value="{{ isSrev }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Отзывы о специалистах" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Отзывы о специалистах <span style="color:#56626F;font-weight:600;font-size:15px">{{ srevCount }}</span></h2>
+        <button onClick="{{ addSrev }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить из переписки</button>
+      </div>
+      <div style="font-size:12.5px;color:#7C8894;line-height:1.6">Отзывы, которые гости оставляют на странице специалиста, сначала попадают сюда и на сайте не видны. Нажмите «Опубликовать» у нужного — и сохраните. Отзыв из переписки добавляется кнопкой справа: он публикуется сразу после сохранения.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <select data-selval="{{ srevFilter }}" onChange="{{ uSrevFilter }}" style="flex:2;min-width:220px;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:12px 14px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;cursor:pointer" style-focus="border-color:var(--acc)"><option value="all">Все специалисты</option><sc-for list="{{ srevSpecOpts }}" as="o"><option value="{{ o.id }}">{{ o.label }}</option></sc-for></select>
+        <button onClick="{{ toggleSrevOnlyNew }}" style="flex:1;min-width:190px;background:{{ srevOnlyNewBg }};color:{{ srevOnlyNewColor }};border:1px solid {{ srevOnlyNewBorder }};border-radius:9px;padding:12px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc)">{{ srevOnlyNewLabel }}</button>
+      </div>
+      <sc-if value="{{ noSrev }}" hint-placeholder-val="{{ false }}"><div style="border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:34px;text-align:center;color:#7C8894;font-size:13.5px">{{ noSrevText }}</div></sc-if>
+      <sc-for list="{{ srevRows }}" as="r" hint-placeholder-count="2">
+        <div style="background:#121A26;border:1px solid {{ r.cardBorder }};border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <span style="border:1px solid {{ r.statusBorder }};color:{{ r.statusColor }};border-radius:999px;padding:6px 14px;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase">{{ r.statusLabel }}</span>
+            <span style="font-size:12px;color:#7C8894">{{ r.srcLabel }} · {{ r.dateLabel }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Специалист</div><select data-selval="{{ r.specId }}" onChange="{{ r.uSpec }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;cursor:pointer"><sc-for list="{{ srevSpecOpts }}" as="o"><option value="{{ o.id }}">{{ o.label }}</option></sc-for></select></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Автор</div><input value="{{ r.author }}" onInput="{{ r.uAuthor }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Событие / год</div><input value="{{ r.event }}" onInput="{{ r.uEvent }}" placeholder="Свадьба, июль 2026" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
+            <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Оценка</div>
+              <div style="display:flex;gap:2px">
+                <sc-for list="{{ r.stars }}" as="st" hint-placeholder-count="5">
+                  <button onClick="{{ st.pick }}" aria-label="{{ st.label }}" style="background:transparent;border:none;color:{{ st.color }};font-size:24px;line-height:1;padding:2px;cursor:pointer;font-family:inherit">{{ st.icon }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Текст отзыва</div><textarea rows="4" value="{{ r.text }}" onInput="{{ r.uText }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;line-height:1.6;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ r.approve }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:8px;padding:11px 20px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">Опубликовать</button>
+            </sc-if>
+            <sc-if value="{{ r.isOk }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ r.hide }}" style="background:transparent;border:1px solid rgba(255,255,255,.2);color:#C7D0D9;border-radius:8px;padding:11px 20px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc);color:var(--acc)">Снять с сайта</button>
+            </sc-if>
+            <button onClick="{{ r.del }}" style="background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:8px;padding:11px 20px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">Удалить</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
   <sc-if value="{{ isBlog }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Блог" style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
@@ -437,7 +483,7 @@ option{background:#121A26;color:#F2F5F8}
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { d: null, tab: 'spec', syncState: null, copiedJson: false, resetArmed: false, impErr: null };
+  state = { d: null, tab: 'spec', syncState: null, dirty: false, copiedJson: false, resetArmed: false, impErr: null, srevFilter: 'all', srevOnlyNew: false };
   jsonRef = null;
   _thumbCache = {}; // url -> превью-URL | null (ещё грузится/не нашлось), см. resolveThumb/thumbFor
   componentDidMount() {
@@ -446,6 +492,15 @@ class Component extends DCLogic {
       m.loadData().then(d => { this._baseData = JSON.parse(JSON.stringify(d)); this.setState({ d }); });
     });
     this._selT = setInterval(() => this.syncSelects(), 400);
+    // Ctrl+S / ⌘S — привычное сохранение с клавиатуры вместо сохранения страницы браузером.
+    this._keyFn = e => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'ы')) { e.preventDefault(); if (this.state.dirty) this.commit(); }
+    };
+    document.addEventListener('keydown', this._keyFn);
+    // Предупреждение при закрытии вкладки с несохранёнными правками — иначе черновик
+    // останется только в этом браузере, а на сайте ничего не изменится.
+    this._beforeUnload = e => { if (this.state.dirty) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', this._beforeUnload);
   }
   thumbFor(url) {
     url = String(url || '').trim();
@@ -467,49 +522,58 @@ class Component extends DCLogic {
       this.forceUpdate();
     });
   }
-  componentWillUnmount() { clearInterval(this._selT); clearTimeout(this._syncT); clearTimeout(this._hideT); }
+  componentWillUnmount() {
+    clearInterval(this._selT); clearTimeout(this._hideT);
+    document.removeEventListener('keydown', this._keyFn);
+    window.removeEventListener('beforeunload', this._beforeUnload);
+  }
+  // Выпадающие списки показывают текущее значение по атрибуту data-selval на самом
+  // теге select (раньше значения раздавались по порядку списков в DOM — это работало
+  // только на вкладке «Специалисты» и ломалось от любой перестановки разметки).
   syncSelects() {
-    if (this.state.tab !== 'spec' || !this._selOrder) return;
-    const sels = document.querySelectorAll('select');
-    // порядок в DOM: [0] — фильтр категорий, дальше — селект категории каждой карточки
-    const expected = [this._selFcat === 'all' ? 'all' : this._selFcat].concat(this._selOrder);
-    sels.forEach((el, i) => {
-      const v = expected[i];
+    document.querySelectorAll('select[data-selval]').forEach(el => {
+      const v = el.getAttribute('data-selval');
       if (v == null) return;
       if (el.value !== v && [...el.options].some(o => o.value === v)) el.value = v;
       [...el.options].forEach(o => { if ((o.value === v) !== o.hasAttribute('selected')) o.toggleAttribute('selected', o.value === v); });
     });
   }
   componentDidUpdate() { this.syncSelects(); }
-  // Мгновенно сохраняет локально (кэш на случай обрыва связи) и с паузой в 700мс
-  // после последней правки отправляет данные на сервер — так набор текста не шлёт
-  // запрос на каждую букву. dataOverride — для импорта/сброса, где данные подставляются
-  // целиком и не гарантированно успевают попасть в this.state к моменту вызова.
-  // forceOverwrite — тоже только для импорта/сброса: заменить всё без слияния (это и
-  // есть их смысл), в отличие от обычного редактирования, где сервер сливает карточки
-  // по отдельности с тем, что уже сохранил кто-то другой (см. syncData в data.js) —
-  // именно это позволяет двум админкам одновременно править разные карточки.
-  save(extra, dataOverride, forceOverwrite) {
+  // Правка — это ЧЕРНОВИК: она сразу видна в интерфейсе и кладётся в локальный кэш
+  // браузера, но на сервер (и на сайт) не уходит, пока не нажата кнопка «Сохранить».
+  // Раньше каждая буква улетала на сервер через 0,7 с, а пришедший ответ подменял
+  // содержимое полей — из-за этого прыгал курсор и терялся только что набранный текст.
+  save(extra) {
+    const data = this.state.d;
+    this.mod.saveData(data); // локальный кэш: черновик переживёт случайное закрытие вкладки
+    this.setState({ dirty: true, syncState: null, ...(extra || {}) });
+  }
+  // Отправка на сервер — по кнопке «Сохранить» (а также сразу после загрузки/удаления
+  // файла фотографии: файл уже лежит на сервере, ссылка на него не должна остаться
+  // только в черновике). dataOverride + forceOverwrite — для импорта и сброса, где
+  // данные подставляются целиком и заменяют всё без слияния; в обычном режиме сервер
+  // сливает карточки по отдельности с тем, что уже сохранил кто-то другой (см. syncData
+  // в data.js) — именно это позволяет двум админкам одновременно править разные карточки.
+  commit(dataOverride, forceOverwrite) {
+    if (!this.mod) return;
     const data = dataOverride || this.state.d;
+    if (!data) return;
     this.mod.saveData(data);
-    clearTimeout(this._syncT);
     clearTimeout(this._hideT);
-    this.setState({ d: data, syncState: 'pending', ...(extra || {}) });
-    this._syncT = setTimeout(() => {
-      const p = forceOverwrite ? this.mod.overwriteData(data) : this.mod.syncData(this._baseData || data, data);
-      p.then(res => {
-        if (res.ok && res.merged) {
-          // merged может содержать чужие правки, добавленные, пока мы редактировали —
-          // подхватываем их сразу, чтобы обе админки видели актуальную картину, не дожидаясь
-          // перезагрузки страницы. Это и есть база для следующего сравнения при сохранении.
-          this._baseData = JSON.parse(JSON.stringify(res.merged));
-          this.setState({ d: res.merged, syncState: 'ok' });
-        } else {
-          this.setState({ syncState: res.ok ? 'ok' : 'error' });
-        }
-        if (res.ok) this._hideT = setTimeout(() => this.setState({ syncState: null }), 1800);
-      });
-    }, 700);
+    this.setState({ d: data, syncState: 'pending' });
+    const p = forceOverwrite ? this.mod.overwriteData(data) : this.mod.syncData(this._baseData || data, data);
+    p.then(res => {
+      if (res.ok && res.merged) {
+        // merged может содержать чужие правки, добавленные, пока мы редактировали —
+        // подхватываем их сразу, чтобы обе админки видели актуальную картину, не дожидаясь
+        // перезагрузки страницы. Это и есть база для следующего сравнения при сохранении.
+        this._baseData = JSON.parse(JSON.stringify(res.merged));
+        this.setState({ d: res.merged, syncState: 'ok', dirty: false });
+      } else {
+        this.setState({ syncState: res.ok ? 'ok' : 'error', dirty: !res.ok });
+      }
+      if (res.ok) this._hideT = setTimeout(() => this.setState({ syncState: null }), 2500);
+    });
   }
   bind(obj, field) { return e => { obj[field] = e.target.value; this.save(); }; }
   // Фото профиля: ужимаем до 900px по ширине в JPEG на клиенте, затем грузим на сервер
@@ -539,7 +603,9 @@ class Component extends DCLogic {
           if (!j || !j.ok) throw new Error('upload-failed');
           delete s.photoUploading;
           s.photo = j.url;
-          this.save();
+          // фото уже лежит на сервере — сохраняем сразу, чтобы ссылка на него не осталась
+          // только в черновике (иначе файл есть, а на сайте его нет)
+          this.commit();
           this.deletePhotoFile(prevPhoto);
         })
         .catch(() => { delete s.photoUploading; this.setState({}); alert('Не получилось загрузить фото на сервер. Проверьте подключение и попробуйте снова.'); });
@@ -577,7 +643,7 @@ class Component extends DCLogic {
           if (!j || !j.ok) throw new Error('upload-failed');
           if (!Array.isArray(s.photos)) s.photos = [];
           s.photos.push({ url: j.url, cat: catId });
-          this.save();
+          this.commit(); // см. выше: файл уже на сервере, ссылку сохраняем сразу
         })
         .catch(() => alert('Не получилось загрузить фото на сервер. Проверьте подключение и попробуйте снова.'));
     };
@@ -626,7 +692,7 @@ class Component extends DCLogic {
           name: g.name,
           rows: groupPhotos.map(p => ({
             url: p.url,
-            del: () => { target.photos = target.photos.filter(x => x !== p); this.save(); this.deletePhotoFile(p.url); },
+            del: () => { target.photos = target.photos.filter(x => x !== p); this.commit(); this.deletePhotoFile(p.url); },
           })),
           addPhoto: this.addPortfolioPhoto(target, g.id),
         };
@@ -635,7 +701,10 @@ class Component extends DCLogic {
   }
   renderVals() {
     const { d, tab } = this.state;
-    const tabDefs = [['spec', 'Специалисты'], ['cases', 'Кейсы'], ['pack', 'Пакеты'], ['rev', 'Отзывы'], ['vid', 'Видео'], ['blog', 'Блог'], ['scat', 'Категории специалистов'], ['mcat', 'Медиа-категории'], ['cont', 'Контакты'], ['exp', 'Экспорт']];
+    const pendingRevs = ((d && Array.isArray(d.specReviews)) ? d.specReviews : []).filter(r => r.status !== 'ok').length;
+    const tabDefs = [['spec', 'Специалисты'], ['cases', 'Кейсы'], ['pack', 'Пакеты'],
+      ['srev', 'Отзывы о специалистах' + (pendingRevs ? ' · ' + pendingRevs : '')],
+      ['rev', 'Отзывы на главной'], ['vid', 'Видео'], ['blog', 'Блог'], ['scat', 'Категории специалистов'], ['mcat', 'Медиа-категории'], ['cont', 'Контакты'], ['exp', 'Экспорт']];
     const tabs = tabDefs.map(([id, label]) => ({ id, label,
       bg: tab === id ? 'var(--acc)' : 'transparent', color: tab === id ? '#0C1117' : '#C7D0D9', border: tab === id ? 'var(--acc)' : 'rgba(255,255,255,.16)',
       pick: () => this.setState({ tab: id, resetArmed: false, impErr: null }) }));
@@ -646,14 +715,11 @@ class Component extends DCLogic {
     const dup = (arr, item, idp) => () => { const i = arr.indexOf(item); arr.splice(i + 1, 0, { ...item, id: idp + Date.now() }); this.save(); };
     const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
     const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
-    const selOrder = [];
     const specs = d.specialists.filter(s => (fcat === 'all' || s.cat === fcat) && (!q || (s.name + ' ' + s.role).toLowerCase().includes(q))).map(s => {
       const pcfg = portfolioCfg[s.cat] || defPortfolioCfg;
       const catObj = C.find(x => x.slug === s.cat);
       const subOpts = (catObj && Array.isArray(catObj.subcats)) ? catObj.subcats : [];
       const hasSubcats = subOpts.length > 0;
-      selOrder.push(s.cat);
-      if (hasSubcats) selOrder.push(s.subcat || '');
       if (!s.weddingProfile) s.weddingProfile = { about: '', feats: [], links: [], videos: [], photos: [] };
       const general = this.buildProfileBlock(s, s, pcfg, mediaCats);
       const wedding = this.buildProfileBlock(s, s.weddingProfile, pcfg, mediaCats);
@@ -662,7 +728,7 @@ class Component extends DCLogic {
       uCat: e => { s.cat = e.target.value; s.subcat = ''; this.save(); },
       subOpts, hasSubcats, uSubcat: e => { s.subcat = e.target.value; this.save(); },
       hasPhoto: !!s.photo, photoSrc: s.photo || '', photoLabel: s.photoUploading ? 'Загрузка…' : (s.photo ? 'Заменить' : 'Загрузить'),
-      uPhotoFile: this.photoTo(s), delPhoto: () => { const old = s.photo; s.photo = ''; this.save(); this.deletePhotoFile(old); },
+      uPhotoFile: this.photoTo(s), delPhoto: () => { const old = s.photo; s.photo = ''; this.commit(); this.deletePhotoFile(old); },
       profHref: './specialist.html?id=' + s.id,
       isWedding: !!s.wedding,
       toggleWedding: () => { s.wedding = !s.wedding; this.save(); },
@@ -696,22 +762,61 @@ class Component extends DCLogic {
       up: () => this.mv(d.reviews, r, -1), down: () => this.mv(d.reviews, r, 1),
       del: () => { d.reviews = d.reviews.filter(x => x !== r); this.save(); } }));
     const vidRows = d.videos.map(v => ({ ...v, uTitle: this.bind(v, 'title'), uUrl: this.bind(v, 'url') }));
+    // Отзывы о конкретных специалистах: с сайта они приходят со статусом «на модерации»
+    // (status: 'new') и до одобрения не видны никому, кроме этой страницы — сервер вырезает
+    // их из данных для посетителей. Здесь их публикуют, правят или удаляют.
+    if (!Array.isArray(d.specReviews)) d.specReviews = [];
+    const srevSpecOpts = d.specialists.map(s => ({ id: s.id, label: s.name + (s.role ? ' — ' + s.role : '') }));
+    const srevPending = d.specReviews.filter(r => r.status !== 'ok').length;
+    const srevVisible = d.specReviews
+      .filter(r => (this.state.srevFilter === 'all' || r.specId === this.state.srevFilter)
+        && (!this.state.srevOnlyNew || r.status !== 'ok'))
+      // сначала то, что ждёт решения, дальше — опубликованное, внутри каждой группы новые сверху
+      .sort((a, b) => (a.status === 'ok') - (b.status === 'ok') || String(b.date || '').localeCompare(String(a.date || '')));
+    const srevRows = srevVisible.map(r => {
+      const isNew = r.status !== 'ok';
+      return { ...r,
+        isNew, isOk: !isNew,
+        statusLabel: isNew ? 'Ждёт решения' : 'На сайте',
+        statusColor: isNew ? '#E2B33C' : '#7CC46B',
+        statusBorder: isNew ? 'rgba(226,179,60,.5)' : 'rgba(124,196,107,.45)',
+        cardBorder: isNew ? 'rgba(226,179,60,.35)' : 'rgba(255,255,255,.07)',
+        srcLabel: r.src === 'admin' ? 'добавлен вручную' : 'оставлен на сайте',
+        dateLabel: r.date || '',
+        uSpec: e => { r.specId = e.target.value; this.save(); },
+        uAuthor: this.bind(r, 'author'), uEvent: this.bind(r, 'event'), uText: this.bind(r, 'text'),
+        stars: [1, 2, 3, 4, 5].map(n => ({
+          icon: n <= (Number(r.rating) || 0) ? '★' : '☆',
+          color: n <= (Number(r.rating) || 0) ? 'var(--acc)' : '#56626F',
+          label: 'Оценка ' + n + ' из 5',
+          pick: () => { r.rating = n; this.save(); },
+        })),
+        approve: () => { r.status = 'ok'; this.save(); },
+        hide: () => { r.status = 'new'; this.save(); },
+        del: () => { d.specReviews = d.specReviews.filter(x => x !== r); this.save(); },
+      };
+    });
     if (!Array.isArray(d.articles)) d.articles = [];
     const artRows = d.articles.map(a => ({ ...a,
       uTitle: this.bind(a, 'title'), uTag: this.bind(a, 'tag'), uDate: this.bind(a, 'date'), uMinutes: this.bind(a, 'minutes'), uLead: this.bind(a, 'lead'), uBody: this.bind(a, 'body'),
       uSlug: e => { a.slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'); this.save(); },
       up: () => this.mv(d.articles, a, -1), down: () => this.mv(d.articles, a, 1),
       del: () => { d.articles = d.articles.filter(x => x !== a); this.save(); } }));
-    this._selOrder = selOrder;
-    this._selFcat = fcat;
     return {
       tabs,
-      isSpec: tab === 'spec', isCases: tab === 'cases', isPack: tab === 'pack', isRev: tab === 'rev', isVid: tab === 'vid', isBlog: tab === 'blog', isScat: tab === 'scat', isMcat: tab === 'mcat', isCont: tab === 'cont', isExp: tab === 'exp',
+      isSpec: tab === 'spec', isCases: tab === 'cases', isPack: tab === 'pack', isRev: tab === 'rev', isSrev: tab === 'srev', isVid: tab === 'vid', isBlog: tab === 'blog', isScat: tab === 'scat', isMcat: tab === 'mcat', isCont: tab === 'cont', isExp: tab === 'exp',
       artRows, artCount: d.articles.length + ' шт.',
       addArt: () => { d.articles.unshift({ id: 'a' + Date.now(), slug: 'novaya-statya-' + (d.articles.length + 1), title: 'Новая статья', date: new Date().toISOString().slice(0, 10), minutes: '5', tag: 'Советы', lead: '', body: 'Первый раздел|Текст раздела.' }); this.save(); },
       hasSyncStatus: !!this.state.syncState,
       syncLabel: this.state.syncState === 'pending' ? 'Сохраняю…' : this.state.syncState === 'error' ? 'Не сохранилось на сервере ⚠' : 'Сохранено ✓',
       syncColor: this.state.syncState === 'error' ? '#E5533C' : this.state.syncState === 'pending' ? '#97A3B0' : '#7CC46B',
+      doSave: () => { if (this.state.dirty && this.state.syncState !== 'pending') this.commit(); },
+      saveDisabled: !this.state.dirty || this.state.syncState === 'pending',
+      saveLabel: this.state.syncState === 'pending' ? 'Сохраняю…' : this.state.dirty ? 'Сохранить' : 'Сохранено',
+      saveBg: this.state.dirty && this.state.syncState !== 'pending' ? 'var(--acc)' : 'transparent',
+      saveColor: this.state.dirty && this.state.syncState !== 'pending' ? '#0C1117' : '#56626F',
+      saveBorder: this.state.dirty && this.state.syncState !== 'pending' ? 'var(--acc)' : 'rgba(255,255,255,.14)',
+      saveCursor: this.state.dirty && this.state.syncState !== 'pending' ? 'pointer' : 'default',
       cats: C,
       specs, specCount: (fcat === 'all' && !q) ? d.specialists.length + ' шт.' : specs.length + ' из ' + d.specialists.length,
       noSpecs: specs.length === 0,
@@ -720,6 +825,27 @@ class Component extends DCLogic {
       addSpec: () => { d.specialists.unshift({ id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '' }); this.save(); },
       caseRows, caseCount: d.cases.length + ' шт.',
       addCase: () => { d.cases.unshift({ id: 'c' + Date.now(), title: 'Новый кейс', format: '', guests: '', city: '', year: '2026', desc: '', video: '', team: '' }); this.save(); },
+      srevRows, srevSpecOpts,
+      srevCount: srevPending ? (srevPending + ' ждёт решения из ' + d.specReviews.length) : (d.specReviews.length + ' шт.'),
+      noSrev: srevRows.length === 0,
+      noSrevText: d.specReviews.length === 0
+        ? 'Отзывов пока нет. Они появятся здесь, как только кто-то оставит отзыв на странице специалиста.'
+        : 'Под выбранный фильтр ничего не подходит.',
+      srevFilter: this.state.srevFilter, uSrevFilter: e => this.setState({ srevFilter: e.target.value }),
+      toggleSrevOnlyNew: () => this.setState({ srevOnlyNew: !this.state.srevOnlyNew }),
+      srevOnlyNewLabel: this.state.srevOnlyNew ? 'Показаны только ждущие решения' : 'Показаны все отзывы',
+      srevOnlyNewBg: this.state.srevOnlyNew ? 'var(--acc)' : 'transparent',
+      srevOnlyNewColor: this.state.srevOnlyNew ? '#0C1117' : '#C7D0D9',
+      srevOnlyNewBorder: this.state.srevOnlyNew ? 'var(--acc)' : 'rgba(255,255,255,.12)',
+      addSrev: () => {
+        const first = d.specialists[0];
+        d.specReviews.unshift({
+          id: 'rv' + Date.now(), specId: this.state.srevFilter !== 'all' ? this.state.srevFilter : (first ? first.id : ''),
+          author: 'Имя клиента', event: '', rating: 5, text: '',
+          date: new Date().toISOString().slice(0, 10), status: 'ok', src: 'admin',
+        });
+        this.save({ srevOnlyNew: false });
+      },
       packRows, revRows, revCount: d.reviews.length + ' шт.',
       addRev: () => { d.reviews.unshift({ id: 'r' + Date.now(), author: 'Имя клиента', event: '', text: '' }); this.save(); },
       vidRows,
@@ -774,7 +900,7 @@ class Component extends DCLogic {
           const parsed = JSON.parse(this.jsonRef ? this.jsonRef.value : '');
           if (!parsed || !Array.isArray(parsed.specialists)) throw new Error('bad');
           this.setState({ impErr: null });
-          this.save(null, parsed, true);
+          this.commit(parsed, true);
         } catch (e) { this.setState({ impErr: 'Не получилось разобрать JSON — проверьте, что вставлен весь текст без изменений.' }); }
       },
       hasImpErr: !!this.state.impErr, impErr: this.state.impErr || '',
@@ -783,7 +909,7 @@ class Component extends DCLogic {
         if (!this.state.resetArmed) { this.setState({ resetArmed: true }); return; }
         localStorage.removeItem(this.mod.STORE_KEY);
         this.setState({ resetArmed: false });
-        this.save(null, JSON.parse(JSON.stringify(this.mod.DEFAULTS)), true);
+        this.commit(JSON.parse(JSON.stringify(this.mod.DEFAULTS)), true);
       }
     };
   }

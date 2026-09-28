@@ -121,6 +121,11 @@ export const DEFAULTS = {
     { id: 'r2', author: 'Имя клиента', event: 'Свадьба · 2025', text: 'Место для отзыва — добавьте текст в админ-панели.' },
     { id: 'r3', author: 'Имя клиента', event: 'Форум · 2024', text: 'Место для отзыва — добавьте текст в админ-панели.' },
   ],
+  // Отзывы о конкретных специалистах — их оставляют гости прямо на странице специалиста
+  // (status: 'new' — ждёт одобрения в админке, 'ok' — опубликован) или добавляет админ
+  // вручную, перенося текст из переписки (src: 'admin', сразу 'ok'). Не путать с reviews
+  // выше: те общие, про объединение, и показываются на главной.
+  specReviews: [],
   videos: [
     { id: 'v1', title: 'Шоурил объединения', url: '' },
     { id: 'v2', title: 'Корпоратив — афтемуви', url: '' },
@@ -155,6 +160,7 @@ function mergeWithDefaults(saved) {
   if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
   if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
   if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], subcat: '', wedding: false, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [] }, ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [], ...(s.weddingProfile || {}) } }));
+  if (!Array.isArray(d.specReviews)) d.specReviews = [];
   if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
   if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));
   else {
@@ -233,6 +239,62 @@ export async function overwriteData(d) {
 }
 
 export function tgUrl(handle) { return 'https://t.me/' + String(handle || '').replace(/^@/, ''); }
+
+// Одобренные отзывы о конкретном специалисте, новые сверху. Неодобренные сюда не попадают
+// и вообще не доходят до браузера: сервер вырезает их из /api/data всем, кроме админки.
+export function specReviewsFor(d, specId) {
+  const all = (d && Array.isArray(d.specReviews)) ? d.specReviews : [];
+  return all
+    .filter(r => r && r.specId === specId && r.status === 'ok')
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+}
+
+// Отправка отзыва с сайта. Сервер кладёт его в данные со статусом «на модерации»
+// и пишет в Telegram — на сайте отзыв появится после одобрения в админке.
+export async function sendReview(payload) {
+  try {
+    const r = await fetch('/api/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j && j.ok) return { ok: true };
+    return { ok: false, reason: (j && j.reason) || ('http-' + r.status) };
+  } catch (e) { return { ok: false, reason: 'network' }; }
+}
+
+// Адрес встроенного плеера видеосервиса — чтобы ролик проигрывался прямо в карточке на
+// странице, а не уводил посетителя на чужой сайт. Знаем Rutube, YouTube, VK и Vimeo;
+// для всего остального возвращаем пустую строку — там карточка остаётся обычной ссылкой.
+export function videoEmbedUrl(url) {
+  const raw = String(url || '').trim();
+  if (!raw) return '';
+  let u;
+  try { u = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw); } catch (e) { return ''; }
+  const host = u.hostname.replace(/^www\./, '').toLowerCase();
+  const seg = u.pathname.split('/').filter(Boolean);
+  if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtu.be') {
+    const id = host === 'youtu.be'
+      ? seg[0]
+      : (u.searchParams.get('v') || (['shorts', 'embed', 'live', 'v'].includes(seg[0]) ? seg[1] : ''));
+    return /^[\w-]{6,}$/.test(id || '') ? 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0' : '';
+  }
+  if (host === 'rutube.ru') {
+    const i = seg.indexOf('video') >= 0 ? seg.indexOf('video') : seg.indexOf('embed');
+    const id = i >= 0 ? seg[i + 1] : '';
+    return /^[0-9a-f]{16,}$/i.test(id || '') ? 'https://rutube.ru/play/embed/' + id + '/?autoplay=1' : '';
+  }
+  if (host === 'vimeo.com' || host === 'player.vimeo.com') {
+    const id = seg.filter(x => /^\d+$/.test(x))[0];
+    return id ? 'https://player.vimeo.com/video/' + id + '?autoplay=1' : '';
+  }
+  if (host === 'vk.com' || host === 'm.vk.com' || host === 'vkvideo.ru') {
+    const m = /video(-?\d+)_(\d+)/.exec(u.pathname + u.search);
+    return m ? 'https://vk.com/video_ext.php?oid=' + m[1] + '&id=' + m[2] + '&hd=2&autoplay=1' : '';
+  }
+  return '';
+}
 
 // Превью для видео-ссылки. YouTube — сразу и без сети (предсказуемый адрес картинки
 // по id ролика). Остальное (Vimeo, Rutube) — через сервер (/api/video-thumb, см.

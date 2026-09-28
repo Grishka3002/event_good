@@ -462,7 +462,7 @@ function mergeObjectByKeys(base, data, current) {
 }
 
 const ARRAY_FIELDS_BY_KEY = {
-  specialists: 'id', cases: 'id', reviews: 'id', videos: 'id',
+  specialists: 'id', cases: 'id', reviews: 'id', specReviews: 'id', videos: 'id',
   calcServices: 'id', articles: 'id', packages: 'id', mediaCats: 'id', categories: 'slug',
 };
 
@@ -511,6 +511,19 @@ async function handleData(req, res) {
   if (req.method === 'GET') {
     fs.readFile(LIVE_DATA_PATH, 'utf8', (err, data) => {
       if (err) return send(req, res, 200, '{}', { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
+      // Отзывы, ещё не одобренные в админке, не должны доходить до посетителей: этот
+      // ответ читает каждая страница сайта, и всё, что в нём есть, видно любому через
+      // «Просмотр кода». Админке (она за паролем) отдаём данные целиком — иначе там
+      // нечего будет модерировать.
+      if (!adminAuthorized(req)) {
+        try {
+          const j = JSON.parse(data);
+          if (Array.isArray(j.specReviews)) {
+            j.specReviews = j.specReviews.filter(r => r && r.status === 'ok');
+            data = JSON.stringify(j);
+          }
+        } catch { /* файл повреждён — отдаём как есть, как и раньше */ }
+      }
       send(req, res, 200, data, { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' });
     });
     return;
@@ -687,6 +700,94 @@ function handleLead(req, res) {
   });
 }
 
+// Отзыв о специалисте, оставленный гостем прямо на его странице. На сайт он не попадает
+// сразу: сохраняем со статусом 'new' (в /api/data такие не отдаются никому, кроме админки,
+// см. handleData) и пишем в тот же телеграм, куда уходят заявки. Публикуется одобрением
+// в админке. Защита от мусора: ловушка-поле для ботов, ограничение по частоте с одного
+// IP, лимиты длины и потолок на число неодобренных отзывов.
+const REVIEW_MAX_PENDING = 300;
+// Считаем только ДОШЕДШИЕ до сохранения отзывы: иначе человек, ошибившийся в форме
+// пару раз, исчерпал бы лимит и не смог отправить исправленный отзыв.
+const reviewLog = new Map();
+function reviewsRecently(ip) {
+  const now = Date.now();
+  return (reviewLog.get(ip) || []).filter(t => now - t < 3600000).length;
+}
+function reviewRecord(ip) {
+  const now = Date.now();
+  const arr = (reviewLog.get(ip) || []).filter(t => now - t < 3600000);
+  arr.push(now);
+  reviewLog.set(ip, arr);
+  if (reviewLog.size > 5000) reviewLog.clear();
+}
+
+function writeLiveData(data) {
+  backupLiveData();
+  const tmpPath = LIVE_DATA_PATH + '.tmp';
+  fs.writeFileSync(tmpPath, JSON.stringify(data));
+  fs.renameSync(tmpPath, LIVE_DATA_PATH);
+}
+
+async function handleReview(req, res) {
+  if (req.method !== 'POST') return send(req, res, 405, '{"ok":false}', { 'Content-Type': 'application/json' });
+  const json = (code, obj) => send(req, res, code, JSON.stringify(obj), { 'Content-Type': 'application/json' });
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  if (reviewsRecently(ip) >= 3) return json(429, { ok: false, reason: 'rate-limit' });
+  try {
+    const parsed = JSON.parse(await readBody(req, 16 * 1024));
+    // Поле-ловушка: в форме оно спрятано от людей, но бот его послушно заполняет.
+    // Отвечаем «принято», чтобы он не искал обход, — на деле просто ничего не сохраняем.
+    if (String(parsed.website || '').trim()) return json(200, { ok: true });
+
+    const specId = String(parsed.specId || '').trim();
+    const author = String(parsed.author || '').trim().slice(0, 60);
+    const event = String(parsed.event || '').trim().slice(0, 80);
+    const text = String(parsed.text || '').trim();
+    const rating = Math.round(Number(parsed.rating));
+    if (author.length < 2) return json(400, { ok: false, reason: 'bad-author' });
+    if (text.length < 10 || text.length > 2000) return json(400, { ok: false, reason: 'bad-text' });
+    if (!(rating >= 1 && rating <= 5)) return json(400, { ok: false, reason: 'bad-rating' });
+
+    const current = readLiveData() || {};
+    const spec = Array.isArray(current.specialists) ? current.specialists.find(x => x.id === specId) : null;
+    if (!spec) return json(400, { ok: false, reason: 'bad-specialist' });
+
+    const list = Array.isArray(current.specReviews) ? current.specReviews : [];
+    if (list.filter(r => r && r.status === 'new').length >= REVIEW_MAX_PENDING) {
+      return json(429, { ok: false, reason: 'too-many-pending' });
+    }
+    // Двойное нажатие кнопки или повторная отправка той же формы — не плодим копии.
+    if (list.some(r => r && r.specId === specId && r.text === text && r.author === author)) {
+      return json(200, { ok: true });
+    }
+    list.push({
+      id: 'rv' + Date.now() + Math.random().toString(36).slice(2, 6),
+      specId, author, event, rating, text,
+      date: new Date().toISOString().slice(0, 10),
+      status: 'new', src: 'site',
+    });
+    current.specReviews = list;
+    writeLiveData(current);
+    reviewRecord(ip);
+
+    if (TG_BOT_TOKEN) {
+      const msg = '🆕 Новый отзыв (ждёт одобрения)\n'
+        + 'Специалист: ' + spec.name + (spec.role ? ' — ' + spec.role : '') + '\n'
+        + 'Автор: ' + author + (event ? ' · ' + event : '') + '\n'
+        + 'Оценка: ' + '★'.repeat(rating) + '☆'.repeat(5 - rating) + ' (' + rating + ' из 5)\n\n'
+        + text + '\n\n'
+        + 'Опубликовать: админ-панель → Отзывы → На модерации';
+      tgSend(LEAD_MAIN_ID, msg).catch(() => {});
+      for (const id of extraLeadIds()) {
+        if (id !== LEAD_MAIN_ID) tgSend(id, msg).catch(() => {});
+      }
+    }
+    return json(200, { ok: true });
+  } catch (e) {
+    return json(400, { ok: false, reason: 'bad-body' });
+  }
+}
+
 http.createServer((req, res) => {
   let urlObj, urlPath;
   try {
@@ -708,6 +809,7 @@ http.createServer((req, res) => {
 
   if (urlPath === '/api/lead') return handleLead(req, res);
   if (urlPath === '/api/data') return handleData(req, res);
+  if (urlPath === '/api/review') return handleReview(req, res);
   if (urlPath === '/api/video-thumb') return handleVideoThumb(req, res, urlObj.searchParams.get('url'));
   if (urlPath === '/api/upload-photo') return handleUploadPhoto(req, res);
   if (urlPath === '/api/delete-photo') return handleDeletePhoto(req, res);
