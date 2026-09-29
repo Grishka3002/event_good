@@ -161,6 +161,16 @@ function mergeWithDefaults(saved) {
   if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
   if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], subcat: '', wedding: false, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [] }, ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [], ...(s.weddingProfile || {}) } }));
   if (!Array.isArray(d.specReviews)) d.specReviews = [];
+  // Подстраховка: метки draft:… — это фотографии, выбранные в админке, но ещё не
+  // загруженные на сервер (см. _pendingUploads в admin.html). В данные сайта они попасть
+  // не должны; если всё же попали (например, из локального кэша браузера-редактора) —
+  // молча выбрасываем, чтобы на странице не появилась битая картинка.
+  const isDraft = u => typeof u === 'string' && u.startsWith('draft:');
+  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => {
+    const clean = list => (Array.isArray(list) ? list.filter(p => p && !isDraft(p.url)) : list);
+    const wp = s.weddingProfile ? { ...s.weddingProfile, photos: clean(s.weddingProfile.photos) } : s.weddingProfile;
+    return { ...s, photo: isDraft(s.photo) ? '' : s.photo, photos: clean(s.photos), weddingProfile: wp };
+  });
   if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
   if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));
   else {

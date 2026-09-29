@@ -35,6 +35,7 @@ option{background:#121A26;color:#F2F5F8}
       <div style="width:9px;height:32px;background:var(--acc)"></div>
       <div><div style="font-weight:900;font-size:14px;letter-spacing:.14em">АДМИН-ПАНЕЛЬ</div><div style="font-size:11px;color:#97A3B0;margin-top:2px">Хорошее решение · контент сайта</div></div>
     </div>
+    <sc-if value="{{ hasBusy }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;color:var(--acc)">{{ busyLabel }}</span></sc-if>
     <sc-if value="{{ hasSyncStatus }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{{ syncColor }}">{{ syncLabel }}</span></sc-if>
     <button onClick="{{ doSave }}" disabled="{{ saveDisabled }}" title="Сохранить изменения на сайте (Ctrl+S)" style="background:{{ saveBg }};color:{{ saveColor }};border:1px solid {{ saveBorder }};border-radius:9px;padding:12px 22px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:{{ saveCursor }};font-family:inherit" style-hover="filter:brightness(1.1)">{{ saveLabel }}</button>
     <a href="./index.html" style="border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:11px 18px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase" style-hover="border-color:var(--acc);color:var(--acc)">Открыть сайт →</a>
@@ -42,7 +43,7 @@ option{background:#121A26;color:#F2F5F8}
 </div>
 
 <div style="max-width:1180px;margin:0 auto;padding:26px 28px 80px">
-  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Правки становятся видны на сайте только после нажатия кнопки «Сохранить» в правом верхнем углу (или Ctrl+S) — до этого спокойно правьте текст, ничего никуда не уходит. Если закрыть вкладку с несохранёнными правками, браузер предупредит. Можно редактировать одновременно с другого устройства: разные карточки не мешают друг другу, сервер сам сливает правки. Фотографии сохраняются сразу при загрузке.</div>
+  <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Правки становятся видны на сайте только после нажатия кнопки «Сохранить» в правом верхнем углу (или Ctrl+S) — до этого спокойно правьте текст, ничего никуда не уходит. Если закрыть вкладку с несохранёнными правками, браузер предупредит. Это касается и фотографий: выбранные снимки видны сразу, но на сайт уходят вместе с остальными правками по кнопке «Сохранить». Можно редактировать одновременно с другого устройства: разные карточки не мешают друг другу, сервер сам сливает правки.</div>
 
   <div data-screen-label="Вкладки" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">
     <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="7">
@@ -129,18 +130,27 @@ option{background:#121A26;color:#F2F5F8}
               </div>
             </sc-if>
             <div style="margin-top:14px">
-              <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">Фото портфолио</div>
+              <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:4px">Фото портфолио</div>
+              <div style="font-size:11.5px;color:#7C8894;line-height:1.55;margin-bottom:8px">Можно выбрать сразу несколько файлов. Порядок фото на сайте — такой же, как здесь: перетащите карточку мышью или подвиньте стрелками ◀ ▶.</div>
               <sc-for list="{{ s.photoGroups }}" as="pg" hint-placeholder-count="1">
                 <div style="margin-bottom:14px">
                   <div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:8px">{{ pg.name }}</div>
                   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">
                     <sc-for list="{{ pg.rows }}" as="row" hint-placeholder-count="2">
-                      <div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.1);background:#0C141D">
-                        <img src="{{ row.url }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                      <div draggable="true" onDragStart="{{ row.dragStart }}" onDragOver="{{ row.dragOver }}" onDrop="{{ row.drop }}" onDragEnd="{{ row.dragEnd }}" style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid {{ row.border }};background:#0C141D;cursor:grab;opacity:{{ row.opacity }}">
+                        <img src="{{ row.url }}" draggable="false" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none">
+                        <span style="position:absolute;top:5px;left:5px;background:rgba(10,14,19,.75);border-radius:5px;padding:2px 6px;font-size:10px;font-weight:700;color:#C7D0D9">{{ row.num }}</span>
+                        <sc-if value="{{ row.isNew }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:5px;left:5px;background:rgba(238,127,45,.9);color:#0C1117;border-radius:5px;padding:2px 6px;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase">Не сохранено</span></sc-if>
                         <button onClick="{{ row.del }}" title="Удалить фото" style="position:absolute;top:5px;right:5px;background:rgba(10,14,19,.75);border:1px solid rgba(229,83,60,.5);color:#E5533C;border-radius:6px;width:22px;height:22px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.25)">✕</button>
+                        <sc-if value="{{ pg.hasPhotos }}" hint-placeholder-val="{{ false }}">
+                          <div style="position:absolute;bottom:5px;right:5px;display:flex;gap:3px">
+                            <button onClick="{{ row.left }}" title="Сдвинуть левее" style="background:rgba(10,14,19,.8);border:1px solid rgba(255,255,255,.22);color:#F2F5F8;border-radius:6px;width:22px;height:22px;font-size:10px;line-height:1;cursor:pointer;font-family:inherit;padding:0" style-hover="border-color:var(--acc);color:var(--acc)">◀</button>
+                            <button onClick="{{ row.right }}" title="Сдвинуть правее" style="background:rgba(10,14,19,.8);border:1px solid rgba(255,255,255,.22);color:#F2F5F8;border-radius:6px;width:22px;height:22px;font-size:10px;line-height:1;cursor:pointer;font-family:inherit;padding:0" style-hover="border-color:var(--acc);color:var(--acc)">▶</button>
+                          </div>
+                        </sc-if>
                       </div>
                     </sc-for>
-                    <label style="aspect-ratio:4/3;border:1px dashed rgba(255,255,255,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;color:#C7D0D9;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px" style-hover="border-color:var(--acc);color:var(--acc)">+ Фото<input type="file" accept="image/*" onChange="{{ pg.addPhoto }}" style="display:none"></label>
+                    <label style="aspect-ratio:4/3;border:1px dashed rgba(255,255,255,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;color:#C7D0D9;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px" style-hover="border-color:var(--acc);color:var(--acc)">+ Фото<input type="file" accept="image/*" multiple="true" onChange="{{ pg.addPhoto }}" style="display:none"></label>
                   </div>
                 </div>
               </sc-for>
@@ -216,7 +226,7 @@ option{background:#121A26;color:#F2F5F8}
                             <button onClick="{{ row.del }}" title="Удалить фото" style="position:absolute;top:5px;right:5px;background:rgba(10,14,19,.75);border:1px solid rgba(229,83,60,.5);color:#E5533C;border-radius:6px;width:22px;height:22px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.25)">✕</button>
                           </div>
                         </sc-for>
-                        <label style="aspect-ratio:4/3;border:1px dashed rgba(255,255,255,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;color:#C7D0D9;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px" style-hover="border-color:var(--acc);color:var(--acc)">+ Фото<input type="file" accept="image/*" onChange="{{ pg.addPhoto }}" style="display:none"></label>
+                        <label style="aspect-ratio:4/3;border:1px dashed rgba(255,255,255,.25);border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;color:#C7D0D9;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px" style-hover="border-color:var(--acc);color:var(--acc)">+ Фото<input type="file" accept="image/*" multiple="true" onChange="{{ pg.addPhoto }}" style="display:none"></label>
                       </div>
                     </div>
                   </sc-for>
@@ -486,6 +496,9 @@ class Component extends DCLogic {
   state = { d: null, tab: 'spec', syncState: null, dirty: false, copiedJson: false, resetArmed: false, impErr: null, srevFilter: 'all', srevOnlyNew: false };
   jsonRef = null;
   _thumbCache = {}; // url -> превью-URL | null (ещё грузится/не нашлось), см. resolveThumb/thumbFor
+  _pendingUploads = new Map(); // draft:… -> снимок в памяти, пока не нажали «Сохранить»
+  _photoDeletes = [];          // файлы, которые удалим на сервере после успешного сохранения
+  _draftSeq = 0;
   componentDidMount() {
     import('./data.js?v=2').then(m => {
       this.mod = m;
@@ -554,15 +567,19 @@ class Component extends DCLogic {
   // данные подставляются целиком и заменяют всё без слияния; в обычном режиме сервер
   // сливает карточки по отдельности с тем, что уже сохранил кто-то другой (см. syncData
   // в data.js) — именно это позволяет двум админкам одновременно править разные карточки.
-  commit(dataOverride, forceOverwrite) {
+  async commit(dataOverride, forceOverwrite) {
     if (!this.mod) return;
     const data = dataOverride || this.state.d;
     if (!data) return;
+    // сначала — фотографии черновика: пока они не на сервере, сохранять данные нельзя
+    if (!dataOverride && !(await this.uploadPendingPhotos(data))) return;
     this.mod.saveData(data);
     clearTimeout(this._hideT);
     this.setState({ d: data, syncState: 'pending' });
     const p = forceOverwrite ? this.mod.overwriteData(data) : this.mod.syncData(this._baseData || data, data);
     p.then(res => {
+      // файлы удалённых фотографий чистим только теперь: правка дошла до сервера
+      if (res.ok) this._photoDeletes.splice(0).forEach(u => this.deletePhotoFile(u));
       if (res.ok && res.merged) {
         // merged может содержать чужие правки, добавленные, пока мы редактировали —
         // подхватываем их сразу, чтобы обе админки видели актуальную картину, не дожидаясь
@@ -576,80 +593,142 @@ class Component extends DCLogic {
     });
   }
   bind(obj, field) { return e => { obj[field] = e.target.value; this.save(); }; }
-  // Фото профиля: ужимаем до 900px по ширине в JPEG на клиенте, затем грузим на сервер
-  // как обычный файл (не base64 в данные сайта — иначе каждое фото раздувает /api/data,
-  // который целиком грузит любая страница сайта). В s.photo кладём ссылку на файл.
-  photoTo(s) { return e => {
-    const f = e.target.files && e.target.files[0];
+  // Ужимает выбранный файл до maxW по ширине и отдаёт его как JPEG-данные. На сервер
+  // ничего не уходит: снимок живёт в памяти вкладки до нажатия «Сохранить» (см.
+  // uploadPendingPhotos) — фото ведут себя так же, как текст, и черновик можно бросить.
+  compressImage(file, maxW) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const k = Math.min(1, maxW / img.width);
+        const w = Math.round(img.width * k), h = Math.round(img.height * k);
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        try { resolve(cv.toDataURL('image/jpeg', 0.85)); } catch (err) { reject(err); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('not-an-image')); };
+      img.src = url;
+    });
+  }
+  // Черновая (ещё не загруженная) фотография: в данных лежит временная метка draft:…,
+  // а сам снимок — в _pendingUploads. При сохранении метки заменяются ссылками на файлы.
+  draftPhoto(dataUrl) {
+    const id = 'draft:' + Date.now() + '-' + (++this._draftSeq);
+    this._pendingUploads.set(id, dataUrl);
+    return id;
+  }
+  // Файл на сервере удаляем не сразу, а только после успешного сохранения: иначе
+  // «удалил и передумал» оставляло бы карточку со ссылкой на уже стёртый файл.
+  queuePhotoDelete(url) {
+    url = String(url || '');
+    if (url.startsWith('draft:')) { this._pendingUploads.delete(url); return; }
+    if (url.startsWith('/uploads/')) this._photoDeletes.push(url);
+  }
+  // Все места в данных, где встречается эта метка черновика (фото профиля, портфолио,
+  // свадебное портфолио) — чтобы после загрузки подставить в них настоящую ссылку.
+  photoRefs(data, id) {
+    const refs = [];
+    for (const s of (Array.isArray(data.specialists) ? data.specialists : [])) {
+      if (s.photo === id) refs.push(u => { s.photo = u; });
+      for (const p of (Array.isArray(s.photos) ? s.photos : [])) if (p.url === id) refs.push(u => { p.url = u; });
+      const wp = s.weddingProfile;
+      for (const p of ((wp && Array.isArray(wp.photos)) ? wp.photos : [])) if (p.url === id) refs.push(u => { p.url = u; });
+    }
+    return refs;
+  }
+  // Догружает на сервер все фотографии черновика — вызывается при «Сохранить», до отправки
+  // данных. Если хоть одна не загрузилась, сохранение не начинаем: лучше показать ошибку,
+  // чем сохранить карточку со ссылкой в никуда.
+  async uploadPendingPhotos(data) {
+    for (const id of [...this._pendingUploads.keys()]) {
+      if (!this.photoRefs(data, id).length) this._pendingUploads.delete(id); // фото удалили до сохранения
+    }
+    const ids = [...this._pendingUploads.keys()];
+    if (!ids.length) return true;
+    let n = 0;
+    for (const id of ids) {
+      n++;
+      this.setState({ busy: 'Загружаю фото ' + n + ' из ' + ids.length + '…' });
+      let j = null;
+      try {
+        const r = await fetch('/api/upload-photo', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dataUrl: this._pendingUploads.get(id) }),
+        });
+        if (r.ok) j = await r.json();
+      } catch (e) { /* сеть отвалилась — обработаем ниже */ }
+      if (!j || !j.ok) {
+        this.setState({ busy: null, syncState: 'error' });
+        alert('Не получилось загрузить фото на сервер. Проверьте подключение и нажмите «Сохранить» ещё раз — правки никуда не делись.');
+        return false;
+      }
+      this.photoRefs(data, id).forEach(set => set(j.url));
+      this._pendingUploads.delete(id);
+    }
+    this.setState({ busy: null });
+    return true;
+  }
+  // Фото профиля: одно на специалиста, ужимаем до 900px по ширине. На сервер уходит
+  // при сохранении — как обычный файл, а не base64 внутри данных сайта (иначе каждое
+  // фото раздувало бы /api/data, который целиком грузит любая страница сайта).
+  photoTo(s) { return async e => {
     const input = e.target;
+    const f = input.files && input.files[0];
+    input.value = '';
     if (!f) return;
-    const img = new Image();
-    const url = URL.createObjectURL(f);
-    img.onload = () => {
-      const k = Math.min(1, 900 / img.width);
-      const w = Math.round(img.width * k), h = Math.round(img.height * k);
-      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
-      cv.getContext('2d').drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      input.value = '';
-      let dataUrl;
-      try { dataUrl = cv.toDataURL('image/jpeg', 0.85); }
-      catch (err) { alert('Не получилось обработать фото.'); return; }
-      const prevPhoto = s.photo;
-      s.photoUploading = true; this.setState({});
-      fetch('/api/upload-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl }) })
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(j => {
-          if (!j || !j.ok) throw new Error('upload-failed');
-          delete s.photoUploading;
-          s.photo = j.url;
-          // фото уже лежит на сервере — сохраняем сразу, чтобы ссылка на него не осталась
-          // только в черновике (иначе файл есть, а на сайте его нет)
-          this.commit();
-          this.deletePhotoFile(prevPhoto);
-        })
-        .catch(() => { delete s.photoUploading; this.setState({}); alert('Не получилось загрузить фото на сервер. Проверьте подключение и попробуйте снова.'); });
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); input.value = ''; alert('Файл не похож на изображение.'); };
-    img.src = url;
+    let dataUrl;
+    try { dataUrl = await this.compressImage(f, 900); }
+    catch (err) { alert('Файл не похож на изображение.'); return; }
+    this.queuePhotoDelete(s.photo);
+    s.photo = this.draftPhoto(dataUrl);
+    this.save();
   }; }
   // Чистит старый файл при замене/удалении фото — не блокирует сохранение, если не выйдет.
   deletePhotoFile(url) {
     if (!url || !String(url).startsWith('/uploads/')) return;
     fetch('/api/delete-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) }).catch(() => {});
   }
-  // Фото портфолио — несколько штук на специалиста, по медиа-категориям (та же сжатие +
-  // загрузка на сервер, что и для фото профиля выше, только результат копится в s.photos,
-  // а не заменяет единственное значение).
-  addPortfolioPhoto(s, catId) { return e => {
-    const f = e.target.files && e.target.files[0];
+  // Фото портфолио — сколько угодно на специалиста, по медиа-категориям. Можно выбрать
+  // сразу несколько файлов: обрабатываем их по очереди (каждый ужимаем до 1200px),
+  // показывая, сколько уже готово. На сервер они уйдут при «Сохранить».
+  addPortfolioPhotos(target, catId) { return async e => {
     const input = e.target;
-    if (!f) return;
-    const img = new Image();
-    const url = URL.createObjectURL(f);
-    img.onload = () => {
-      const k = Math.min(1, 1200 / img.width);
-      const w = Math.round(img.width * k), h = Math.round(img.height * k);
-      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
-      cv.getContext('2d').drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      input.value = '';
+    const files = [...(input.files || [])];
+    input.value = '';
+    if (!files.length) return;
+    if (!Array.isArray(target.photos)) target.photos = [];
+    let bad = 0;
+    for (let i = 0; i < files.length; i++) {
+      this.setState({ busy: files.length > 1 ? ('Готовлю фото ' + (i + 1) + ' из ' + files.length + '…') : 'Готовлю фото…' });
       let dataUrl;
-      try { dataUrl = cv.toDataURL('image/jpeg', 0.85); }
-      catch (err) { alert('Не получилось обработать фото.'); return; }
-      fetch('/api/upload-photo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataUrl }) })
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(j => {
-          if (!j || !j.ok) throw new Error('upload-failed');
-          if (!Array.isArray(s.photos)) s.photos = [];
-          s.photos.push({ url: j.url, cat: catId });
-          this.commit(); // см. выше: файл уже на сервере, ссылку сохраняем сразу
-        })
-        .catch(() => alert('Не получилось загрузить фото на сервер. Проверьте подключение и попробуйте снова.'));
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); input.value = ''; alert('Файл не похож на изображение.'); };
-    img.src = url;
+      try { dataUrl = await this.compressImage(files[i], 1200); }
+      catch (err) { bad++; continue; }
+      target.photos.push({ url: this.draftPhoto(dataUrl), cat: catId });
+      this.save(); // показываем каждое сразу, не дожидаясь конца пачки
+    }
+    this.setState({ busy: null });
+    if (bad) {
+      alert(bad === files.length
+        ? 'Не получилось обработать выбранные файлы — это точно изображения?'
+        : ('Часть файлов (' + bad + ') не получилось обработать, они пропущены.'));
+    }
   }; }
+  // Перестановка фото внутри группы: from и to — позиции в группе, а двигаем элемент
+  // в общем списке target.photos (в нём вперемешку лежат фото всех категорий).
+  movePhoto(target, catId, from, to) {
+    const all = Array.isArray(target.photos) ? target.photos : [];
+    const idxOf = () => all.map((p, i) => ({ p, i })).filter(o => (o.p.cat || '') === catId).map(o => o.i);
+    const before = idxOf();
+    if (from < 0 || to < 0 || from >= before.length || to >= before.length || from === to) return;
+    const item = all[before[from]];
+    all.splice(before[from], 1);
+    const after = idxOf();
+    const insertAt = to >= after.length ? (after.length ? after[after.length - 1] + 1 : all.length) : after[to];
+    all.splice(insertAt, 0, item);
+    this.save();
+  }
   mv(arr, item, delta) { const i = arr.indexOf(item); const j = i + delta; if (i < 0 || j < 0 || j >= arr.length) return; arr.splice(i, 1); arr.splice(j, 0, item); this.save(); }
   // Общий редактор блока "описание/фишки/ссылки/видео/фото" — используется и для общего профиля
   // специалиста (target=s), и для свадебного (target=s.weddingProfile), чтобы не дублировать логику.
@@ -688,13 +767,47 @@ class Component extends DCLogic {
       }),
       photoGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все фото' }]).map(g => {
         const groupPhotos = (target.photos || []).filter(p => (p.cat || '') === g.id);
+        const dragKey = (i) => (s.id || '') + '|' + (target === s ? 'main' : 'wed') + '|' + g.id + '|' + i;
         return {
           name: g.name,
-          rows: groupPhotos.map(p => ({
-            url: p.url,
-            del: () => { target.photos = target.photos.filter(x => x !== p); this.commit(); this.deletePhotoFile(p.url); },
-          })),
-          addPhoto: this.addPortfolioPhoto(target, g.id),
+          hasPhotos: groupPhotos.length > 1,
+          rows: groupPhotos.map((p, i) => {
+            const pending = this._pendingUploads.has(p.url);
+            const key = dragKey(i);
+            return {
+              // у ещё не загруженных фото в данных лежит метка draft:… — показываем сам снимок из памяти
+              url: pending ? this._pendingUploads.get(p.url) : p.url,
+              isNew: pending,
+              num: String(i + 1),
+              border: this.state.dragOver === key ? 'var(--acc)' : 'rgba(255,255,255,.1)',
+              opacity: this.state.dragFrom === key ? '.45' : '1',
+              canLeft: i > 0, canRight: i < groupPhotos.length - 1,
+              left: () => this.movePhoto(target, g.id, i, i - 1),
+              right: () => this.movePhoto(target, g.id, i, i + 1),
+              dragStart: e => {
+                this._drag = { target, cat: g.id, index: i };
+                try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(i)); } catch (err) {}
+                this.setState({ dragFrom: key });
+              },
+              dragOver: e => {
+                const dr = this._drag;
+                if (!dr || dr.target !== target || dr.cat !== g.id) return;
+                e.preventDefault();
+                if (this.state.dragOver !== key) this.setState({ dragOver: key });
+              },
+              drop: e => {
+                e.preventDefault();
+                const dr = this._drag;
+                this._drag = null;
+                this.setState({ dragOver: null, dragFrom: null });
+                if (!dr || dr.target !== target || dr.cat !== g.id) return;
+                this.movePhoto(target, g.id, dr.index, i);
+              },
+              dragEnd: () => { this._drag = null; this.setState({ dragOver: null, dragFrom: null }); },
+              del: () => { target.photos = target.photos.filter(x => x !== p); this.queuePhotoDelete(p.url); this.save(); },
+            };
+          }),
+          addPhoto: this.addPortfolioPhotos(target, g.id),
         };
       }),
     };
@@ -727,7 +840,10 @@ class Component extends DCLogic {
       uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
       uCat: e => { s.cat = e.target.value; s.subcat = ''; this.save(); },
       subOpts, hasSubcats, uSubcat: e => { s.subcat = e.target.value; this.save(); },
-      hasPhoto: !!s.photo, photoSrc: s.photo || '', photoLabel: s.photoUploading ? 'Загрузка…' : (s.photo ? 'Заменить' : 'Загрузить'),
+      hasPhoto: !!s.photo,
+      // выбранное, но ещё не сохранённое фото лежит в памяти под меткой draft:… — показываем его
+      photoSrc: (s.photo && this._pendingUploads.get(s.photo)) || s.photo || '',
+      photoLabel: s.photo ? 'Заменить' : 'Загрузить',
       uPhotoFile: this.photoTo(s), delPhoto: () => { const old = s.photo; s.photo = ''; this.commit(); this.deletePhotoFile(old); },
       profHref: './specialist.html?id=' + s.id,
       isWedding: !!s.wedding,
@@ -810,9 +926,10 @@ class Component extends DCLogic {
       hasSyncStatus: !!this.state.syncState,
       syncLabel: this.state.syncState === 'pending' ? 'Сохраняю…' : this.state.syncState === 'error' ? 'Не сохранилось на сервере ⚠' : 'Сохранено ✓',
       syncColor: this.state.syncState === 'error' ? '#E5533C' : this.state.syncState === 'pending' ? '#97A3B0' : '#7CC46B',
-      doSave: () => { if (this.state.dirty && this.state.syncState !== 'pending') this.commit(); },
-      saveDisabled: !this.state.dirty || this.state.syncState === 'pending',
-      saveLabel: this.state.syncState === 'pending' ? 'Сохраняю…' : this.state.dirty ? 'Сохранить' : 'Сохранено',
+      hasBusy: !!this.state.busy, busyLabel: this.state.busy || '',
+      doSave: () => { if (this.state.dirty && this.state.syncState !== 'pending' && !this.state.busy) this.commit(); },
+      saveDisabled: !this.state.dirty || this.state.syncState === 'pending' || !!this.state.busy,
+      saveLabel: this.state.busy ? 'Загружаю фото…' : this.state.syncState === 'pending' ? 'Сохраняю…' : this.state.dirty ? 'Сохранить' : 'Сохранено',
       saveBg: this.state.dirty && this.state.syncState !== 'pending' ? 'var(--acc)' : 'transparent',
       saveColor: this.state.dirty && this.state.syncState !== 'pending' ? '#0C1117' : '#56626F',
       saveBorder: this.state.dirty && this.state.syncState !== 'pending' ? 'var(--acc)' : 'rgba(255,255,255,.14)',
