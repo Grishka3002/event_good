@@ -368,8 +368,8 @@ class Component extends DCLogic {
   spec() {
     const { d, id } = this.state;
     if (!d) return null;
-    if (id) return d.specialists.find(x => x.id === id) || null;
-    return d.specialists[0] || null; // без ?id= показываем первого — витрина формата
+    if (id) return d.specialists.find(x => x.id === id && x.hidden !== true) || null;
+    return d.specialists.find(x => x.hidden !== true) || null; // без ?id= показываем первого опубликованного — витрина формата
   }
   syncSeo() {
     const s = this.spec();
@@ -562,7 +562,7 @@ class Component extends DCLogic {
     const revsRaw = (s && this.mod && this.mod.specReviewsFor) ? this.mod.specReviewsFor(d, s.id) : [];
     const revSum = revsRaw.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
     const revAvg = revsRaw.length ? (revSum / revsRaw.length) : 0;
-    const related = s && d ? d.specialists.filter(x => x.cat === s.cat && x.id !== s.id && (!wedding || x.wedding === true)).slice(0, 4).map(x => ({ ...x, href: (wedding ? '/svadby/specialist.html?id=' : '/specialist.html?id=') + x.id })) : [];
+    const related = s && d ? d.specialists.filter(x => x.hidden !== true && x.cat === s.cat && x.id !== s.id && (!wedding || x.wedding === true)).slice(0, 4).map(x => ({ ...x, href: (wedding ? '/svadby/specialist.html?id=' : '/specialist.html?id=') + x.id })) : [];
     const aboutSrc = wedding ? (wp.about || (s && s.about)) : (s && s.about);
     return {
       person: cts.person, phone: cts.phone, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''),

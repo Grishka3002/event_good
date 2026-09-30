@@ -159,7 +159,7 @@ function mergeWithDefaults(saved) {
   if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
   if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
   if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
-  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], subcat: '', wedding: false, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [] }, ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [], ...(s.weddingProfile || {}) } }));
+  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], subcat: '', wedding: false, hidden: false, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [] }, ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [], ...(s.weddingProfile || {}) } }));
   if (!Array.isArray(d.specReviews)) d.specReviews = [];
   // Подстраховка: метки draft:… — это фотографии, выбранные в админке, но ещё не
   // загруженные на сервер (см. _pendingUploads в admin.html). В данные сайта они попасть

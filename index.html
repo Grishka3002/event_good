@@ -692,7 +692,7 @@ class Component extends DCLogic {
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const plural = n => n % 10 === 1 && n % 100 !== 11 ? 'специалист' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'специалиста' : 'специалистов');
     const catCards = C.map((c, i) => {
-      const n = d ? d.specialists.filter(s => s.cat === c.slug).length : 0;
+      const n = d ? d.specialists.filter(s => s.cat === c.slug && s.hidden !== true).length : 0;
       return { ...c, num: String(i + 1).padStart(2, '0'), countLabel: n ? n + ' ' + plural(n) : 'состав уточняется', href: './specialists.html?cat=' + c.slug };
     });
     const casesPreview = d ? d.cases.slice(0, 3).map(k => ({ ...k, slotId: 'case-' + k.id, ph: 'Фото: ' + k.title, meta: k.guests + ' гостей · ' + k.city + ' · ' + k.year })) : [];

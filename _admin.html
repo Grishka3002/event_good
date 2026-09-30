@@ -73,6 +73,7 @@ option{background:#121A26;color:#F2F5F8}
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Опыт</div><input value="{{ s.exp }}" onInput="{{ s.uExp }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Цена</div><input value="{{ s.price }}" onInput="{{ s.uPrice }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Свадьбы</div><button onClick="{{ s.toggleWedding }}" title="Показывать в разделе /svadby" style="width:100%;box-sizing:border-box;background:{{ s.weddingChipBg }};color:{{ s.weddingChipColor }};border:1px solid {{ s.weddingChipBorder }};border-radius:8px;padding:11px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc)">{{ s.weddingChipLabel }}</button></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Карточка на сайте</div><button onClick="{{ s.toggleVisibility }}" title="{{ s.visibilityTitle }}" aria-label="{{ s.visibilityTitle }}" style="width:100%;box-sizing:border-box;background:{{ s.visibilityBg }};color:{{ s.visibilityColor }};border:1px solid {{ s.visibilityBorder }};border-radius:8px;padding:11px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="border-color:var(--acc)"><span style="display:inline-flex;position:relative;align-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg><sc-if value="{{ s.isHidden }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:-3px;background:#0C141D;transform:rotate(-45deg);height:2px;top:8px"></span></sc-if></span>{{ s.visibilityLabel }}</button></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Фото профиля</div>
             <div style="display:flex;gap:8px;align-items:center">
               <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ s.photoSrc }}" alt="" style="width:42px;height:54px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.15);flex:none"></sc-if>
@@ -849,6 +850,10 @@ class Component extends DCLogic {
       isWedding: !!s.wedding,
       toggleWedding: () => { s.wedding = !s.wedding; this.save(); },
       weddingChipBg: s.wedding ? 'var(--acc)' : 'transparent', weddingChipColor: s.wedding ? '#0C1117' : '#C7D0D9', weddingChipBorder: s.wedding ? 'var(--acc)' : 'rgba(255,255,255,.25)',
+      isHidden: s.hidden === true, visibilityLabel: s.hidden === true ? 'Скрыта' : 'Видна',
+      visibilityTitle: s.hidden === true ? 'Показать карточку на сайте' : 'Скрыть карточку с сайта',
+      visibilityBg: s.hidden === true ? 'rgba(229,83,60,.1)' : 'transparent', visibilityColor: s.hidden === true ? '#F2A79A' : '#C7D0D9', visibilityBorder: s.hidden === true ? 'rgba(229,83,60,.45)' : 'rgba(255,255,255,.25)',
+      toggleVisibility: () => { s.hidden = s.hidden !== true; this.save(); },
       weddingChipLabel: s.wedding ? 'Участвует ✓' : 'Не участвует',
       aboutText: general.aboutText, uAbout: general.uAbout,
       featsText: general.featsText, uFeats: general.uFeats,
@@ -939,7 +944,7 @@ class Component extends DCLogic {
       noSpecs: specs.length === 0,
       q: this.state.q || '', uQ: e => this.setState({ q: e.target.value }),
       fcat, uFcat: e => this.setState({ fcat: e.target.value }),
-      addSpec: () => { d.specialists.unshift({ id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '' }); this.save(); },
+      addSpec: () => { d.specialists.unshift({ id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '', hidden: false }); this.save(); },
       caseRows, caseCount: d.cases.length + ' шт.',
       addCase: () => { d.cases.unshift({ id: 'c' + Date.now(), title: 'Новый кейс', format: '', guests: '', city: '', year: '2026', desc: '', video: '', team: '' }); this.save(); },
       srevRows, srevSpecOpts,

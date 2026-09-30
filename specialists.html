@@ -234,7 +234,7 @@ class Component extends DCLogic {
     const mainHref = maxHref || tgHref;
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const allRaw = d ? d.specialists : [];
-    const all = wedding ? allRaw.filter(s => s.wedding === true) : allRaw;
+    const all = allRaw.filter(s => s.hidden !== true && (!wedding || s.wedding === true));
     const cur = C.find(c => c.slug === cat);
     const subcats = (!wedding && cur && Array.isArray(cur.subcats)) ? cur.subcats : [];
     const curSub = sub !== 'all' ? subcats.find(sc => sc.slug === sub) : null;

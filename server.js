@@ -342,7 +342,8 @@ function servePageWithSeo(req, res, filePath, seo) {
 // ctx — необязательный контекст (см. buildSpecialistSeo), напр. { wedding: true } для /svadby/specialist.html.
 function serveSpecialistPage(req, res, id, ctx) {
   const d = readLiveData();
-  const s = id && d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id) : null;
+  const s = id && d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id && x.hidden !== true) : null;
+  if (id && d && Array.isArray(d.specialists) && d.specialists.some(x => x.id === id && x.hidden === true)) return notFound(req, res);
   const seo = s ? buildSpecialistSeo(s, d.categories, requestOrigin(req) || 'https://eventspecialists.ru', ctx) : null;
   servePageWithSeo(req, res, SPECIALIST_HTML_PATH, seo);
 }
@@ -382,7 +383,7 @@ function serveSitemap(req, res) {
     { loc: origin + '/cases.html', priority: '0.8' },
     { loc: origin + '/blog.html', priority: '0.7' },
   ];
-  if (d && Array.isArray(d.specialists)) d.specialists.forEach(s => {
+  if (d && Array.isArray(d.specialists)) d.specialists.filter(s => s.hidden !== true).forEach(s => {
     urls.push({ loc: origin + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
     if (s.wedding) urls.push({ loc: origin + '/svadby/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
   });
