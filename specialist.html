@@ -138,7 +138,7 @@ a:hover{color:var(--acc)}
           <a href="{{ mainHref }}" target="_blank" style="display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:17px 28px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Задать вопрос в&nbsp;{{ mainLabel }}</a>
           <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:17px 28px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Задать вопрос в TG</a></sc-if>
         </div>
-        <div style="margin-top:16px;font-size:12px;color:#56626F;line-height:1.6">Кнопка соберёт сообщение с именем специалиста и откроет чат {{ tgAt }} — даты и прямую цену подтвердим там.</div>
+        <div style="margin-top:16px;font-size:12px;color:#56626F;line-height:1.6">Кнопка соберёт сообщение с именем специалиста и откроет чат @sazelenskii — даты и прямую цену подтвердим там.</div>
       </div>
     </div>
   </div>
@@ -484,6 +484,7 @@ class Component extends DCLogic {
     const C = (d && d.categories) || [];
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
+    const bookingHref = 'https://t.me/sazelenskii';
     const maxRaw = String(cts.max || '').trim();
     const maxHref = maxRaw ? (maxRaw.startsWith('http') ? maxRaw : 'https://' + maxRaw.replace(/^\/+/, '')) : '';
     const mainHref = maxHref || tgHref;
@@ -639,7 +640,7 @@ class Component extends DCLogic {
         // негде увидеть на другой стороне.
         const msg = (wedding ? 'Здравствуйте! Нашёл(а) на странице свадебных специалистов сайта «Хорошее решение» и хочу забронировать: ' : 'Здравствуйте! Хочу забронировать специалиста с сайта «Хорошее решение»: ') + s.name + ' (' + s.role + '). Подскажите свободные даты и цену.';
         try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch (e) {}
-        window.open(tgHref, '_blank');
+        window.open(bookingHref, '_blank');
       }
     };
   }
