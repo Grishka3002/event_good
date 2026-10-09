@@ -290,10 +290,22 @@ export function videoEmbedUrl(url) {
       : (u.searchParams.get('v') || (['shorts', 'embed', 'live', 'v'].includes(seg[0]) ? seg[1] : ''));
     return /^[\w-]{6,}$/.test(id || '') ? 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0' : '';
   }
-  if (host === 'rutube.ru') {
-    const i = seg.indexOf('video') >= 0 ? seg.indexOf('video') : seg.indexOf('embed');
-    const id = i >= 0 ? seg[i + 1] : '';
-    return /^[0-9a-f]{16,}$/i.test(id || '') ? 'https://rutube.ru/play/embed/' + id + '/?autoplay=1' : '';
+  if (host === 'rutube.ru' || host === 'm.rutube.ru') {
+    // Rutube uses both 32-character hex IDs and older numeric IDs. Shorts links
+    // can be embedded with the same player ID as a regular /video/ link.
+    const i = seg.findIndex(part => ['video', 'embed', 'shorts'].includes(part));
+    let idIndex = i + 1;
+    if (i >= 0 && seg[i] === 'video' && seg[idIndex] === 'private') idIndex++;
+    const id = i >= 0 ? (seg[idIndex] || '') : '';
+    const validId = /^(?:\d{5,}|[0-9a-f]{32}|[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})$/i;
+    if (!validId.test(id)) return '';
+    const params = new URLSearchParams({ autoplay: '1' });
+    // Direct-link-only Rutube videos need their access key in the player URL.
+    const accessKey = u.searchParams.get('p');
+    if (accessKey) params.set('p', accessKey);
+    const start = u.searchParams.get('t');
+    if (start && /^\d+$/.test(start)) params.set('t', start);
+    return 'https://rutube.ru/play/embed/' + id + '/?' + params.toString();
   }
   if (host === 'vimeo.com' || host === 'player.vimeo.com') {
     const id = seg.filter(x => /^\d+$/.test(x))[0];
