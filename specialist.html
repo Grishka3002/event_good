@@ -374,18 +374,19 @@ class Component extends DCLogic {
   syncSeo() {
     const s = this.spec();
     if (!s) return;
-    const wedding = location.pathname.startsWith('/svadby') && s.wedding === true;
-    const title = (wedding ? 'Свадебный ' : '') + s.name + ' — ' + s.role + ' | Хорошее решение';
+    const eventType = location.pathname.startsWith('/svadby/') ? 'wedding' : location.pathname.startsWith('/korporativy/') ? 'corporate' : location.pathname.startsWith('/prazdniki-i-shou/') ? 'entertainment' : '';
+    const profile = eventType && this.mod && this.mod.eventProfile ? this.mod.eventProfile(s, eventType) : s;
+    const title = (eventType === 'wedding' ? 'Свадебный ' : '') + profile.name + ' — ' + profile.role + ' | Хорошее решение';
     if (document.title !== title) { document.title = title; setTimeout(() => { if (document.title !== title) document.title = title; }, 400); }
-    if (this._seoFor === s.id) return;
-    this._seoFor = s.id;
+    if (this._seoFor === s.id + ':' + eventType) return;
+    this._seoFor = s.id + ':' + eventType;
     const scats = (this.state.d && this.state.d.categories) || [];
-    const cn = (scats.find(c => c.slug === s.cat) || {}).name || '';
+    const cn = (scats.find(c => c.slug === profile.cat) || {}).name || '';
     const md = document.querySelector('meta[name="description"]');
-    if (md) md.setAttribute('content', s.name + ' (' + cn + ', опыт ' + s.exp + ') — профиль, портфолио и видео работ. Бронирование напрямую, ' + s.price + ', без агентской наценки.');
+    if (md) md.setAttribute('content', profile.name + ' (' + cn + ', опыт ' + profile.exp + ') — профиль, портфолио и видео работ. Бронирование напрямую, ' + profile.price + ', без агентской наценки.');
     let el = document.getElementById('ld-person');
     if (!el) { el = document.createElement('script'); el.type = 'application/ld+json'; el.id = 'ld-person'; document.head.appendChild(el); }
-    el.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', name: s.name, jobTitle: s.role, description: s.about || undefined, memberOf: { '@type': 'Organization', name: 'Объединение ивент-специалистов «Хорошее решение»' } });
+    el.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', name: profile.name, jobTitle: profile.role, description: profile.about || undefined, memberOf: { '@type': 'Organization', name: 'Объединение ивент-специалистов «Хорошее решение»' } });
   }
   // Превью видео: YouTube — сразу (без сети), остальное (Vimeo, Rutube) — через сервер,
   // с перерисовкой карточки, когда превью придёт. См. data.js: ytThumbSync/resolveVideoThumb.
@@ -495,16 +496,18 @@ class Component extends DCLogic {
     // упиралась в пустоту. Иначе описание/фишки/ссылки/видео/фото берём из s.weddingProfile,
     // а по каждому пустому полю откатываемся на общее значение — так страница не пустует,
     // пока свадебный профиль ещё не полностью заполнен.
-    const wedding = location.pathname.startsWith('/svadby') && !!s && s.wedding === true;
-    const wp = (wedding && s && s.weddingProfile) ? s.weddingProfile : {};
-    const cat = s ? (C.find(c => c.slug === s.cat) || null) : null;
-    const subcat = (s && s.subcat && cat && Array.isArray(cat.subcats)) ? (cat.subcats.find(sc => sc.slug === s.subcat) || null) : null;
+    const eventType = location.pathname.startsWith('/svadby/') ? 'wedding' : location.pathname.startsWith('/korporativy/') ? 'corporate' : location.pathname.startsWith('/prazdniki-i-shou/') ? 'entertainment' : '';
+    const eventMeta = (this.mod && this.mod.EVENT_TYPES || []).find(e => e.id === eventType) || null;
+    const profile = s && eventType && this.mod && this.mod.eventProfile ? this.mod.eventProfile(s, eventType) : s;
+    const wedding = eventType === 'wedding';
+    const cat = profile ? (C.find(c => c.slug === profile.cat) || null) : null;
+    const subcat = (profile && profile.subcat && cat && Array.isArray(cat.subcats)) ? (cat.subcats.find(sc => sc.slug === profile.subcat) || null) : null;
     const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
     const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
-    const pcfg = s ? (portfolioCfg[s.cat] || defPortfolioCfg) : defPortfolioCfg;
-    const featsSrc = (wedding && Array.isArray(wp.feats) && wp.feats.some(x => x && x.trim())) ? wp.feats : (s ? s.feats : []);
+    const pcfg = profile ? (portfolioCfg[profile.cat] || defPortfolioCfg) : defPortfolioCfg;
+    const featsSrc = profile ? profile.feats : [];
     const feats = (Array.isArray(featsSrc) ? featsSrc : []).filter(x => x && x.trim());
-    const videosSrc = (wedding && Array.isArray(wp.videos) && wp.videos.length) ? wp.videos : (s ? s.videos : []);
+    const videosSrc = profile ? profile.videos : [];
     const vids = (s && pcfg.video !== 'none' && Array.isArray(videosSrc)) ? videosSrc : [];
     const allV = vids.map((v, i) => {
       this.resolveThumb(v.url);
@@ -527,15 +530,15 @@ class Component extends DCLogic {
           if (!!this._thumbPortrait[key] !== p) { this._thumbPortrait[key] = p; this.forceUpdate(); }
         } };
     }).filter(v => v.url);
-    const linksSrc = (wedding && Array.isArray(wp.links) && wp.links.length) ? wp.links : (s ? s.links : []);
+    const linksSrc = profile ? profile.links : [];
     const links = (s && pcfg.links && Array.isArray(linksSrc) ? linksSrc : []).map((l, i) => {
       let url = (l.url || '').trim();
       if (url && !/^(https?:)?\/\//i.test(url)) url = 'https://' + url;
       return { url, caption: l.title || 'Портфолио ' + (i + 1) };
     }).filter(l => l.url);
     const mediaCats = (d && Array.isArray(d.mediaCats)) ? d.mediaCats : [];
-    const selCats = s ? mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)) : [];
-    const photosSrc = (wedding && Array.isArray(wp.photos) && wp.photos.length) ? wp.photos : (s ? s.photos : []);
+    const selCats = profile ? mediaCats.filter(c => Array.isArray(profile.mediaCats) && profile.mediaCats.includes(c.id)) : [];
+    const photosSrc = profile ? profile.photos : [];
     const allP = (Array.isArray(photosSrc) ? photosSrc : []).filter(p => p && p.url);
     let groups = [];
     if (s && selCats.length) {
@@ -553,7 +556,7 @@ class Component extends DCLogic {
     // на боевом сайте (сработали бы только внутри дизайн-инструмента, которым собирали
     // сайт); теперь фото грузятся по-настоящему через админку, и пустое просто не рисуем.
     groups = groups.map(g => {
-      const ph = g.photos.map(p => ({ url: p.url, alt: s.name + ' — ' + g.name }));
+      const ph = g.photos.map(p => ({ url: p.url, alt: profile.name + ' — ' + g.name }));
       return { ...g,
         photos: ph.map((p, i) => ({ ...p, open: () => this.openLb(ph, i), label: 'Открыть фото ' + (i + 1) + ' из ' + ph.length })),
         hasPhotos: g.photos.length > 0, hasVideos: g.videos.length > 0 };
@@ -563,8 +566,11 @@ class Component extends DCLogic {
     const revsRaw = (s && this.mod && this.mod.specReviewsFor) ? this.mod.specReviewsFor(d, s.id) : [];
     const revSum = revsRaw.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
     const revAvg = revsRaw.length ? (revSum / revsRaw.length) : 0;
-    const related = s && d ? d.specialists.filter(x => x.hidden !== true && x.cat === s.cat && x.id !== s.id && (!wedding || x.wedding === true)).slice(0, 4).map(x => ({ ...x, href: (wedding ? '/svadby/specialist.html?id=' : '/specialist.html?id=') + x.id })) : [];
-    const aboutSrc = wedding ? (wp.about || (s && s.about)) : (s && s.about);
+    const related = s && d ? d.specialists.filter(x => {
+      const xp = eventType && this.mod && this.mod.eventProfile ? this.mod.eventProfile(x, eventType) : x;
+      return x.hidden !== true && (!eventType || xp.enabled === true) && xp.cat === (profile && profile.cat) && x.id !== s.id;
+    }).slice(0, 4).map(x => ({ ...x, ...((eventType && this.mod && this.mod.eventProfile) ? this.mod.eventProfile(x, eventType) : x), href: (eventMeta ? eventMeta.path + '/specialist.html?id=' : '/specialist.html?id=') + x.id })) : [];
+    const aboutSrc = profile && profile.about;
     return {
       person: cts.person, phone: cts.phone, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''),
       tgHref, tgAt: '@' + String(cts.tg || '').replace(/^@/, ''), maxHref, hasMax: !!maxHref, mainHref, mainLabel,
@@ -577,12 +583,12 @@ class Component extends DCLogic {
       profCols: this.state.mobile ? '1fr' : 'minmax(300px,380px) 1fr',
       vidCols: this.state.mobile ? '1fr' : 'repeat(auto-fit,minmax(min(420px,100%),1fr))',
       slotId: s ? 'spec-' + s.id : 'spec-none',
-      photoSrc: (s && s.photo) || '', hasPhoto: !!(s && s.photo), noPhoto: !(s && s.photo),
-      photoAlt: s ? s.name + ' — ' + s.role : '',
-      name: s ? s.name : '', role: s ? s.role : '', exp: s ? s.exp : '', price: s ? s.price : '',
-      catName: cat ? cat.name : '', catHref: wedding ? '/svadby' : (cat ? '/specialists.html?cat=' + cat.slug : '/specialists.html'),
+      photoSrc: (profile && profile.photo) || '', hasPhoto: !!(profile && profile.photo), noPhoto: !(profile && profile.photo),
+      photoAlt: profile ? profile.name + ' — ' + profile.role : '',
+      name: profile ? profile.name : '', role: profile ? profile.role : '', exp: profile ? profile.exp : '', price: profile ? profile.price : '',
+      catName: cat ? cat.name : '', catHref: eventMeta ? eventMeta.path : (cat ? '/specialists.html?cat=' + cat.slug : '/specialists.html'),
       catLinkColor: subcat ? '#97A3B0' : 'var(--acc)',
-      hasSubcat: !wedding && !!subcat, subcatName: subcat ? subcat.name : '',
+      hasSubcat: !eventType && !!subcat, subcatName: subcat ? subcat.name : '',
       subcatHref: (cat && subcat) ? '/specialists.html?cat=' + cat.slug + '&sub=' + subcat.slug : '',
       about: s ? (aboutSrc || 'Описание появится в ближайшее время. А пока напишите нам в Telegram — расскажем о специалисте, пришлём примеры работ и проверим свободные даты.') : '',
       hasFeats: feats.length > 0, feats,
@@ -638,7 +644,7 @@ class Component extends DCLogic {
         // "Бронь" не идёт через /api/lead — это сразу диалог в Telegram, поэтому источник
         // (обычный сайт / свадебный раздел) помечаем прямо в тексте сообщения, иначе его
         // негде увидеть на другой стороне.
-        const msg = (wedding ? 'Здравствуйте! Нашёл(а) на странице свадебных специалистов сайта «Хорошее решение» и хочу забронировать: ' : 'Здравствуйте! Хочу забронировать специалиста с сайта «Хорошее решение»: ') + s.name + ' (' + s.role + '). Подскажите свободные даты и цену.';
+        const msg = 'Здравствуйте! Нашёл(а) на странице ' + (eventMeta ? eventMeta.name.toLowerCase() : 'специалистов') + ' сайта «Хорошее решение» и хочу забронировать: ' + profile.name + ' (' + profile.role + '). Подскажите свободные даты и цену.';
         try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch (e) {}
         window.open(bookingHref, '_blank');
       }

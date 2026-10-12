@@ -278,27 +278,47 @@ function injectHead(html, seo) {
   return html;
 }
 
-// ctx.wedding=true (и специалист сам отмечен s.wedding в админке) — заголовок/описание/url
-// подстраиваются под свадебный раздел (/svadby), см. роут /svadby/specialist.html ниже.
+// В страницах направлений SEO и данные профиля берутся из соответствующего eventProfile.
 function buildSpecialistSeo(s, categories, origin, ctx) {
-  const wedding = !!(ctx && ctx.wedding && s.wedding);
-  const cat = (categories || []).find(c => c.slug === s.cat);
+  const eventType = ctx && ctx.eventType;
+  const profile = getEventProfile(s, eventType) || s;
+  const eventNames = { wedding: 'свадьбы', corporate: 'корпоративы', entertainment: 'праздники и шоу' };
+  const cat = (categories || []).find(c => c.slug === profile.cat);
   const catName = cat ? cat.name : '';
-  const titlePrefix = wedding ? 'Свадебный ' : '';
-  const title = clamp(`${titlePrefix}${s.name} — ${s.role} | Хорошее решение`, 90);
-  const description = clamp(`${s.name}${catName ? ' (' + catName + (s.exp ? ', опыт ' + s.exp : '') + ')' : ''}${wedding ? ' — специалист по свадьбам' : ''} — профиль, портфолио и видео работ. Бронирование напрямую, ${s.price || 'цена по запросу'}, без агентской наценки.`, 200);
-  const url = `${origin}/${wedding ? 'svadby/' : ''}specialist.html?id=${encodeURIComponent(s.id)}`;
+  const eventLabel = eventNames[eventType] || '';
+  const title = clamp(`${profile.name} — ${profile.role} | Хорошее решение`, 90);
+  const description = clamp(`${profile.name}${catName ? ' (' + catName + (profile.exp ? ', опыт ' + profile.exp : '') + ')' : ''}${eventLabel ? ' — специалист: ' + eventLabel : ''} — профиль, портфолио и видео работ. Бронирование напрямую, ${profile.price || 'цена по запросу'}, без агентской наценки.`, 200);
+  const sectionPath = eventType === 'wedding' ? '/svadby' : eventType === 'corporate' ? '/korporativy' : eventType === 'entertainment' ? '/prazdniki-i-shou' : '';
+  const url = `${origin}${sectionPath}${sectionPath ? '/' : '/'}specialist.html?id=${encodeURIComponent(s.id)}`;
   return {
     title, description, url,
-    ogTitle: clamp(`${s.name} — ${s.role}`, 90),
+    ogTitle: clamp(`${profile.name} — ${profile.role}`, 90),
     ogDescription: description,
     ld: {
-      '@context': 'https://schema.org', '@type': 'Person', name: s.name, jobTitle: s.role,
-      description: s.about || undefined,
+      '@context': 'https://schema.org', '@type': 'Person', name: profile.name, jobTitle: profile.role,
+      description: profile.about || undefined,
       memberOf: { '@type': 'Organization', name: 'Объединение ивент-специалистов «Хорошее решение»' },
       url,
     },
   };
+}
+
+// Поддерживаем старые живые данные до их первого сохранения из обновлённой админки.
+function getEventProfile(s, eventType) {
+  if (!s || !eventType) return s || null;
+  const current = s.eventProfiles && s.eventProfiles[eventType];
+  if (current) return current;
+  const common = {
+    name: s.name || '', role: s.role || '', exp: s.exp || '', price: s.price || '',
+    cat: s.cat || '', subcat: s.subcat || '', photo: s.photo || '', about: s.about || '',
+    feats: Array.isArray(s.feats) ? s.feats : [], links: Array.isArray(s.links) ? s.links : [],
+    videos: Array.isArray(s.videos) ? s.videos : [], photos: Array.isArray(s.photos) ? s.photos : [],
+    mediaCats: Array.isArray(s.mediaCats) ? s.mediaCats : [],
+  };
+  if (eventType === 'wedding') return {
+    ...common, ...(s.weddingProfile || {}), enabled: s.wedding === true,
+  };
+  return { ...common, enabled: s.wedding !== true };
 }
 
 function buildArticleSeo(a, origin) {
@@ -344,6 +364,8 @@ function serveSpecialistPage(req, res, id, ctx) {
   const d = readLiveData();
   const s = id && d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id && x.hidden !== true) : null;
   if (id && d && Array.isArray(d.specialists) && d.specialists.some(x => x.id === id && x.hidden === true)) return notFound(req, res);
+  const profile = s && ctx && ctx.eventType ? getEventProfile(s, ctx.eventType) : null;
+  if (ctx && ctx.eventType && (!profile || profile.enabled !== true)) return notFound(req, res);
   const seo = s ? buildSpecialistSeo(s, d.categories, requestOrigin(req) || 'https://eventspecialists.ru', ctx) : null;
   servePageWithSeo(req, res, SPECIALIST_HTML_PATH, seo);
 }
@@ -380,12 +402,19 @@ function serveSitemap(req, res) {
     { loc: origin + '/', priority: '1.0' },
     { loc: origin + '/specialists.html', priority: '0.9' },
     { loc: origin + '/svadby', priority: '0.85' },
+    { loc: origin + '/korporativy', priority: '0.85' },
+    { loc: origin + '/prazdniki-i-shou', priority: '0.85' },
+    { loc: origin + '/svadby/cases', priority: '0.75' },
+    { loc: origin + '/korporativy/cases', priority: '0.75' },
+    { loc: origin + '/prazdniki-i-shou/cases', priority: '0.75' },
     { loc: origin + '/cases.html', priority: '0.8' },
     { loc: origin + '/blog.html', priority: '0.7' },
   ];
   if (d && Array.isArray(d.specialists)) d.specialists.filter(s => s.hidden !== true).forEach(s => {
     urls.push({ loc: origin + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
-    if (s.wedding) urls.push({ loc: origin + '/svadby/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
+    const paths = { wedding: '/svadby', corporate: '/korporativy', entertainment: '/prazdniki-i-shou' };
+    for (const [type, basePath] of Object.entries(paths)) if (getEventProfile(s, type).enabled === true)
+      urls.push({ loc: origin + basePath + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
   });
   if (d && Array.isArray(d.articles)) d.articles.forEach(a => urls.push({ loc: origin + '/blog.html?post=' + encodeURIComponent(a.slug), priority: '0.6' }));
   const body = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -849,15 +878,33 @@ http.createServer((req, res) => {
   if (urlPath === '/blog.html' || urlPath === '/blog') {
     return serveArticlePage(req, res, urlObj.searchParams.get('post'));
   }
-  // Свадебный раздел — та же страница-каталог/профиль, что и обычно (см. specialists.html/
-  // specialist.html: они сами распознают свадебный контекст по location.pathname), просто
-  // отдана по другому пути и (для профиля) с подставленными свадебными SEO-тегами.
-  if (urlPath === '/svadby' || urlPath === '/svadby/') {
-    return servePageWithSeo(req, res, SPECIALISTS_HTML_PATH, weddingCatalogSeo(requestOrigin(req)));
+  // Каталоги и кейсы каждого направления используют те же шаблоны, сохраняя отдельные профили.
+  const eventRoutes = {
+    '/svadby': { id: 'wedding', name: 'Свадьбы' },
+    '/korporativy': { id: 'corporate', name: 'Корпоративы' },
+    '/prazdniki-i-shou': { id: 'entertainment', name: 'Праздники и шоу' },
+  };
+  const eventRoute = eventRoutes[urlPath.replace(/\/$/, '')];
+  if (eventRoute) {
+    const origin = requestOrigin(req) || 'https://eventspecialists.ru';
+    const desc = `Специалисты и портфолио для направления «${eventRoute.name}» во Владивостоке. Подбор команды и бронирование напрямую.`;
+    const routePath = urlPath.replace(/\/$/, '');
+    const seo = eventRoute.id === 'wedding' ? weddingCatalogSeo(origin) : {
+      title: `${eventRoute.name} во Владивостоке | Хорошее решение`, description: desc,
+      url: `${origin}${routePath}`,
+      ogTitle: eventRoute.name, ogDescription: desc,
+    };
+    return servePageWithSeo(req, res, SPECIALISTS_HTML_PATH, seo);
   }
-  if (urlPath === '/svadby/specialist.html' || urlPath === '/svadby/specialist') {
-    return serveSpecialistPage(req, res, urlObj.searchParams.get('id'), { wedding: true });
-  }
+  if (urlPath === '/svadby/cases' || urlPath === '/korporativy/cases' || urlPath === '/prazdniki-i-shou/cases')
+    return servePlainPage(req, res, CASES_HTML_PATH);
+  if (urlPath === '/svadby/specialist.html' || urlPath === '/svadby/specialist')
+    return serveSpecialistPage(req, res, urlObj.searchParams.get('id'), { eventType: 'wedding' });
+  if (urlPath === '/korporativy/specialist.html' || urlPath === '/korporativy/specialist')
+    return serveSpecialistPage(req, res, urlObj.searchParams.get('id'), { eventType: 'corporate' });
+  if (urlPath === '/prazdniki-i-shou/specialist.html' || urlPath === '/prazdniki-i-shou/specialist')
+    return serveSpecialistPage(req, res, urlObj.searchParams.get('id'), { eventType: 'entertainment' });
+  // Старый свадебный маршрут сохраняется.
   // На некоторых хостингах (например, Beget) файлы, физически лежащие в отдаваемой
   // папке, веб-сервер может отдать напрямую в обход Node — а значит, и в обход проверки
   // пароля. Поэтому реальный файл админки может физически лежать ВНЕ этой папки

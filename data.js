@@ -22,6 +22,17 @@ export const CATEGORIES = [
   { slug: 'ploshchadki', name: 'Площадки', desc: 'Локации для свадебной церемонии и банкета', subcats: [], weddingOnly: true },
 ];
 
+// Направления сайта. Ключи используются в URL, профилях специалистов и метках кейсов.
+export const EVENT_TYPES = [
+  { id: 'wedding', name: 'Свадьбы', path: '/svadby' },
+  { id: 'corporate', name: 'Корпоративы', path: '/korporativy' },
+  { id: 'entertainment', name: 'Праздники и шоу', path: '/prazdniki-i-shou' },
+];
+
+export function eventProfile(s, eventType) {
+  return s && s.eventProfiles && s.eventProfiles[eventType] || s || null;
+}
+
 // Свадебный каталог (/svadby) — какие плитки показывать и какие категории специалистов в них входят
 // (используется вместо CATEGORIES, чтобы переименовать/объединить категории только для этого раздела,
 // не трогая общий каталог; напр. «Создание образа» объединяет визажистов и стилистов)
@@ -35,6 +46,26 @@ export const WEDDING_CATALOG = [
   { name: 'Создание образа', cats: ['vizazhisty', 'stilisty'] },
   { name: 'Площадки', cats: ['ploshchadki'] },
 ];
+
+export const EVENT_CATALOGS = {
+  wedding: WEDDING_CATALOG,
+  corporate: [
+    { name: 'Организаторы', cats: ['organizatory'] },
+    { name: 'Ведущие', cats: ['vedushchie'] },
+    { name: 'Фото и видео', cats: ['fotografy', 'videografy'] },
+    { name: 'Музыка', cats: ['didzhei', 'muzykanty'] },
+    { name: 'Декор и техника', cats: ['dekoratory', 'prokatchiki'] },
+    { name: 'Шоу-программа', cats: ['artisty', 'animatory'] },
+  ],
+  entertainment: [
+    { name: 'Организаторы', cats: ['organizatory'] },
+    { name: 'Ведущие', cats: ['vedushchie'] },
+    { name: 'Артисты и шоу', cats: ['artisty', 'animatory'] },
+    { name: 'Музыка', cats: ['didzhei', 'muzykanty'] },
+    { name: 'Фото и видео', cats: ['fotografy', 'videografy'] },
+    { name: 'Декор и техника', cats: ['dekoratory', 'prokatchiki'] },
+  ],
+};
 
 // Транслитерация имени категории в URL-слаг; при коллизии добавляется числовой суффикс.
 export function slugify(name, existingSlugs) {
@@ -156,10 +187,31 @@ function mergeWithDefaults(saved) {
   const d = { ...DEFAULTS, ...saved, contacts: { ...DEFAULTS.contacts, ...(saved.contacts || {}) } };
   // миграция: подтягиваем новые поля из DEFAULTS в ранее сохранённые записи —
   // так код можно обновлять сколько угодно, старые сохранённые данные не «слетают»
-  if (Array.isArray(d.cases)) d.cases = d.cases.map(k => ({ team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k }));
+  if (Array.isArray(d.cases)) d.cases = d.cases.map(k => {
+    const c = { team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k };
+    if (!Array.isArray(c.eventTypes)) {
+      const text = (c.title + ' ' + c.format).toLowerCase();
+      c.eventTypes = /свад|невест|венчан/.test(text) ? ['wedding']
+        : /корпорат|форум|конференц|компан|делов|бизнес/.test(text) ? ['corporate']
+        : ['entertainment'];
+    }
+    return c;
+  });
   if (!Array.isArray(d.articles) || !d.articles.length) d.articles = JSON.parse(JSON.stringify(DEFAULTS.articles));
   if (!Array.isArray(d.calcServices) || !d.calcServices.length) d.calcServices = JSON.parse(JSON.stringify(DEFAULTS.calcServices));
-  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => ({ about: '', feats: [], videos: [], mediaCats: [], photo: '', links: [], subcat: '', wedding: false, hidden: false, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [] }, ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [], ...(s.weddingProfile || {}) } }));
+  if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => {
+    const merged = { about: '', feats: [], videos: [], mediaCats: [], photo: '', photos: [], links: [], subcat: '', wedding: false, hidden: false, weddingProfile: { about: '', feats: [], links: [], videos: [], photos: [] }, ...(DEFAULTS.specialists.find(x => x.id === s.id) || {}), ...s };
+    merged.weddingProfile = { about: '', feats: [], links: [], videos: [], photos: [], ...(s.weddingProfile || {}) };
+    const common = { name: merged.name || '', role: merged.role || '', exp: merged.exp || '', price: merged.price || '', cat: merged.cat || '', subcat: merged.subcat || '', photo: merged.photo || '', about: merged.about || '', feats: [...(merged.feats || [])], links: [...(merged.links || [])], videos: [...(merged.videos || [])], photos: [...(merged.photos || [])], mediaCats: [...(merged.mediaCats || [])] };
+    const existing = s.eventProfiles && typeof s.eventProfiles === 'object' ? s.eventProfiles : {};
+    const weddingLegacy = { ...common, ...merged.weddingProfile };
+    merged.eventProfiles = {
+      wedding: { ...weddingLegacy, ...(existing.wedding || {}), enabled: existing.wedding && typeof existing.wedding.enabled === 'boolean' ? existing.wedding.enabled : merged.wedding === true },
+      corporate: { ...common, ...(existing.corporate || {}), enabled: existing.corporate && typeof existing.corporate.enabled === 'boolean' ? existing.corporate.enabled : merged.wedding !== true },
+      entertainment: { ...common, ...(existing.entertainment || {}), enabled: existing.entertainment && typeof existing.entertainment.enabled === 'boolean' ? existing.entertainment.enabled : merged.wedding !== true },
+    };
+    return merged;
+  });
   if (!Array.isArray(d.specReviews)) d.specReviews = [];
   // Подстраховка: метки draft:… — это фотографии, выбранные в админке, но ещё не
   // загруженные на сервер (см. _pendingUploads в admin.html). В данные сайта они попасть
@@ -169,7 +221,12 @@ function mergeWithDefaults(saved) {
   if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => {
     const clean = list => (Array.isArray(list) ? list.filter(p => p && !isDraft(p.url)) : list);
     const wp = s.weddingProfile ? { ...s.weddingProfile, photos: clean(s.weddingProfile.photos) } : s.weddingProfile;
-    return { ...s, photo: isDraft(s.photo) ? '' : s.photo, photos: clean(s.photos), weddingProfile: wp };
+    const eventProfiles = Object.fromEntries(Object.entries(s.eventProfiles || {}).map(([key, profile]) => [key, {
+      ...profile,
+      photo: isDraft(profile.photo) ? '' : profile.photo,
+      photos: clean(profile.photos),
+    }]));
+    return { ...s, photo: isDraft(s.photo) ? '' : s.photo, photos: clean(s.photos), weddingProfile: wp, eventProfiles };
   });
   if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
   if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));

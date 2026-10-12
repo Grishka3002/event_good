@@ -132,12 +132,9 @@ option{background:#121A26;color:#F2F5F8}
       <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 30px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в Telegram</a></sc-if>
     </div>
     <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:34px;animation:fadeUp .7s cubic-bezier(.22,.61,.36,1) .3s both">
-      <a href="./specialists.html?cat=vedushchie" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Ведущие</a>
-      <a href="./specialists.html?cat=fotografy" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Фотографы</a>
-      <a href="./specialists.html?cat=videografy" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Видеографы</a>
-      <a href="./specialists.html?cat=didzhei" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Диджеи</a>
-      <a href="./specialists.html?cat=muzykanty" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Музыканты</a>
-      <a href="./specialists.html" style="border:1px solid color-mix(in oklab,var(--acc) 55%,transparent);border-radius:999px;padding:12px 16px;font-size:12px;color:var(--acc);font-weight:700" style-hover="background:var(--acc);color:#0C1117">Все {{ catCount }} направлений →</a>
+      <a href="/svadby" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Свадьбы</a>
+      <a href="/korporativy" style="border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:12px 16px;font-size:12px;color:#C7D0D9;font-weight:600" style-hover="border-color:var(--acc);color:var(--acc)">Корпоративы</a>
+      <a href="/prazdniki-i-shou" style="border:1px solid color-mix(in oklab,var(--acc) 55%,transparent);border-radius:999px;padding:12px 16px;font-size:12px;color:var(--acc);font-weight:700" style-hover="background:var(--acc);color:#0C1117">Праздники и шоу →</a>
     </div>
     </div>
     <sc-if value="{{ deskNav }}" hint-placeholder-val="{{ true }}">
@@ -155,7 +152,7 @@ option{background:#121A26;color:#F2F5F8}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:34px;margin-top:86px;animation:fadeUp .8s cubic-bezier(.22,.61,.36,1) .34s both">
       <div><div data-count="100" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">100</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">человек всех<br>ивент-специальностей</div></div>
-      <div><div data-count="{{ catCount }}" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">{{ catCount }}</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">направлений —<br>от ведущих до прокатчиков</div></div>
+      <div><div data-count="{{ catCount }}" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">{{ catCount }}</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">формата события —<br>подходящий найдётся</div></div>
       <div><div data-count="16" data-suffix=" лет" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">16 лет</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">в event-индустрии,<br>специалистам 20–45 лет</div></div>
       <div><div data-count="1000" data-suffix="+" style="font-size:clamp(40px,4.4vw,62px);font-weight:900;line-height:1">1000+</div><div style="width:44px;height:4px;background:var(--acc);margin:12px 0 10px"></div><div style="font-size:13px;line-height:1.55;color:#9AA6B2">мероприятий —<br>от 1 до 3000 гостей</div></div>
     </div>
@@ -206,11 +203,11 @@ option{background:#121A26;color:#F2F5F8}
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:44px">
       <div>
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div style="width:34px;height:3px;background:var(--acc)"></div><div style="font-size:11px;font-weight:700;letter-spacing:.38em;color:#97A3B0;text-transform:uppercase">Специалисты</div></div>
-        <h2 style="margin:0;font-size:clamp(30px,3.4vw,44px);font-weight:900;letter-spacing:.01em;text-transform:uppercase;line-height:1.06">{{ catCount }} направлений —<br>одна команда</h2>
+        <h2 style="margin:0;font-size:clamp(30px,3.4vw,44px);font-weight:900;letter-spacing:.01em;text-transform:uppercase;line-height:1.06">Три формата события —<br>одна команда</h2>
       </div>
-      <a href="./specialists.html" style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:15px 24px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">Все специалисты →</a>
+      <a href="/korporativy" style="display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:15px 24px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">Выбрать формат →</a>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(270px,100%),1fr));gap:16px">
       <sc-for list="{{ catCards }}" as="c" hint-placeholder-count="12">
         <a href="{{ c.href }}" rel="nofollow" style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:10px;min-height:170px;transition:all .22s ease;color:#F2F5F8" style-hover="border-color:var(--acc);transform:translateY(-4px);color:#F2F5F8">
           <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--acc);font-weight:800;font-size:13px;letter-spacing:.24em">{{ c.num }}</span><span style="flex:1;height:1px;background:rgba(255,255,255,.1)"></span><span style="font-size:11.5px;color:#97A3B0;font-weight:600">{{ c.countLabel }}</span></div>
@@ -459,7 +456,7 @@ option{background:#121A26;color:#F2F5F8}
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px"><div style="width:34px;height:3px;background:var(--acc)"></div><div style="font-size:11px;font-weight:700;letter-spacing:.38em;color:#97A3B0;text-transform:uppercase">FAQ</div></div>
     <h2 style="margin:0 0 34px;font-size:clamp(30px,3.4vw,44px);font-weight:900;letter-spacing:.01em;text-transform:uppercase;line-height:1.06">Частые вопросы</h2>
     <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Чем объединение отличается от агентства?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Агентство перепродаёт чужие услуги с наценкой. Мы — сами специалисты: вы работаете напрямую с теми, кто выйдет на вашу площадку. Поэтому в смете нет статьи «организация», а цены — прямые.</div></details>
-    <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Можно заказать одного специалиста, а не всё событие?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Да. Ведущего, фотографа, диджея, кавер-группу — кого угодно из {{ catCount }} направлений. Подберём под формат и бюджет, при форс-мажоре бесплатно заменим.</div></details>
+    <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Можно заказать одного специалиста, а не всё событие?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Да. Ведущего, фотографа, диджея, кавер-группу — кого угодно из наших специализаций. Подберём под формат и бюджет, при форс-мажоре бесплатно заменим.</div></details>
     <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Сколько это стоит?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Ровно столько, сколько стоят специалисты, — наценок нет. Смету с прямыми ценами присылаем после 15-минутного брифа. Это бесплатно и ни к чему не обязывает.</div></details>
     <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Работаете ли вы за пределами Владивостока?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">Да, работаем по всему Дальнему Востоку, по России и за рубежом — логистику команды берём на себя и закладываем в смету прозрачно.</div></details>
     <details style="border-top:1px solid rgba(255,255,255,.1)"><summary style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 0;font-weight:700;font-size:16.5px;line-height:1.4">Что за кэшбек 100%?<span style="color:var(--acc);font-size:24px;font-weight:400;flex-shrink:0">+</span></summary><div style="padding:0 40px 26px 0;font-size:15px;line-height:1.75;color:#9AA6B2">После события начисляем 100% суммы оплаты бонусными рублями. Например, при оплате 300 000 ₽ на счёт зачислится 300 000 бонусных рублей. Каждым новым заказом можно оплатить бонусами до 20% его стоимости — остаток продолжает храниться на счёте, так что кэшбек можно использовать за несколько мероприятий, пока не потратите его полностью.</div></details>
@@ -683,7 +680,11 @@ class Component extends DCLogic {
   }
   renderVals() {
     const d = this.state.d;
-    const C = ((d && d.categories) || []).filter(c => !c.weddingOnly);
+    const eventTypes = (this.mod && this.mod.EVENT_TYPES) || [
+      { id: 'wedding', name: 'Свадьбы', path: '/svadby' },
+      { id: 'corporate', name: 'Корпоративы', path: '/korporativy' },
+      { id: 'entertainment', name: 'Праздники и шоу', path: '/prazdniki-i-shou' },
+    ];
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy', email: 'ser-zelenskiy@yandex.ru' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
     const maxRaw = String(cts.max || '').trim();
@@ -691,9 +692,10 @@ class Component extends DCLogic {
     const mainHref = maxHref || tgHref;
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const plural = n => n % 10 === 1 && n % 100 !== 11 ? 'специалист' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 'специалиста' : 'специалистов');
-    const catCards = C.map((c, i) => {
-      const n = d ? d.specialists.filter(s => s.cat === c.slug && s.hidden !== true).length : 0;
-      return { ...c, num: String(i + 1).padStart(2, '0'), countLabel: n ? n + ' ' + plural(n) : 'состав уточняется', href: './specialists.html?cat=' + c.slug };
+    const eventDescriptions = { wedding: 'Команда и портфолио для свадьбы: ведущие, фото, видео, декор и площадки.', corporate: 'Команды для корпоративов, форумов, конференций и деловых событий.', entertainment: 'Шоу, артисты и специалисты для детских праздников и ярких событий.' };
+    const catCards = eventTypes.map((event, i) => {
+      const n = d ? d.specialists.filter(s => s.hidden !== true && (this.mod.eventProfile ? this.mod.eventProfile(s, event.id) : s).enabled === true).length : 0;
+      return { num: String(i + 1).padStart(2, '0'), name: event.name, desc: eventDescriptions[event.id], countLabel: n ? n + ' ' + plural(n) : 'состав уточняется', href: event.path };
     });
     const casesPreview = d ? d.cases.slice(0, 3).map(k => ({ ...k, slotId: 'case-' + k.id, ph: 'Фото: ' + k.title, meta: k.guests + ' гостей · ' + k.city + ' · ' + k.year })) : [];
     const packages = d ? d.packages.map((p, i) => ({ ...p, featured: i === 1, bg: i === 1 ? '#131D2B' : '#121A26', border: i === 1 ? 'color-mix(in oklab, var(--acc) 55%, transparent)' : 'rgba(255,255,255,.07)', choose: () => { if (this.f.need) this.f.need.value = i === 2 ? 'Событие под ключ' : (i === 1 ? 'Команда специалистов' : 'Один-два специалиста'); location.hash = ''; location.hash = 'zayavka'; } })) : [];
@@ -744,7 +746,7 @@ class Component extends DCLogic {
       person: cts.person, phone: cts.phone, email: cts.email,
       tgAt: '@' + String(cts.tg || '').replace(/^@/, ''),
       tgHref, maxHref, hasMax: !!maxHref, mainHref, mainLabel, phoneHref: 'tel:' + String(cts.phone || '').replace(/[^+\d]/g, ''), mailHref: 'mailto:' + cts.email,
-      catCards, catCount: C.length, casesPreview, packages, videos,
+      catCards, catCount: eventTypes.length, casesPreview, packages, videos,
       reviews: d ? d.reviews : [],
       showVideos: (this.props.showVideo ?? true),
       refName: rf('name'), refContact: rf('contact'), refNeed: rf('need'), refFormat: rf('format'), refDate: rf('date'), refGuests: rf('guests'), refBudget: rf('budget'), refMsg: rf('msg'),

@@ -61,6 +61,10 @@ option{background:#121A26;color:#F2F5F8}
         <input value="{{ q }}" onInput="{{ uQ }}" placeholder="Поиск по имени или роли…" style="flex:2;min-width:220px;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:12px 14px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
         <select data-selval="{{ fcat }}" onChange="{{ uFcat }}" style="flex:1;min-width:190px;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:12px 14px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;cursor:pointer" style-focus="border-color:var(--acc)"><option value="all">Все категории</option><sc-for list="{{ cats }}" as="c"><option value="{{ c.slug }}">{{ c.name }}</option></sc-for></select>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:13px 15px">
+        <span style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#97A3B0">Редактировать профиль:</span>
+        <sc-for list="{{ profileTabs }}" as="e"><button onClick="{{ e.pick }}" style="background:{{ e.bg }};color:{{ e.color }};border:1px solid {{ e.border }};border-radius:999px;padding:9px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">{{ e.name }}</button></sc-for>
+      </div>
       <sc-if value="{{ noSpecs }}" hint-placeholder-val="{{ false }}"><div style="border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:34px;text-align:center;color:#7C8894;font-size:13.5px">Никого не нашлось — измените поиск или категорию.</div></sc-if>
       <sc-for list="{{ specs }}" as="s" hint-placeholder-count="4">
         <div style="background:#121A26;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end">
@@ -72,7 +76,7 @@ option{background:#121A26;color:#F2F5F8}
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Роль / жанр</div><input value="{{ s.role }}" onInput="{{ s.uRole }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Опыт</div><input value="{{ s.exp }}" onInput="{{ s.uExp }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Цена</div><input value="{{ s.price }}" onInput="{{ s.uPrice }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
-          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Свадьбы</div><button onClick="{{ s.toggleWedding }}" title="Показывать в разделе /svadby" style="width:100%;box-sizing:border-box;background:{{ s.weddingChipBg }};color:{{ s.weddingChipColor }};border:1px solid {{ s.weddingChipBorder }};border-radius:8px;padding:11px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc)">{{ s.weddingChipLabel }}</button></div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Показ в разделе</div><button onClick="{{ s.toggleEventProfile }}" title="{{ s.eventProfileLabel }}" style="width:100%;box-sizing:border-box;background:{{ s.eventProfileBg }};color:{{ s.eventProfileColor }};border:1px solid {{ s.eventProfileBorder }};border-radius:8px;padding:11px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc)">{{ s.eventProfileLabel }}</button></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Карточка на сайте</div><button onClick="{{ s.toggleVisibility }}" title="{{ s.visibilityTitle }}" aria-label="{{ s.visibilityTitle }}" style="width:100%;box-sizing:border-box;background:{{ s.visibilityBg }};color:{{ s.visibilityColor }};border:1px solid {{ s.visibilityBorder }};border-radius:8px;padding:11px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="border-color:var(--acc)"><span style="display:inline-flex;position:relative;align-items:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg><sc-if value="{{ s.isHidden }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:-3px;background:#0C141D;transform:rotate(-45deg);height:2px;top:8px"></span></sc-if></span>{{ s.visibilityLabel }}</button></div>
           <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Фото профиля</div>
             <div style="display:flex;gap:8px;align-items:center">
@@ -263,6 +267,7 @@ option{background:#121A26;color:#F2F5F8}
             <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Год</div><input value="{{ k.year }}" onInput="{{ k.uYear }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
             <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Ссылка на видео</div><input value="{{ k.video }}" onInput="{{ k.uVideo }}" placeholder="https://…" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)"></div>
           </div>
+          <div><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">Показывать кейс в разделах</div><div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ k.eventToggles }}" as="ev"><button onClick="{{ ev.toggle }}" style="background:{{ ev.bg }};color:{{ ev.color }};border:1px solid {{ ev.border }};border-radius:999px;padding:8px 12px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">{{ ev.name }}</button></sc-for></div></div>
           <div style="display:flex;gap:12px;align-items:end">
             <div style="flex:1"><div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">Описание</div><textarea rows="2" value="{{ k.desc }}" onInput="{{ k.uDesc }}" style="width:100%;box-sizing:border-box;background:#0C141D;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:11px 12px;color:#F2F5F8;font-size:13.5px;font-family:inherit;outline:none;resize:vertical" style-focus="border-color:var(--acc)"></textarea></div>
             <div style="display:flex;gap:6px;height:fit-content">
@@ -494,7 +499,7 @@ option{background:#121A26;color:#F2F5F8}
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { d: null, tab: 'spec', syncState: null, dirty: false, copiedJson: false, resetArmed: false, impErr: null, srevFilter: 'all', srevOnlyNew: false };
+  state = { d: null, tab: 'spec', profileEvent: 'wedding', syncState: null, dirty: false, copiedJson: false, resetArmed: false, impErr: null, srevFilter: 'all', srevOnlyNew: false };
   jsonRef = null;
   _thumbCache = {}; // url -> превью-URL | null (ещё грузится/не нашлось), см. resolveThumb/thumbFor
   _pendingUploads = new Map(); // draft:… -> снимок в памяти, пока не нажали «Сохранить»
@@ -580,7 +585,10 @@ class Component extends DCLogic {
     const p = forceOverwrite ? this.mod.overwriteData(data) : this.mod.syncData(this._baseData || data, data);
     p.then(res => {
       // файлы удалённых фотографий чистим только теперь: правка дошла до сервера
-      if (res.ok) this._photoDeletes.splice(0).forEach(u => this.deletePhotoFile(u));
+      if (res.ok) {
+        const remaining = JSON.stringify(res.merged || data);
+        this._photoDeletes.splice(0).forEach(u => { if (!remaining.includes(JSON.stringify(u))) this.deletePhotoFile(u); });
+      }
       if (res.ok && res.merged) {
         // merged может содержать чужие правки, добавленные, пока мы редактировали —
         // подхватываем их сразу, чтобы обе админки видели актуальную картину, не дожидаясь
@@ -636,6 +644,10 @@ class Component extends DCLogic {
       for (const p of (Array.isArray(s.photos) ? s.photos : [])) if (p.url === id) refs.push(u => { p.url = u; });
       const wp = s.weddingProfile;
       for (const p of ((wp && Array.isArray(wp.photos)) ? wp.photos : [])) if (p.url === id) refs.push(u => { p.url = u; });
+      for (const profile of Object.values(s.eventProfiles || {})) {
+        if (profile.photo === id) refs.push(u => { profile.photo = u; });
+        for (const p of (Array.isArray(profile.photos) ? profile.photos : [])) if (p.url === id) refs.push(u => { p.url = u; });
+      }
     }
     return refs;
   }
@@ -748,7 +760,7 @@ class Component extends DCLogic {
       addLink: () => { if (!Array.isArray(target.links)) target.links = []; target.links.push({ title: '', url: '' }); this.save(); },
       showVideoField: pcfg.video !== 'none',
       videoFieldLabel: pcfg.video === 'reel' ? 'Видео-визитка (обычно достаточно одной ссылки)' : 'Видео',
-      vidGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все видео' }]).map(g => {
+      vidGroups: mediaCats.filter(c => Array.isArray(target.mediaCats || s.mediaCats) && (target.mediaCats || s.mediaCats).includes(c.id)).concat([{ id: '', name: (Array.isArray(target.mediaCats || s.mediaCats) && (target.mediaCats || s.mediaCats).length) ? 'Без категории' : 'Все видео' }]).map(g => {
         const groupVideos = (target.videos || []).filter(v => (v.cat || '') === g.id);
         return {
           name: g.name,
@@ -766,9 +778,9 @@ class Component extends DCLogic {
           addVideo: () => { if (!Array.isArray(target.videos)) target.videos = []; target.videos.push({ title: '', url: '', cat: g.id }); this.save(); },
         };
       }),
-      photoGroups: mediaCats.filter(c => Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id)).concat([{ id: '', name: (Array.isArray(s.mediaCats) && s.mediaCats.length) ? 'Без категории' : 'Все фото' }]).map(g => {
+      photoGroups: mediaCats.filter(c => Array.isArray(target.mediaCats || s.mediaCats) && (target.mediaCats || s.mediaCats).includes(c.id)).concat([{ id: '', name: (Array.isArray(target.mediaCats || s.mediaCats) && (target.mediaCats || s.mediaCats).length) ? 'Без категории' : 'Все фото' }]).map(g => {
         const groupPhotos = (target.photos || []).filter(p => (p.cat || '') === g.id);
-        const dragKey = (i) => (s.id || '') + '|' + (target === s ? 'main' : 'wed') + '|' + g.id + '|' + i;
+        const dragKey = (i) => (s.id || '') + '|' + (target === s ? 'main' : (target === s.weddingProfile ? 'wed' : 'event')) + '|' + g.id + '|' + i;
         return {
           name: g.name,
           hasPhotos: groupPhotos.length > 1,
@@ -826,52 +838,67 @@ class Component extends DCLogic {
     const fcat = this.state.fcat || 'all', q = (this.state.q || '').trim().toLowerCase();
     const mediaCats = Array.isArray(d.mediaCats) ? d.mediaCats : [];
     const C = Array.isArray(d.categories) ? d.categories : [];
+    const eventTypes = (this.mod && this.mod.EVENT_TYPES) || [
+      { id: 'wedding', name: 'Свадьбы', path: '/svadby' },
+      { id: 'corporate', name: 'Корпоративы', path: '/korporativy' },
+      { id: 'entertainment', name: 'Праздники и шоу', path: '/prazdniki-i-shou' },
+    ];
+    const profileEvent = this.state.profileEvent || 'wedding';
+    const profileTabs = eventTypes.map(e => ({ ...e,
+      bg: profileEvent === e.id ? 'var(--acc)' : 'transparent', color: profileEvent === e.id ? '#0C1117' : '#C7D0D9', border: profileEvent === e.id ? 'var(--acc)' : 'rgba(255,255,255,.16)',
+      pick: () => this.setState({ profileEvent: e.id }),
+    }));
     const dup = (arr, item, idp) => () => { const i = arr.indexOf(item); arr.splice(i + 1, 0, { ...item, id: idp + Date.now() }); this.save(); };
     const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
     const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
-    const specs = d.specialists.filter(s => (fcat === 'all' || s.cat === fcat) && (!q || (s.name + ' ' + s.role).toLowerCase().includes(q))).map(s => {
-      const pcfg = portfolioCfg[s.cat] || defPortfolioCfg;
-      const catObj = C.find(x => x.slug === s.cat);
+    const specs = d.specialists.map(s => {
+      if (!s.eventProfiles) s.eventProfiles = {};
+      for (const ev of eventTypes) if (!s.eventProfiles[ev.id]) s.eventProfiles[ev.id] = {
+        name: s.name || '', role: s.role || '', exp: s.exp || '', price: s.price || '', cat: s.cat || '', subcat: s.subcat || '', photo: s.photo || '', about: s.about || '', feats: [...(s.feats || [])], links: [...(s.links || [])], videos: [...(s.videos || [])], photos: [...(s.photos || [])], mediaCats: [...(s.mediaCats || [])], enabled: ev.id === 'wedding' ? s.wedding === true : s.wedding !== true,
+      };
+      return { s, p: s.eventProfiles[profileEvent] };
+    }).filter(({ s, p }) => (fcat === 'all' || p.cat === fcat) && (!q || (p.name + ' ' + p.role).toLowerCase().includes(q))).map(({ s, p }) => {
+      const pcfg = portfolioCfg[p.cat] || defPortfolioCfg;
+      const catObj = C.find(x => x.slug === p.cat);
       const subOpts = (catObj && Array.isArray(catObj.subcats)) ? catObj.subcats : [];
       const hasSubcats = subOpts.length > 0;
       if (!s.weddingProfile) s.weddingProfile = { about: '', feats: [], links: [], videos: [], photos: [] };
-      const general = this.buildProfileBlock(s, s, pcfg, mediaCats);
-      const wedding = this.buildProfileBlock(s, s.weddingProfile, pcfg, mediaCats);
+      const general = this.buildProfileBlock(s, p, pcfg, mediaCats);
       return { ...s,
-      uName: this.bind(s, 'name'), uRole: this.bind(s, 'role'), uExp: this.bind(s, 'exp'), uPrice: this.bind(s, 'price'),
-      uCat: e => { s.cat = e.target.value; s.subcat = ''; this.save(); },
-      subOpts, hasSubcats, uSubcat: e => { s.subcat = e.target.value; this.save(); },
-      hasPhoto: !!s.photo,
+      name: p.name, role: p.role, exp: p.exp, price: p.price, cat: p.cat, subcat: p.subcat,
+      uName: this.bind(p, 'name'), uRole: this.bind(p, 'role'), uExp: this.bind(p, 'exp'), uPrice: this.bind(p, 'price'),
+      uCat: e => { p.cat = e.target.value; p.subcat = ''; this.save(); },
+      subOpts, hasSubcats, uSubcat: e => { p.subcat = e.target.value; this.save(); },
+      hasPhoto: !!p.photo,
       // выбранное, но ещё не сохранённое фото лежит в памяти под меткой draft:… — показываем его
-      photoSrc: (s.photo && this._pendingUploads.get(s.photo)) || s.photo || '',
-      photoLabel: s.photo ? 'Заменить' : 'Загрузить',
-      uPhotoFile: this.photoTo(s), delPhoto: () => { const old = s.photo; s.photo = ''; this.commit(); this.deletePhotoFile(old); },
-      profHref: './specialist.html?id=' + s.id,
-      isWedding: !!s.wedding,
-      toggleWedding: () => { s.wedding = !s.wedding; this.save(); },
-      weddingChipBg: s.wedding ? 'var(--acc)' : 'transparent', weddingChipColor: s.wedding ? '#0C1117' : '#C7D0D9', weddingChipBorder: s.wedding ? 'var(--acc)' : 'rgba(255,255,255,.25)',
+      photoSrc: (p.photo && this._pendingUploads.get(p.photo)) || p.photo || '',
+      photoLabel: p.photo ? 'Заменить' : 'Загрузить',
+      uPhotoFile: this.photoTo(p), delPhoto: () => { const old = p.photo; p.photo = ''; this.queuePhotoDelete(old); this.save(); },
+      profHref: eventTypes.find(e => e.id === profileEvent).path + '/specialist.html?id=' + s.id,
+      isWedding: false,
+      eventProfileEnabled: p.enabled === true,
+      eventProfileLabel: p.enabled === true ? 'Показывается в разделе' : 'Скрыт в разделе',
+      eventProfileBg: p.enabled === true ? 'var(--acc)' : 'transparent',
+      eventProfileColor: p.enabled === true ? '#0C1117' : '#C7D0D9',
+      eventProfileBorder: p.enabled === true ? 'var(--acc)' : 'rgba(255,255,255,.25)',
+      toggleEventProfile: () => { p.enabled = p.enabled !== true; if (profileEvent === 'wedding') s.wedding = p.enabled; this.save(); },
+      eventTabs: profileTabs,
       isHidden: s.hidden === true, visibilityLabel: s.hidden === true ? 'Скрыта' : 'Видна',
       visibilityTitle: s.hidden === true ? 'Показать карточку на сайте' : 'Скрыть карточку с сайта',
       visibilityBg: s.hidden === true ? 'rgba(229,83,60,.1)' : 'transparent', visibilityColor: s.hidden === true ? '#F2A79A' : '#C7D0D9', visibilityBorder: s.hidden === true ? 'rgba(229,83,60,.45)' : 'rgba(255,255,255,.25)',
       toggleVisibility: () => { s.hidden = s.hidden !== true; this.save(); },
-      weddingChipLabel: s.wedding ? 'Участвует ✓' : 'Не участвует',
       aboutText: general.aboutText, uAbout: general.uAbout,
       featsText: general.featsText, uFeats: general.uFeats,
       showVideoField: general.showVideoField, videoFieldLabel: general.videoFieldLabel,
       showLinksField: general.showLinksField, linkRows: general.linkRows, addLink: general.addLink,
       vidGroups: general.vidGroups,
       photoGroups: general.photoGroups,
-      wAboutText: wedding.aboutText, wUAbout: wedding.uAbout,
-      wFeatsText: wedding.featsText, wUFeats: wedding.uFeats,
-      wShowVideoField: wedding.showVideoField, wVideoFieldLabel: wedding.videoFieldLabel,
-      wShowLinksField: wedding.showLinksField, wLinkRows: wedding.linkRows, wAddLink: wedding.addLink,
-      wVidGroups: wedding.vidGroups,
-      wPhotoGroups: wedding.photoGroups,
-      mcatChips: mediaCats.map(c => { const on = Array.isArray(s.mediaCats) && s.mediaCats.includes(c.id); return { name: c.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.25)', toggle: () => { s.mediaCats = on ? s.mediaCats.filter(x => x !== c.id) : (Array.isArray(s.mediaCats) ? s.mediaCats : []).concat(c.id); this.save(); } }; }),
+      mcatChips: mediaCats.map(c => { if (!Array.isArray(p.mediaCats)) p.mediaCats = []; const on = p.mediaCats.includes(c.id); return { name: c.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.25)', toggle: () => { p.mediaCats = on ? p.mediaCats.filter(x => x !== c.id) : p.mediaCats.concat(c.id); this.save(); } }; }),
       up: () => this.mv(d.specialists, s, -1), down: () => this.mv(d.specialists, s, 1), dup: dup(d.specialists, s, 's'),
       del: () => { d.specialists = d.specialists.filter(x => x !== s); this.save(); } };
     });
     const caseRows = d.cases.map(k => ({ ...k,
+      eventToggles: eventTypes.map(ev => { if (!Array.isArray(k.eventTypes)) k.eventTypes = []; const on = k.eventTypes.includes(ev.id); return { name: ev.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.2)', toggle: () => { k.eventTypes = on ? k.eventTypes.filter(x => x !== ev.id) : k.eventTypes.concat(ev.id); this.save(); } }; }),
       uTitle: this.bind(k, 'title'), uFormat: this.bind(k, 'format'), uGuests: this.bind(k, 'guests'), uCity: this.bind(k, 'city'), uYear: this.bind(k, 'year'), uVideo: this.bind(k, 'video'), uDesc: this.bind(k, 'desc'), uTeam: this.bind(k, 'team'),
       up: () => this.mv(d.cases, k, -1), down: () => this.mv(d.cases, k, 1), dup: dup(d.cases, k, 'c'),
       del: () => { d.cases = d.cases.filter(x => x !== k); this.save(); } }));
@@ -940,13 +967,14 @@ class Component extends DCLogic {
       saveBorder: this.state.dirty && this.state.syncState !== 'pending' ? 'var(--acc)' : 'rgba(255,255,255,.14)',
       saveCursor: this.state.dirty && this.state.syncState !== 'pending' ? 'pointer' : 'default',
       cats: C,
+      profileTabs,
       specs, specCount: (fcat === 'all' && !q) ? d.specialists.length + ' шт.' : specs.length + ' из ' + d.specialists.length,
       noSpecs: specs.length === 0,
       q: this.state.q || '', uQ: e => this.setState({ q: e.target.value }),
       fcat, uFcat: e => this.setState({ fcat: e.target.value }),
       addSpec: () => { d.specialists.unshift({ id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '', hidden: false }); this.save(); },
       caseRows, caseCount: d.cases.length + ' шт.',
-      addCase: () => { d.cases.unshift({ id: 'c' + Date.now(), title: 'Новый кейс', format: '', guests: '', city: '', year: '2026', desc: '', video: '', team: '' }); this.save(); },
+      addCase: () => { d.cases.unshift({ id: 'c' + Date.now(), title: 'Новый кейс', format: '', guests: '', city: '', year: '2026', desc: '', video: '', team: '', eventTypes: [profileEvent] }); this.save(); },
       srevRows, srevSpecOpts,
       srevCount: srevPending ? (srevPending + ' ждёт решения из ' + d.specReviews.length) : (d.specReviews.length + ' шт.'),
       noSrev: srevRows.length === 0,
