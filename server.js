@@ -318,7 +318,10 @@ function getEventProfile(s, eventType) {
   if (eventType === 'wedding') return {
     ...common, ...(s.weddingProfile || {}), enabled: s.wedding === true,
   };
-  return { ...common, enabled: s.wedding !== true };
+  const text = [s.name, s.role, s.cat].join(' ').toLowerCase();
+  const weddingOnly = /свадеб|свадьб|невест|венчан/.test(text)
+    || ['keitering', 'konditery', 'ploshchadki'].includes(s.cat);
+  return { ...common, enabled: s.wedding !== true && !weddingOnly };
 }
 
 function buildArticleSeo(a, origin) {

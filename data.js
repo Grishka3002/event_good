@@ -33,6 +33,15 @@ export function eventProfile(s, eventType) {
   return s && s.eventProfiles && s.eventProfiles[eventType] || s || null;
 }
 
+export function defaultEventProfileEnabled(s, eventType) {
+  if (!s) return false;
+  if (eventType === 'wedding') return s.wedding === true;
+  if (s.wedding === true) return false;
+  const text = [s.name, s.role, s.cat].join(' ').toLowerCase();
+  return !/свадеб|свадьб|невест|венчан/.test(text)
+    && !['keitering', 'konditery', 'ploshchadki'].includes(s.cat);
+}
+
 // Свадебный каталог (/svadby) — какие плитки показывать и какие категории специалистов в них входят
 // (используется вместо CATEGORIES, чтобы переименовать/объединить категории только для этого раздела,
 // не трогая общий каталог; напр. «Создание образа» объединяет визажистов и стилистов)
@@ -206,9 +215,9 @@ function mergeWithDefaults(saved) {
     const existing = s.eventProfiles && typeof s.eventProfiles === 'object' ? s.eventProfiles : {};
     const weddingLegacy = { ...common, ...merged.weddingProfile };
     merged.eventProfiles = {
-      wedding: { ...weddingLegacy, ...(existing.wedding || {}), enabled: existing.wedding && typeof existing.wedding.enabled === 'boolean' ? existing.wedding.enabled : merged.wedding === true },
-      corporate: { ...common, ...(existing.corporate || {}), enabled: existing.corporate && typeof existing.corporate.enabled === 'boolean' ? existing.corporate.enabled : merged.wedding !== true },
-      entertainment: { ...common, ...(existing.entertainment || {}), enabled: existing.entertainment && typeof existing.entertainment.enabled === 'boolean' ? existing.entertainment.enabled : merged.wedding !== true },
+      wedding: { ...weddingLegacy, ...(existing.wedding || {}), enabled: existing.wedding && typeof existing.wedding.enabled === 'boolean' ? existing.wedding.enabled : defaultEventProfileEnabled(merged, 'wedding') },
+      corporate: { ...common, ...(existing.corporate || {}), enabled: existing.corporate && typeof existing.corporate.enabled === 'boolean' ? existing.corporate.enabled : defaultEventProfileEnabled(merged, 'corporate') },
+      entertainment: { ...common, ...(existing.entertainment || {}), enabled: existing.entertainment && typeof existing.entertainment.enabled === 'boolean' ? existing.entertainment.enabled : defaultEventProfileEnabled(merged, 'entertainment') },
     };
     return merged;
   });

@@ -854,7 +854,7 @@ class Component extends DCLogic {
     const specs = d.specialists.map(s => {
       if (!s.eventProfiles) s.eventProfiles = {};
       for (const ev of eventTypes) if (!s.eventProfiles[ev.id]) s.eventProfiles[ev.id] = {
-        name: s.name || '', role: s.role || '', exp: s.exp || '', price: s.price || '', cat: s.cat || '', subcat: s.subcat || '', photo: s.photo || '', about: s.about || '', feats: [...(s.feats || [])], links: [...(s.links || [])], videos: [...(s.videos || [])], photos: [...(s.photos || [])], mediaCats: [...(s.mediaCats || [])], enabled: ev.id === 'wedding' ? s.wedding === true : s.wedding !== true,
+        name: s.name || '', role: s.role || '', exp: s.exp || '', price: s.price || '', cat: s.cat || '', subcat: s.subcat || '', photo: s.photo || '', about: s.about || '', feats: [...(s.feats || [])], links: [...(s.links || [])], videos: [...(s.videos || [])], photos: [...(s.photos || [])], mediaCats: [...(s.mediaCats || [])], enabled: this.mod.defaultEventProfileEnabled ? this.mod.defaultEventProfileEnabled(s, ev.id) : (ev.id === 'wedding' ? s.wedding === true : s.wedding !== true),
       };
       return { s, p: s.eventProfiles[profileEvent] };
     }).filter(({ s, p }) => (fcat === 'all' || p.cat === fcat) && (!q || (p.name + ' ' + p.role).toLowerCase().includes(q))).map(({ s, p }) => {
