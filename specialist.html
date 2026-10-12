@@ -390,13 +390,13 @@ class Component extends DCLogic {
   }
   // Превью видео: YouTube — сразу (без сети), остальное (Vimeo, Rutube) — через сервер,
   // с перерисовкой карточки, когда превью придёт. См. data.js: ytThumbSync/resolveVideoThumb.
-  thumbFor(url) {
+  thumbFor(url, manualThumb) {
     url = String(url || '').trim();
-    return (url && this._thumbCache[url]) || '';
+    return String(manualThumb || '').trim() || (url && this._thumbCache[url]) || '';
   }
-  resolveThumb(url) {
+  resolveThumb(url, manualThumb) {
     url = String(url || '').trim();
-    if (!url || !this.mod || Object.prototype.hasOwnProperty.call(this._thumbCache, url)) return;
+    if (String(manualThumb || '').trim() || !url || !this.mod || Object.prototype.hasOwnProperty.call(this._thumbCache, url)) return;
     const sync = this.mod.ytThumbSync(url);
     if (sync) { this._thumbCache[url] = sync; return; }
     this._thumbCache[url] = null;
@@ -510,8 +510,8 @@ class Component extends DCLogic {
     const videosSrc = profile ? profile.videos : [];
     const vids = (s && pcfg.video !== 'none' && Array.isArray(videosSrc)) ? videosSrc : [];
     const allV = vids.map((v, i) => {
-      this.resolveThumb(v.url);
-      const thumb = this.thumbFor(v.url);
+      this.resolveThumb(v.url, v.thumb);
+      const thumb = this.thumbFor(v.url, v.thumb);
       const key = String(v.url || '').trim();
       // вертикальное превью на телефоне показываем в более высокой карточке — лицо крупнее;
       // ориентацию узнаём по самой картинке, когда она загрузится (провайдеры её не отдают надёжно)

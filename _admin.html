@@ -110,7 +110,8 @@ option{background:#121A26;color:#F2F5F8}
             </sc-if>
             <sc-if value="{{ s.showVideoField }}" hint-placeholder-val="{{ true }}">
               <div style="margin-top:14px">
-                <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">{{ s.videoFieldLabel }}</div>
+                <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">{{ s.videoFieldLabel }}</div>
+                <div style="font-size:11px;color:#7C8894;line-height:1.5;margin-bottom:9px">Обложка загрузится автоматически, если сервис её отдаёт. Если кадр не появился — загрузите свой.</div>
                 <sc-for list="{{ s.vidGroups }}" as="vg" hint-placeholder-count="1">
                   <div style="margin-bottom:14px">
                     <div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:8px">{{ vg.name }}</div>
@@ -124,6 +125,10 @@ option{background:#121A26;color:#F2F5F8}
                           <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
                             <input value="{{ row.title }}" onInput="{{ row.uTitle }}" placeholder="Название (необязательно)" style="width:100%;box-sizing:border-box;background:#0A0E13;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 8px;color:#F2F5F8;font-size:11.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
                             <input value="{{ row.url }}" onInput="{{ row.uUrl }}" placeholder="https://…" style="width:100%;box-sizing:border-box;background:#0A0E13;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 8px;color:#F2F5F8;font-size:11.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                              <label style="cursor:pointer;color:#C7D0D9;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border:1px solid rgba(255,255,255,.16);border-radius:6px;padding:6px 8px" style-hover="border-color:var(--acc);color:var(--acc)">Загрузить обложку<input type="file" accept="image/*" onChange="{{ row.uThumbFile }}" style="display:none"></label>
+                              <sc-if value="{{ row.hasCustomThumb }}" hint-placeholder-val="{{ false }}"><button onClick="{{ row.clearThumb }}" style="background:transparent;border:0;color:#E99B82;font-size:10px;cursor:pointer;font-family:inherit">Вернуть автоматическую</button></sc-if>
+                            </div>
                           </div>
                           <button onClick="{{ row.del }}" title="Удалить видео" style="flex:none;background:transparent;border:1px solid rgba(229,83,60,.4);color:#E5533C;border-radius:6px;width:24px;height:24px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
                         </div>
@@ -195,7 +200,8 @@ option{background:#121A26;color:#F2F5F8}
                 </sc-if>
                 <sc-if value="{{ s.wShowVideoField }}" hint-placeholder-val="{{ true }}">
                   <div style="margin-top:14px">
-                    <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:8px">{{ s.wVideoFieldLabel }} (свадьбы)</div>
+                    <div style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#97A3B0;margin-bottom:6px">{{ s.wVideoFieldLabel }} (свадьбы)</div>
+                    <div style="font-size:11px;color:#7C8894;line-height:1.5;margin-bottom:9px">Обложка загрузится автоматически, если сервис её отдаёт. Если кадр не появился — загрузите свой.</div>
                     <sc-for list="{{ s.wVidGroups }}" as="vg" hint-placeholder-count="1">
                       <div style="margin-bottom:14px">
                         <div style="font-size:10.5px;font-weight:700;color:var(--acc);margin-bottom:8px">{{ vg.name }}</div>
@@ -209,6 +215,10 @@ option{background:#121A26;color:#F2F5F8}
                               <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
                                 <input value="{{ row.title }}" onInput="{{ row.uTitle }}" placeholder="Название (необязательно)" style="width:100%;box-sizing:border-box;background:#0A0E13;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 8px;color:#F2F5F8;font-size:11.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
                                 <input value="{{ row.url }}" onInput="{{ row.uUrl }}" placeholder="https://…" style="width:100%;box-sizing:border-box;background:#0A0E13;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:6px 8px;color:#F2F5F8;font-size:11.5px;font-family:inherit;outline:none" style-focus="border-color:var(--acc)">
+                                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                                  <label style="cursor:pointer;color:#C7D0D9;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border:1px solid rgba(255,255,255,.16);border-radius:6px;padding:6px 8px" style-hover="border-color:var(--acc);color:var(--acc)">Загрузить обложку<input type="file" accept="image/*" onChange="{{ row.uThumbFile }}" style="display:none"></label>
+                                  <sc-if value="{{ row.hasCustomThumb }}" hint-placeholder-val="{{ false }}"><button onClick="{{ row.clearThumb }}" style="background:transparent;border:0;color:#E99B82;font-size:10px;cursor:pointer;font-family:inherit">Вернуть автоматическую</button></sc-if>
+                                </div>
                               </div>
                               <button onClick="{{ row.del }}" title="Удалить видео" style="flex:none;background:transparent;border:1px solid rgba(229,83,60,.4);color:#E5533C;border-radius:6px;width:24px;height:24px;font-size:11px;line-height:1;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button>
                             </div>
@@ -506,7 +516,7 @@ class Component extends DCLogic {
   _photoDeletes = [];          // файлы, которые удалим на сервере после успешного сохранения
   _draftSeq = 0;
   componentDidMount() {
-    import('./data.js?v=2').then(m => {
+    import('./data.js?v=3').then(m => {
       this.mod = m;
       m.loadData().then(d => { this._baseData = JSON.parse(JSON.stringify(d)); this.setState({ d }); });
     });
@@ -524,6 +534,11 @@ class Component extends DCLogic {
   thumbFor(url) {
     url = String(url || '').trim();
     return (url && this._thumbCache[url]) || '';
+  }
+  videoThumbFor(video) {
+    const manual = String((video && video.thumb) || '').trim();
+    if (manual.startsWith('draft:')) return this._pendingUploads.get(manual) || '';
+    return manual || this.thumbFor(video && video.url);
   }
   // Синхронно — для YouTube (по предсказуемому адресу картинки), без сети.
   // Для остального — спрашиваем сервер (/api/video-thumb) и перерисовываем карточку,
@@ -642,11 +657,14 @@ class Component extends DCLogic {
     for (const s of (Array.isArray(data.specialists) ? data.specialists : [])) {
       if (s.photo === id) refs.push(u => { s.photo = u; });
       for (const p of (Array.isArray(s.photos) ? s.photos : [])) if (p.url === id) refs.push(u => { p.url = u; });
+      for (const v of (Array.isArray(s.videos) ? s.videos : [])) if (v.thumb === id) refs.push(u => { v.thumb = u; });
       const wp = s.weddingProfile;
       for (const p of ((wp && Array.isArray(wp.photos)) ? wp.photos : [])) if (p.url === id) refs.push(u => { p.url = u; });
+      for (const v of ((wp && Array.isArray(wp.videos)) ? wp.videos : [])) if (v.thumb === id) refs.push(u => { v.thumb = u; });
       for (const profile of Object.values(s.eventProfiles || {})) {
         if (profile.photo === id) refs.push(u => { profile.photo = u; });
         for (const p of (Array.isArray(profile.photos) ? profile.photos : [])) if (p.url === id) refs.push(u => { p.url = u; });
+        for (const v of (Array.isArray(profile.videos) ? profile.videos : [])) if (v.thumb === id) refs.push(u => { v.thumb = u; });
       }
     }
     return refs;
@@ -696,6 +714,18 @@ class Component extends DCLogic {
     catch (err) { alert('Файл не похож на изображение.'); return; }
     this.queuePhotoDelete(s.photo);
     s.photo = this.draftPhoto(dataUrl);
+    this.save();
+  }; }
+  videoThumbTo(video) { return async e => {
+    const input = e.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    let dataUrl;
+    try { dataUrl = await this.compressImage(file, 1200); }
+    catch (err) { alert('Файл не похож на изображение.'); return; }
+    this.queuePhotoDelete(video.thumb);
+    video.thumb = this.draftPhoto(dataUrl);
     this.save();
   }; }
   // Чистит старый файл при замене/удалении фото — не блокирует сохранение, если не выйдет.
@@ -765,13 +795,22 @@ class Component extends DCLogic {
         return {
           name: g.name,
           rows: groupVideos.map(v => {
-            this.resolveThumb(v.url);
-            const thumb = this.thumbFor(v.url);
+            if (!v.thumb) this.resolveThumb(v.url);
+            const thumb = this.videoThumbFor(v);
             return {
               title: v.title || '', url: v.url || '',
               uTitle: this.bind(v, 'title'),
               uUrl: e => { v.url = e.target.value; this.save(); this.resolveThumb(v.url); },
-              thumb, hasThumb: !!thumb, noThumb: !thumb,
+              thumb, hasThumb: !!thumb, noThumb: !thumb, hasCustomThumb: !!String(v.thumb || '').trim(),
+              uThumbFile: this.videoThumbTo(v),
+              clearThumb: () => {
+                this.queuePhotoDelete(v.thumb);
+                v.thumb = '';
+                const url = String(v.url || '').trim();
+                if (url) delete this._thumbCache[url];
+                this.resolveThumb(url);
+                this.save();
+              },
               del: () => { target.videos = target.videos.filter(x => x !== v); this.save(); },
             };
           }),

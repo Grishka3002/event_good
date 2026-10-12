@@ -229,13 +229,15 @@ function mergeWithDefaults(saved) {
   const isDraft = u => typeof u === 'string' && u.startsWith('draft:');
   if (Array.isArray(d.specialists)) d.specialists = d.specialists.map(s => {
     const clean = list => (Array.isArray(list) ? list.filter(p => p && !isDraft(p.url)) : list);
-    const wp = s.weddingProfile ? { ...s.weddingProfile, photos: clean(s.weddingProfile.photos) } : s.weddingProfile;
+    const cleanVideos = list => (Array.isArray(list) ? list.filter(Boolean).map(v => ({ ...v, thumb: isDraft(v.thumb) ? '' : v.thumb })) : list);
+    const wp = s.weddingProfile ? { ...s.weddingProfile, photos: clean(s.weddingProfile.photos), videos: cleanVideos(s.weddingProfile.videos) } : s.weddingProfile;
     const eventProfiles = Object.fromEntries(Object.entries(s.eventProfiles || {}).map(([key, profile]) => [key, {
       ...profile,
       photo: isDraft(profile.photo) ? '' : profile.photo,
       photos: clean(profile.photos),
+      videos: cleanVideos(profile.videos),
     }]));
-    return { ...s, photo: isDraft(s.photo) ? '' : s.photo, photos: clean(s.photos), weddingProfile: wp, eventProfiles };
+    return { ...s, photo: isDraft(s.photo) ? '' : s.photo, photos: clean(s.photos), videos: cleanVideos(s.videos), weddingProfile: wp, eventProfiles };
   });
   if (!Array.isArray(d.mediaCats)) d.mediaCats = JSON.parse(JSON.stringify(DEFAULTS.mediaCats));
   if (!Array.isArray(d.categories) || !d.categories.length) d.categories = JSON.parse(JSON.stringify(DEFAULTS.categories));
@@ -384,13 +386,23 @@ export function videoEmbedUrl(url) {
   return '';
 }
 
-// Превью для видео-ссылки. YouTube — сразу и без сети (предсказуемый адрес картинки
-// по id ролика). Остальное (Vimeo, Rutube) — через сервер (/api/video-thumb, см.
-// server.js): у него нет проблем с CORS и ответы кэшируются. У VK публичного oEmbed
-// нет — для vk.com превью получить не получится, ссылка при этом всё равно рабочая.
+// Превью видео: YouTube и публичные ролики Google Drive — напрямую по id;
+// остальное (Vimeo, Rutube) — через сервер (/api/video-thumb, см. server.js).
+// У VK пока не удаётся надёжно получить кадр без авторизации — там нужна ручная обложка.
 export function ytThumbSync(url) {
-  const m = String(url || '').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([\w-]{6,})/);
-  return m ? 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg' : null;
+  const raw = String(url || '').trim();
+  const m = raw.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([\w-]{6,})/);
+  if (m) return 'https://img.youtube.com/vi/' + m[1] + '/hqdefault.jpg';
+  try {
+    const u = new URL(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw);
+    const host = u.hostname.replace(/^www\./, '').toLowerCase();
+    if (host === 'drive.google.com' || host === 'docs.google.com') {
+      const pathId = u.pathname.match(/\/file\/d\/([\w-]+)/);
+      const id = pathId ? pathId[1] : (u.searchParams.get('id') || '');
+      if (/^[\w-]{10,}$/.test(id)) return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w1200';
+    }
+  } catch (e) { /* некорректная или неподдерживаемая ссылка */ }
+  return null;
 }
 
 export async function resolveVideoThumb(url) {

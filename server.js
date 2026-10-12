@@ -152,9 +152,9 @@ function adminAuthorized(req) {
 
 // Превью для ссылок на видео (YouTube — напрямую по предсказуемому адресу картинки,
 // Vimeo/Rutube — через их официальный oEmbed; у VK публичного oEmbed нет, поэтому для
-// vk.com превью не получить — ссылка всё равно сохранится, просто без картинки).
-// Запрос идёт с сервера (не из браузера), поэтому CORS не мешает; ответы кэшируем
-// в памяти на сутки, чтобы не дёргать чужой API на каждое открытие админки.
+// vk.com превью не получить — ссылка всё равно сохранится, просто без картинки.
+// Запрос идёт с сервера (не из браузера), поэтому CORS не мешает. Кэшируем только
+// найденные обложки: временный отказ видеосервиса не должен оставлять видео без кадра на сутки.
 const VIDEO_THUMB_TTL = 24 * 60 * 60 * 1000;
 const videoThumbCache = new Map();
 
@@ -182,7 +182,7 @@ async function resolveVideoThumb(videoUrl) {
       }
     } catch { /* провайдер недоступен/не поддерживает — просто без превью */ }
   }
-  videoThumbCache.set(videoUrl, { thumb, ts: Date.now() });
+  if (thumb) videoThumbCache.set(videoUrl, { thumb, ts: Date.now() });
   if (videoThumbCache.size > 3000) videoThumbCache.clear();
   return thumb;
 }
