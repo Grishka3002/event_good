@@ -197,8 +197,18 @@ function mergeWithDefaults(saved) {
   // миграция: подтягиваем новые поля из DEFAULTS в ранее сохранённые записи —
   // так код можно обновлять сколько угодно, старые сохранённые данные не «слетают»
   if (Array.isArray(d.cases)) d.cases = d.cases.map(k => {
-    const c = { team: '', ...(DEFAULTS.cases.find(x => x.id === k.id) || {}), ...k };
-    if (!Array.isArray(c.eventTypes)) {
+    const defaultCase = DEFAULTS.cases.find(x => x.id === k.id);
+    const c = { team: '', ...(defaultCase || {}), ...k };
+    // Старые демонстрационные кейсы получили пустые или пересекающиеся рубрики.
+    // Исправляем только записи с исходными названиями, не трогая авторские кейсы.
+    const legacyCaseType = { c1: 'corporate', c2: 'wedding', c3: 'entertainment', c4: 'corporate', c5: 'entertainment', c6: 'entertainment' };
+    const selectedTypes = Array.isArray(c.eventTypes) ? c.eventTypes : [];
+    const oldCorporateOverlap = c.id === 'c1' && selectedTypes.length === 2
+      && selectedTypes.includes('wedding') && selectedTypes.includes('corporate');
+    if (defaultCase && c.title === defaultCase.title && legacyCaseType[c.id]
+      && (selectedTypes.length === 0 || oldCorporateOverlap)) {
+      c.eventTypes = [legacyCaseType[c.id]];
+    } else if (!Array.isArray(c.eventTypes)) {
       const text = (c.title + ' ' + c.format).toLowerCase();
       c.eventTypes = /свад|невест|венчан/.test(text) ? ['wedding']
         : /корпорат|форум|конференц|компан|делов|бизнес/.test(text) ? ['corporate']

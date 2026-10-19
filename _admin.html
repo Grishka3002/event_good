@@ -947,7 +947,7 @@ class Component extends DCLogic {
       del: () => { d.specialists = d.specialists.filter(x => x !== s); this.save(); } };
     });
     const caseRows = d.cases.map(k => ({ ...k,
-      eventToggles: eventTypes.map(ev => { if (!Array.isArray(k.eventTypes)) k.eventTypes = []; const on = k.eventTypes.includes(ev.id); return { name: ev.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.2)', toggle: () => { k.eventTypes = on ? k.eventTypes.filter(x => x !== ev.id) : k.eventTypes.concat(ev.id); this.save(); } }; }),
+      eventToggles: eventTypes.map(ev => { if (!Array.isArray(k.eventTypes)) k.eventTypes = []; const on = k.eventTypes.includes(ev.id); return { name: ev.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.2)', toggle: () => { k.eventTypes = [ev.id]; this.save(); } }; }),
       uTitle: this.bind(k, 'title'), uFormat: this.bind(k, 'format'), uGuests: this.bind(k, 'guests'), uCity: this.bind(k, 'city'), uYear: this.bind(k, 'year'), uVideo: this.bind(k, 'video'), uDesc: this.bind(k, 'desc'), uTeam: this.bind(k, 'team'),
       up: () => this.mv(d.cases, k, -1), down: () => this.mv(d.cases, k, 1), dup: dup(d.cases, k, 'c'),
       del: () => { d.cases = d.cases.filter(x => x !== k); this.save(); } }));
