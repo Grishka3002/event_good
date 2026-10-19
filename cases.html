@@ -149,8 +149,7 @@ a:hover{color:var(--acc)}
       <p style="margin:0;color:#9AA6B2;font-size:15.5px;line-height:1.7;max-width:560px">Расскажите про формат и дату — предложим команду, смету с прямыми ценами и пару идей, которых вы не ждёте.</p>
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap">
-      <a href="{{ specialistsHref }}#zayavka" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">Рассчитать событие</a>
-      <a href="{{ mainHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в&nbsp;{{ mainLabel }}</a>
+      <a href="{{ mainHref }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">Обсудить событие</a>
       <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в Telegram</a></sc-if>
     </div>
   </div>
