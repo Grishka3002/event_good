@@ -282,7 +282,7 @@ function injectHead(html, seo) {
 function buildSpecialistSeo(s, categories, origin, ctx) {
   const eventType = ctx && ctx.eventType;
   const profile = getEventProfile(s, eventType) || s;
-  const eventNames = { wedding: 'свадьбы', corporate: 'корпоративы', entertainment: 'праздники и шоу' };
+  const eventNames = { wedding: 'свадебных событий', corporate: 'деловых мероприятий', entertainment: 'праздников' };
   const cat = (categories || []).find(c => c.slug === profile.cat);
   const catName = cat ? cat.name : '';
   const eventLabel = eventNames[eventType] || '';
@@ -883,9 +883,9 @@ http.createServer((req, res) => {
   }
   // Каталоги и кейсы каждого направления используют те же шаблоны, сохраняя отдельные профили.
   const eventRoutes = {
-    '/svadby': { id: 'wedding', name: 'Свадьбы' },
-    '/korporativy': { id: 'corporate', name: 'Корпоративы' },
-    '/prazdniki-i-shou': { id: 'entertainment', name: 'Праздники и шоу' },
+    '/svadby': { id: 'wedding', name: 'Свадебные события' },
+    '/korporativy': { id: 'corporate', name: 'Деловые мероприятия' },
+    '/prazdniki-i-shou': { id: 'entertainment', name: 'Праздники' },
   };
   const eventRoute = eventRoutes[urlPath.replace(/\/$/, '')];
   if (eventRoute) {

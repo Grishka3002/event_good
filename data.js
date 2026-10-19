@@ -24,9 +24,9 @@ export const CATEGORIES = [
 
 // Направления сайта. Ключи используются в URL, профилях специалистов и метках кейсов.
 export const EVENT_TYPES = [
-  { id: 'wedding', name: 'Свадьбы', path: '/svadby' },
-  { id: 'corporate', name: 'Корпоративы', path: '/korporativy' },
-  { id: 'entertainment', name: 'Праздники и шоу', path: '/prazdniki-i-shou' },
+  { id: 'wedding', name: 'Свадебные события', path: '/svadby' },
+  { id: 'corporate', name: 'Деловые мероприятия', path: '/korporativy' },
+  { id: 'entertainment', name: 'Праздники', path: '/prazdniki-i-shou' },
 ];
 
 export function eventProfile(s, eventType) {

@@ -263,6 +263,11 @@ option{background:#121A26;color:#F2F5F8}
 
   <sc-if value="{{ isCases }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Кейсы" style="display:flex;flex-direction:column;gap:14px">
+      <div style="background:#101923;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#97A3B0">Направление нового кейса</span>
+        <select data-selval="{{ caseDefaultType }}" onChange="{{ uCaseDefaultType }}" style="min-width:240px;background:#0C141D;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:10px 12px;color:#F2F5F8;font-size:13px;font-family:inherit;outline:none;cursor:pointer"><sc-for list="{{ eventTypes }}" as="ev"><option value="{{ ev.id }}">{{ ev.name }}</option></sc-for></select>
+        <span style="font-size:11px;color:#7C8894">Новые кейсы сразу появятся только в выбранном разделе; существующие отметки не меняются.</span>
+      </div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
         <h2 style="margin:0;font-size:22px;font-weight:900;text-transform:uppercase">Кейсы <span style="color:#56626F;font-weight:600;font-size:15px">{{ caseCount }}</span></h2>
         <button onClick="{{ addCase }}" style="background:var(--acc);color:#0C1117;border:none;border-radius:9px;padding:13px 22px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1)">+ Добавить</button>
@@ -510,7 +515,7 @@ option{background:#121A26;color:#F2F5F8}
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { d: null, tab: 'spec', profileEvent: 'general', syncState: null, dirty: false, copiedJson: false, resetArmed: false, impErr: null, srevFilter: 'all', srevOnlyNew: false };
+  state = { d: null, tab: 'spec', profileEvent: 'general', caseEventType: 'wedding', syncState: null, dirty: false, copiedJson: false, resetArmed: false, impErr: null, srevFilter: 'all', srevOnlyNew: false };
   jsonRef = null;
   _thumbCache = {}; // url -> превью-URL | null (ещё грузится/не нашлось), см. resolveThumb/thumbFor
   _pendingUploads = new Map(); // draft:… -> снимок в памяти, пока не нажали «Сохранить»
@@ -879,9 +884,9 @@ class Component extends DCLogic {
     const mediaCats = Array.isArray(d.mediaCats) ? d.mediaCats : [];
     const C = Array.isArray(d.categories) ? d.categories : [];
     const eventTypes = (this.mod && this.mod.EVENT_TYPES) || [
-      { id: 'wedding', name: 'Свадьбы', path: '/svadby' },
-      { id: 'corporate', name: 'Корпоративы', path: '/korporativy' },
-      { id: 'entertainment', name: 'Праздники и шоу', path: '/prazdniki-i-shou' },
+      { id: 'wedding', name: 'Свадебные события', path: '/svadby' },
+      { id: 'corporate', name: 'Деловые мероприятия', path: '/korporativy' },
+      { id: 'entertainment', name: 'Праздники', path: '/prazdniki-i-shou' },
     ];
     const profileEvent = this.state.profileEvent || 'general';
     const profileTabs = [{ id: 'general', name: 'Общий профиль', path: '' }, ...eventTypes].map(e => ({ ...e,
@@ -1017,9 +1022,20 @@ class Component extends DCLogic {
       noSpecs: specs.length === 0,
       q: this.state.q || '', uQ: e => this.setState({ q: e.target.value }),
       fcat, uFcat: e => this.setState({ fcat: e.target.value }),
-      addSpec: () => { d.specialists.unshift({ id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '', hidden: false }); this.save(); },
+      addSpec: () => {
+        const s = { id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '', hidden: false };
+        const enabledEvent = profileEvent === 'general' ? '' : profileEvent;
+        s.eventProfiles = Object.fromEntries(eventTypes.map(ev => [ev.id, {
+          name: s.name, role: s.role, exp: s.exp, price: s.price, cat: s.cat, subcat: '', photo: '', about: '', feats: [], links: [], videos: [], photos: [], mediaCats: [], enabled: ev.id === enabledEvent,
+        }]));
+        s.wedding = enabledEvent === 'wedding';
+        d.specialists.unshift(s); this.save();
+      },
       caseRows, caseCount: d.cases.length + ' шт.',
-      addCase: () => { d.cases.unshift({ id: 'c' + Date.now(), title: 'Новый кейс', format: '', guests: '', city: '', year: '2026', desc: '', video: '', team: '', eventTypes: [profileEvent] }); this.save(); },
+      eventTypes,
+      caseDefaultType: eventTypes.some(ev => ev.id === this.state.caseEventType) ? this.state.caseEventType : eventTypes[0].id,
+      uCaseDefaultType: e => this.setState({ caseEventType: e.target.value }),
+      addCase: () => { d.cases.unshift({ id: 'c' + Date.now(), title: 'Новый кейс', format: '', guests: '', city: '', year: '2026', desc: '', video: '', team: '', eventTypes: [eventTypes.some(ev => ev.id === this.state.caseEventType) ? this.state.caseEventType : eventTypes[0].id] }); this.save(); },
       srevRows, srevSpecOpts,
       srevCount: srevPending ? (srevPending + ' ждёт решения из ' + d.specReviews.length) : (d.specReviews.length + ' шт.'),
       noSrev: srevRows.length === 0,

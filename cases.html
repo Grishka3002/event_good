@@ -54,19 +54,19 @@ a:hover{color:var(--acc)}
 
 <nav data-screen-label="Навигация" style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(10,14,19,.85);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.06)">
   <div style="max-width:1240px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
-    <a href="/index.html" style="display:flex;align-items:center;gap:12px">
+    <a href="/" style="display:flex;align-items:center;gap:12px">
       <div style="width:9px;height:36px;background:var(--acc)"></div>
       <div style="line-height:1.15"><div style="font-weight:900;font-size:13.5px;letter-spacing:.2em">ХОРОШЕЕ</div><div style="font-weight:900;font-size:13.5px;letter-spacing:.2em">РЕШЕНИЕ</div></div>
       <div class="nav-badge" style="font-size:9.5px;font-weight:700;letter-spacing:.28em;color:#97A3B0;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 10px;text-transform:uppercase">не агентство</div>
     </a>
     <sc-if value="{{ deskNav }}" hint-placeholder-val="{{ true }}">
     <div style="display:flex;align-items:center;gap:26px;flex-wrap:wrap;font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase">
-      <a href="/index.html#about" style="color:#C7D0D9">О нас</a>
+      <a href="{{ specialistsHref }}#about" style="color:#C7D0D9">О нас</a>
       <a href="{{ specialistsHref }}" style="color:#C7D0D9">Специалисты</a>
-      <a href="/cases.html" style="color:var(--acc)">Кейсы</a>
+      <a href="{{ casesHref }}" style="color:var(--acc)">Кейсы</a>
       <a href="/blog.html" style="color:#C7D0D9">Блог</a>
-      <a href="/index.html#packages" style="color:#C7D0D9">Пакеты</a>
-      <a href="/index.html#faq" style="color:#C7D0D9">FAQ</a>
+      <a href="{{ specialistsHref }}#packages" style="color:#C7D0D9">Пакеты</a>
+      <a href="{{ specialistsHref }}#faq" style="color:#C7D0D9">FAQ</a>
     </div>
     <div style="display:flex;align-items:center;gap:18px">
       <a href="{{ mainHref }}" target="_blank" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:12px 20px;border-radius:9px" style-hover="filter:brightness(1.1);color:#0C1117">{{ mainLabel }}</a>
@@ -79,15 +79,15 @@ a:hover{color:var(--acc)}
   </div>
   <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
     <div data-screen-label="Мобильное меню" style="border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;padding:6px 28px 24px;max-height:calc(100vh - 70px);overflow:auto">
-      <a href="/index.html#about" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">О нас</a>
+      <a href="{{ specialistsHref }}#about" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">О нас</a>
       <a href="{{ specialistsHref }}" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Специалисты</a>
-      <a href="/cases.html" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)">Кейсы</a>
+      <a href="{{ casesHref }}" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)">Кейсы</a>
       <a href="/blog.html" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Блог</a>
-      <a href="/index.html#packages" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Пакеты</a>
-      <a href="/index.html#faq" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">FAQ</a>
+      <a href="{{ specialistsHref }}#packages" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">Пакеты</a>
+      <a href="{{ specialistsHref }}#faq" style="padding:16px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F2F5F8">FAQ</a>
       <a href="{{ phoneHref }}" style="padding:18px 0 20px;font-size:15.5px;font-weight:800;color:#F2F5F8">Связаться</a>
       <div style="display:flex;gap:10px">
-        <a href="/index.html#zayavka" style="flex:1;text-align:center;background:var(--acc);color:#0C1117;font-weight:800;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="filter:brightness(1.1);color:#0C1117">Заявка</a>
+        <a href="{{ specialistsHref }}#zayavka" style="flex:1;text-align:center;background:var(--acc);color:#0C1117;font-weight:800;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="filter:brightness(1.1);color:#0C1117">Заявка</a>
         <a href="{{ mainHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">{{ mainLabel }}</a>
         <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" onClick="{{ closeMenu }}" style="flex:1;text-align:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;padding:15px;border-radius:10px" style-hover="border-color:var(--acc);color:var(--acc)">Telegram</a></sc-if>
       </div>
@@ -149,7 +149,7 @@ a:hover{color:var(--acc)}
       <p style="margin:0;color:#9AA6B2;font-size:15.5px;line-height:1.7;max-width:560px">Расскажите про формат и дату — предложим команду, смету с прямыми ценами и пару идей, которых вы не ждёте.</p>
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap">
-      <a href="/index.html#zayavka" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">Рассчитать событие</a>
+      <a href="{{ specialistsHref }}#zayavka" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">Рассчитать событие</a>
       <a href="{{ mainHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в&nbsp;{{ mainLabel }}</a>
       <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в Telegram</a></sc-if>
     </div>
@@ -188,7 +188,7 @@ class Component extends DCLogic {
     const mainLabel = maxHref ? 'MAX' : 'Telegram';
     const fmt = this.state.fmt || 'all';
     const eventType = location.pathname.startsWith('/svadby') ? 'wedding' : location.pathname.startsWith('/korporativy') ? 'corporate' : location.pathname.startsWith('/prazdniki-i-shou') ? 'entertainment' : '';
-    const eventNames = { wedding: 'Свадьбы', corporate: 'Корпоративы', entertainment: 'Праздники и шоу' };
+    const eventNames = { wedding: 'Свадебные события', corporate: 'Деловые мероприятия', entertainment: 'Праздники' };
     const eventPaths = { wedding: '/svadby', corporate: '/korporativy', entertainment: '/prazdniki-i-shou' };
     const all = d ? d.cases.filter(k => !eventType || (Array.isArray(k.eventTypes) && k.eventTypes.includes(eventType))) : [];
     const shown = fmt === 'all' ? all : all.filter(k => (k.format || 'Другое') === fmt);
@@ -203,6 +203,7 @@ class Component extends DCLogic {
       backHref: eventType ? (eventType === 'wedding' ? '/svadby' : eventType === 'corporate' ? '/korporativy' : '/prazdniki-i-shou') : '/index.html',
       backLabel: eventType ? 'В раздел' : 'На главную',
       specialistsHref: eventType ? eventPaths[eventType] : '/specialists.html',
+      casesHref: eventType ? eventPaths[eventType] + '/cases' : '/cases.html',
       hasEventSections: !!eventType,
       eventSectionTabs: Object.keys(eventPaths).map(id => ({ id, name: eventNames[id], path: eventPaths[id] + '/cases', bg: id === eventType ? 'var(--acc)' : 'transparent', color: id === eventType ? '#0C1117' : '#C7D0D9', border: id === eventType ? 'var(--acc)' : 'rgba(255,255,255,.16)' })),
       statEvents: all.length,
