@@ -35,6 +35,10 @@ a{color:#F2F5F8;text-decoration:none}
 a:hover{color:var(--acc)}
 ::selection{background:var(--acc);color:#0C1117}
 @media (max-width:600px){.nav-badge{display:none}}
+.direction-jump{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:32px}
+.direction-jump-label{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#84919e;margin-right:7px}
+.direction-jump a{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:12px 16px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#dce3e9;transition:border-color .2s,color .2s}
+.direction-jump a:hover,.direction-jump a:focus-visible{border-color:var(--acc);color:var(--acc)}
 </style>
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
@@ -100,6 +104,7 @@ a:hover{color:var(--acc)}
     <a href="{{ backHref }}" style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#97A3B0">← {{ backLabel }}</a>
     <h1 style="margin:22px 0 16px;text-transform:uppercase;line-height:1.02"><span style="display:block;font-size:clamp(36px,5vw,68px);font-weight:900">{{ pageTitle }}</span><span style="display:block;font-size:clamp(14px,1.8vw,24px);font-weight:500;letter-spacing:.32em;margin-top:10px;color:#DDE4EA">{{ pageSubTitle }}</span></h1>
     <p style="max-width:640px;font-size:16px;line-height:1.7;color:#9AA6B2;margin:0">{{ pageLead }}</p>
+    <sc-if value="{{ hasEventSections }}" hint-placeholder-val="{{ false }}"><div class="direction-jump"><span class="direction-jump-label">Другие направления</span><sc-for list="{{ otherDirections }}" as="e"><a href="{{ e.path }}">{{ e.name }} ↗</a></sc-for></div></sc-if>
     <div style="display:flex;gap:40px;flex-wrap:wrap;margin-top:30px">
       <div><div style="font-size:32px;font-weight:900;line-height:1">{{ statEvents }}</div><div style="width:34px;height:3px;background:var(--acc);margin:9px 0 7px"></div><div style="font-size:12px;color:#9AA6B2">кейсов на странице</div></div>
       <div><div style="font-size:32px;font-weight:900;line-height:1">{{ statGuests }}</div><div style="width:34px;height:3px;background:var(--acc);margin:9px 0 7px"></div><div style="font-size:12px;color:#9AA6B2">гостей суммарно</div></div>
@@ -110,7 +115,6 @@ a:hover{color:var(--acc)}
 
 <section data-screen-label="Фильтр форматов" style="position:sticky;top:65px;z-index:40;background:rgba(12,17,23,.9);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06);padding:16px 0">
   <div style="max-width:1240px;margin:0 auto;padding:0 28px;display:flex;flex-wrap:wrap;gap:9px">
-    <sc-if value="{{ hasEventSections }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ eventSectionTabs }}" as="e"><a href="{{ e.path }}" style="background:{{ e.bg }};color:{{ e.color }};border:1px solid {{ e.border }};border-radius:999px;padding:13px 18px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase" style-hover="border-color:var(--acc);color:var(--acc)">{{ e.name }}</a></sc-for><span style="width:1px;height:28px;background:rgba(255,255,255,.15);margin:3px 3px"></span></sc-if>
     <button onClick="{{ pickAllF }}" style="background:{{ allBg }};color:{{ allColor }};border:1px solid {{ allBorder }};border-radius:999px;padding:13px 18px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all .18s" style-hover="border-color:var(--acc)">Все форматы</button>
     <sc-for list="{{ fmtChips }}" as="c" hint-placeholder-count="5">
       <button onClick="{{ c.pick }}" style="background:{{ c.bg }};color:{{ c.color }};border:1px solid {{ c.border }};border-radius:999px;padding:13px 18px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all .18s;display:inline-flex;gap:8px;align-items:center" style-hover="border-color:var(--acc)"><span>{{ c.name }}</span><span style="opacity:.55;font-weight:600">{{ c.count }}</span></button>
@@ -149,7 +153,7 @@ a:hover{color:var(--acc)}
       <p style="margin:0;color:#9AA6B2;font-size:15.5px;line-height:1.7;max-width:560px">Расскажите про формат и дату — предложим команду, смету с прямыми ценами и пару идей, которых вы не ждёте.</p>
     </div>
     <div style="display:flex;gap:14px;flex-wrap:wrap">
-      <a href="{{ mainHref }}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">Обсудить событие</a>
+      <a href="{{ specialistsHref }}#zayavka" style="display:inline-flex;background:var(--acc);color:#0C1117;font-weight:800;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:18px 28px;border-radius:11px" style-hover="filter:brightness(1.1);color:#0C1117">Заказать событие</a>
       <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:13.5px;letter-spacing:.06em;text-transform:uppercase;padding:17px 26px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Написать в Telegram</a></sc-if>
     </div>
   </div>
@@ -204,7 +208,7 @@ class Component extends DCLogic {
       specialistsHref: eventType ? eventPaths[eventType] : '/specialists.html',
       casesHref: eventType ? eventPaths[eventType] + '/cases' : '/cases.html',
       hasEventSections: !!eventType,
-      eventSectionTabs: Object.keys(eventPaths).map(id => ({ id, name: eventNames[id], path: eventPaths[id] + '/cases', bg: id === eventType ? 'var(--acc)' : 'transparent', color: id === eventType ? '#0C1117' : '#C7D0D9', border: id === eventType ? 'var(--acc)' : 'rgba(255,255,255,.16)' })),
+      otherDirections: Object.keys(eventPaths).filter(id => id !== eventType).map(id => ({ name: eventNames[id], path: eventPaths[id] })),
       statEvents: all.length,
       statGuests: guests >= 1000 ? String(Math.round(guests / 100) / 10).replace('.', ',') + ' тыс.' : String(guests),
       statCities: cities,
