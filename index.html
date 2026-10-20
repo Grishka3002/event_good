@@ -27,7 +27,7 @@
     h1 em{font-style:normal;color:var(--orange)}
     .intro-copy{border-left:1px solid rgba(238,127,45,.6);padding:0 0 0 26px;color:#c3ccd4;font-size:clamp(14px,1.15vw,17px);line-height:1.75}
     .intro-copy strong{display:block;color:#f2f5f8;font-size:17px;margin-bottom:8px}
-    .section-note{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 0 17px;border-bottom:1px solid rgba(255,255,255,.16);font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#95a1ad}
+    .section-note{display:flex;align-items:center;justify-content:flex-end;gap:20px;padding:0 0 17px;border-bottom:1px solid rgba(255,255,255,.16);font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#95a1ad}
     .directions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding:20px 0 clamp(55px,7vw,100px)}
     .direction{--glow:rgba(238,127,45,.16);position:relative;isolation:isolate;display:flex;flex-direction:column;min-height:clamp(360px,32vw,480px);padding:clamp(26px,2.5vw,42px);overflow:hidden;background:radial-gradient(circle at 84% 13%,var(--glow),transparent 38%),linear-gradient(151deg,#17222e 0%,#111923 51%,#0c1117 100%);border:1px solid rgba(255,255,255,.12);border-radius:20px;transition:transform .25s,border-color .25s,box-shadow .25s}
     .direction:nth-child(2){--glow:rgba(148,179,208,.15)}
@@ -35,10 +35,9 @@
     .direction::after{content:"";position:absolute;top:-18%;right:-24%;width:88%;aspect-ratio:1;border:1px solid rgba(238,127,45,.22);border-radius:50%;box-shadow:0 0 0 46px rgba(255,255,255,.018),0 0 0 102px rgba(255,255,255,.014);z-index:-1}
     .direction::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:3px;background:linear-gradient(90deg,var(--orange),transparent 85%)}
     .direction:hover,.direction:focus-within{transform:translateY(-6px);border-color:rgba(238,127,45,.65);box-shadow:0 24px 62px rgba(0,0,0,.36)}
-    .card-top{display:flex;justify-content:space-between;gap:12px;align-items:start}
+    .card-top{display:flex;justify-content:flex-end;gap:12px;align-items:start}
     .kind{font-size:10px;color:#bbc6d0;letter-spacing:.13em;text-transform:uppercase;font-weight:800;text-align:right}
     .card-kicker{display:block;margin-bottom:17px;color:var(--orange);font-size:10px;font-weight:900;letter-spacing:.22em;text-transform:uppercase}
-    .number{font-size:13px;font-weight:900;letter-spacing:.25em;color:var(--orange)}
     .body{margin:auto 0 32px}
     h2{margin:0 0 20px;font-size:clamp(27px,2.4vw,39px);font-weight:900;line-height:1.08;text-transform:uppercase;letter-spacing:-.025em}
     .direction-link{color:inherit;text-decoration:none}
@@ -51,7 +50,7 @@
     .direction:hover .arrow,.direction:focus-within .arrow{transform:rotate(45deg)}
     .foot{border-top:1px solid rgba(255,255,255,.1);padding:20px 0 30px;color:#77838e;font-size:11px;line-height:1.6;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
     @media(max-width:1050px){.directions{grid-template-columns:1fr;gap:12px}.direction{min-height:320px;padding:28px}.body{margin:38px 0}h2{font-size:clamp(28px,4.5vw,42px);margin-bottom:13px}.bottom{padding-top:17px}.intro{grid-template-columns:1fr}.intro-copy{max-width:640px}}
-    @media(max-width:600px){.topnote{display:none}.intro{padding-top:66px}.direction{min-height:340px}.body{margin:50px 0 32px}.section-note span:last-child{display:none}}
+    @media(max-width:600px){.topnote{display:none}.intro{padding-top:66px}.direction{min-height:340px}.body{margin:50px 0 32px}}
     @media(prefers-reduced-motion:reduce){.direction,.arrow{transition:none}}
   </style>
 </head>
@@ -59,20 +58,20 @@
   <main class="shell">
     <div class="topbar"><div class="logo"><span>Хорошее<br>решение</span></div><span class="topnote">Объединение ивент-специалистов · Владивосток</span></div>
     <section class="intro" aria-labelledby="intro-title"><div><div class="eyebrow">События с характером</div><h1 id="intro-title">Ваше событие.<br><em>Наше решение.</em></h1></div><div class="intro-copy"><strong>Команда без посредников.</strong>Мы объединяем специалистов, которые создают события вместе с вами: от идеи и программы до финального кадра. Выберите направление — внутри будут подходящие люди, реальные работы и способы заказать событие.</div></section>
-    <div class="section-note"><span>01 — Выберите направление</span><span>Три мира. Одна сильная команда.</span></div>
+    <div class="section-note"><span>Три мира. Одна сильная команда.</span></div>
     <div class="directions" aria-label="Выбор направления">
     <article class="direction">
-      <div class="card-top"><span class="number">01 / 03</span><span class="kind">Личные истории</span></div>
+      <div class="card-top"><span class="kind">Личные истории</span></div>
       <div class="body"><span class="card-kicker">Для самого важного дня</span><h2><a class="direction-link" href="/svadby">Свадебные<br>события</a></h2><p>От первой идеи до последнего танца. Подберём команду, которая почувствует вашу историю и соберёт день без случайных деталей.</p></div>
       <div class="bottom"><span class="features">Свои специалисты<br>Свадебные кейсы · Пакеты</span><span class="arrow" aria-hidden="true">↗</span></div>
     </article>
     <article class="direction">
-      <div class="card-top"><span class="number">02 / 03</span><span class="kind">Бизнес и команда</span></div>
+      <div class="card-top"><span class="kind">Бизнес и команда</span></div>
       <div class="body"><span class="card-kicker">События с результатом</span><h2><a class="direction-link" href="/korporativy">Деловые<br>мероприятия</a></h2><p>Форумы, конференции, презентации и корпоративы. Продуманная программа, сильная команда и впечатление, которое работает на ваш бренд.</p></div>
       <div class="bottom"><span class="features">Свои специалисты<br>Деловые кейсы · Пакеты</span><span class="arrow" aria-hidden="true">↗</span></div>
     </article>
     <article class="direction">
-      <div class="card-top"><span class="number">03 / 03</span><span class="kind">Эмоции и впечатления</span></div>
+      <div class="card-top"><span class="kind">Эмоции и впечатления</span></div>
       <div class="body"><span class="card-kicker">Повод запомнить</span><h2><a class="direction-link" href="/prazdniki-i-shou">Праздники</a></h2><p>Частные вечера, фестивали и шоу. Создадим атмосферу, в которую хочется возвращаться, и найдём исполнителей под ваш формат.</p></div>
       <div class="bottom"><span class="features">Свои специалисты<br>Праздничные кейсы · Пакеты</span><span class="arrow" aria-hidden="true">↗</span></div>
     </article>
