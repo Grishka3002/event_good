@@ -86,6 +86,12 @@ option{background:#121A26;color:#F2F5F8}
               <sc-if value="{{ s.hasPhoto }}" hint-placeholder-val="{{ false }}"><button onClick="{{ s.delPhoto }}" title="Удалить фото" style="background:transparent;border:1px solid rgba(229,83,60,.45);color:#E5533C;border-radius:8px;padding:11px 12px;font-size:13px;cursor:pointer;font-family:inherit" style-hover="background:rgba(229,83,60,.12)">✕</button></sc-if>
             </div>
           </div>
+          <sc-if value="{{ s.isEventProfile }}" hint-placeholder-val="{{ true }}">
+            <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#97A3B0;font-size:11.5px;line-height:1.5">
+              <span>{{ s.profileSyncText }}</span>
+              <sc-if value="{{ s.canCopyGeneral }}" hint-placeholder-val="{{ false }}"><button onClick="{{ s.copyGeneral }}" style="background:transparent;border:1px solid rgba(238,127,45,.45);color:var(--acc);border-radius:8px;padding:9px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">Скопировать общий профиль</button></sc-if>
+            </div>
+          </sc-if>
           <details style="grid-column:1/-1;border-top:1px dashed rgba(255,255,255,.1);padding-top:12px">
             <summary style="cursor:pointer;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#97A3B0">Профиль: описание · фишки · видео · портфолио</summary>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:14px">
@@ -524,7 +530,7 @@ class Component extends DCLogic {
   componentDidMount() {
     import('./data.js?v=3').then(m => {
       this.mod = m;
-      m.loadData().then(d => { this._baseData = JSON.parse(JSON.stringify(d)); this.setState({ d }); });
+      m.loadData().then(d => { this._baseData = JSON.parse(JSON.stringify(d)); this.initProfileLinks(d); this.setState({ d }); });
     });
     this._selT = setInterval(() => this.syncSelects(), 400);
     // Ctrl+S / ⌘S — привычное сохранение с клавиатуры вместо сохранения страницы браузером.
@@ -585,8 +591,34 @@ class Component extends DCLogic {
   // содержимое полей — из-за этого прыгал курсор и терялся только что набранный текст.
   save(extra) {
     const data = this.state.d;
+    this.syncGeneralProfiles(data);
     this.mod.saveData(data); // локальный кэш: черновик переживёт случайное закрытие вкладки
     this.setState({ dirty: true, syncState: null, ...(extra || {}) });
+  }
+  profileFields = ['name', 'role', 'exp', 'price', 'cat', 'subcat', 'photo', 'about', 'feats', 'links', 'videos', 'photos', 'mediaCats'];
+  profileValue(profile, field) {
+    const value = profile && profile[field];
+    return value == null ? (['feats', 'links', 'videos', 'photos', 'mediaCats'].includes(field) ? [] : '') : value;
+  }
+  sameProfileContent(s, profile) {
+    return this.profileFields.every(field => JSON.stringify(this.profileValue(s, field)) === JSON.stringify(this.profileValue(profile, field)));
+  }
+  copyGeneralProfile(s, profile) {
+    for (const field of this.profileFields) profile[field] = JSON.parse(JSON.stringify(this.profileValue(s, field)));
+  }
+  initProfileLinks(data) {
+    for (const s of (data.specialists || [])) for (const profile of Object.values(s.eventProfiles || {})) {
+      if (typeof profile.syncGeneral !== 'boolean' && this.sameProfileContent(s, profile)) profile.syncGeneral = true;
+    }
+  }
+  syncGeneralProfiles(data) {
+    if (!data || this.state.tab !== 'spec') return;
+    const selected = this.state.profileEvent || 'general';
+    for (const s of (data.specialists || [])) for (const [eventType, profile] of Object.entries(s.eventProfiles || {})) {
+      if (profile.syncGeneral !== true) continue;
+      if (selected === eventType && !this.sameProfileContent(s, profile)) profile.syncGeneral = false;
+      else if (selected === 'general') this.copyGeneralProfile(s, profile);
+    }
   }
   // Отправка на сервер — по кнопке «Сохранить» (а также сразу после загрузки/удаления
   // файла фотографии: файл уже лежит на сервере, ссылка на него не должна остаться
@@ -710,7 +742,7 @@ class Component extends DCLogic {
   // Фото профиля: одно на специалиста, ужимаем до 900px по ширине. На сервер уходит
   // при сохранении — как обычный файл, а не base64 внутри данных сайта (иначе каждое
   // фото раздувало бы /api/data, который целиком грузит любая страница сайта).
-  photoTo(s) { return async e => {
+  photoTo(s, sharedWith) { return async e => {
     const input = e.target;
     const f = input.files && input.files[0];
     input.value = '';
@@ -720,6 +752,7 @@ class Component extends DCLogic {
     catch (err) { alert('Файл не похож на изображение.'); return; }
     this.queuePhotoDelete(s.photo);
     s.photo = this.draftPhoto(dataUrl);
+    if (sharedWith) for (const profile of Object.values(sharedWith.eventProfiles || {})) profile.photo = s.photo;
     this.save();
   }; }
   videoThumbTo(video) { return async e => {
@@ -894,8 +927,8 @@ class Component extends DCLogic {
       pick: () => this.setState({ profileEvent: e.id }),
     }));
     const profileScopeText = profileEvent === 'general'
-      ? 'Общий профиль показывается по ссылке /specialist.html?id=… и в общем каталоге специалистов.'
-      : 'Профиль показывается только в разделе «' + ((eventTypes.find(e => e.id === profileEvent) || {}).name || '') + '». Его публичная ссылка находится ниже в настройках портфолио.';
+      ? 'Новый общий профиль автоматически заполняет анкеты всех трёх направлений. После отдельной правки анкета направления становится самостоятельной. Фото, заменённое здесь, обновится во всех направлениях.'
+      : 'Анкета показывается только в разделе «' + ((eventTypes.find(e => e.id === profileEvent) || {}).name || '') + '». Её можно редактировать независимо от других направлений.';
     const dup = (arr, item, idp) => () => { const i = arr.indexOf(item); arr.splice(i + 1, 0, { ...item, id: idp + Date.now() }); this.save(); };
     const portfolioCfg = (this.mod && this.mod.CATEGORY_PORTFOLIO) || {};
     const defPortfolioCfg = (this.mod && this.mod.DEFAULT_PORTFOLIO_CFG) || { video: 'few', links: false };
@@ -921,9 +954,16 @@ class Component extends DCLogic {
       // выбранное, но ещё не сохранённое фото лежит в памяти под меткой draft:… — показываем его
       photoSrc: (p.photo && this._pendingUploads.get(p.photo)) || p.photo || '',
       photoLabel: p.photo ? 'Заменить' : 'Загрузить',
-      uPhotoFile: this.photoTo(p), delPhoto: () => { const old = p.photo; p.photo = ''; this.queuePhotoDelete(old); this.save(); },
+      uPhotoFile: this.photoTo(p, profileEvent === 'general' ? s : null),
+      delPhoto: () => { const old = p.photo; p.photo = ''; if (profileEvent === 'general') for (const ep of Object.values(s.eventProfiles || {})) ep.photo = ''; this.queuePhotoDelete(old); this.save(); },
       profHref: (profileEvent === 'general' ? '' : eventTypes.find(e => e.id === profileEvent).path) + '/specialist.html?id=' + s.id,
       isEventProfile: profileEvent !== 'general',
+      profileSyncText: p.syncGeneral === true ? 'Анкета повторяет общий профиль до первой отдельной правки.' : 'Отдельная анкета: изменения общего профиля здесь не заменят текст и портфолио. Новое общее фото обновит эту анкету.',
+      canCopyGeneral: p.syncGeneral !== true,
+      copyGeneral: () => {
+        if (!confirm('Заменить данные этого направления общим профилем? Тексты, видео и портфолио в этой анкете будут заменены.')) return;
+        this.copyGeneralProfile(s, p); p.syncGeneral = true; this.save();
+      },
       isWedding: false,
       eventProfileEnabled: p.enabled === true,
       eventProfileLabel: p.enabled === true ? 'Показывается в разделе' : 'Скрыт в разделе',
@@ -943,7 +983,8 @@ class Component extends DCLogic {
       vidGroups: general.vidGroups,
       photoGroups: general.photoGroups,
       mcatChips: mediaCats.map(c => { if (!Array.isArray(p.mediaCats)) p.mediaCats = []; const on = p.mediaCats.includes(c.id); return { name: c.name, bg: on ? 'var(--acc)' : 'transparent', color: on ? '#0C1117' : '#C7D0D9', border: on ? 'var(--acc)' : 'rgba(255,255,255,.25)', toggle: () => { p.mediaCats = on ? p.mediaCats.filter(x => x !== c.id) : p.mediaCats.concat(c.id); this.save(); } }; }),
-      up: () => this.mv(d.specialists, s, -1), down: () => this.mv(d.specialists, s, 1), dup: dup(d.specialists, s, 's'),
+      up: () => this.mv(d.specialists, s, -1), down: () => this.mv(d.specialists, s, 1),
+      dup: () => { const i = d.specialists.indexOf(s); d.specialists.splice(i + 1, 0, { ...JSON.parse(JSON.stringify(s)), id: 's' + Date.now() }); this.save(); },
       del: () => { d.specialists = d.specialists.filter(x => x !== s); this.save(); } };
     });
     const caseRows = d.cases.map(k => ({ ...k,
@@ -1023,12 +1064,14 @@ class Component extends DCLogic {
       q: this.state.q || '', uQ: e => this.setState({ q: e.target.value }),
       fcat, uFcat: e => this.setState({ fcat: e.target.value }),
       addSpec: () => {
-        const s = { id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', tg: '', hidden: false };
+        const s = { id: 's' + Date.now(), cat: 'vedushchie', subcat: '', name: 'Имя Фамилия', role: '', exp: '', price: 'от — ₽', photo: '', about: '', feats: [], links: [], videos: [], photos: [], mediaCats: [], tg: '', hidden: false };
         const enabledEvent = profileEvent === 'general' ? '' : profileEvent;
-        s.eventProfiles = Object.fromEntries(eventTypes.map(ev => [ev.id, {
-          name: s.name, role: s.role, exp: s.exp, price: s.price, cat: s.cat, subcat: '', photo: '', about: '', feats: [], links: [], videos: [], photos: [], mediaCats: [], enabled: ev.id === enabledEvent,
-        }]));
-        s.wedding = enabledEvent === 'wedding';
+        s.eventProfiles = Object.fromEntries(eventTypes.map(ev => {
+          const profile = { enabled: profileEvent === 'general' || ev.id === enabledEvent, syncGeneral: true };
+          this.copyGeneralProfile(s, profile);
+          return [ev.id, profile];
+        }));
+        s.wedding = profileEvent === 'general' || enabledEvent === 'wedding';
         d.specialists.unshift(s); this.save();
       },
       caseRows, caseCount: d.cases.length + ' шт.',
