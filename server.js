@@ -264,6 +264,73 @@ function clamp(s, n) {
 // Точечно подменяет title/canonical/og-теги и описание в уже готовом HTML на значения
 // конкретного специалиста/статьи — чтобы соцсети и поисковики видели их без выполнения JS
 // (клиентский код тоже это делает, но только после загрузки, а боты соцсетей JS не ждут).
+const SITE_ORIGIN = 'https://eventspecialists.ru';
+const LOCAL_TITLES = new Map([
+  ['organizatory', 'Организация мероприятий во Владивостоке'],
+  ['vedushchie', 'Ведущие мероприятий во Владивостоке'],
+  ['prokatchiki', 'Прокат оборудования для мероприятий во Владивостоке'],
+]);
+
+const seoDefaults = fs.promises.readFile(DATA_JS_PATH)
+  .then(source => import('data:text/javascript;base64,' + source.toString('base64')))
+  .then(module => module.mergeWithDefaults)
+  .catch(error => {
+    console.error('Unable to load SEO defaults:', error.message);
+    return live => live;
+  });
+
+async function readSeoData() {
+  const merge = await seoDefaults;
+  return { categories: [], specialists: [], articles: [], ...merge(readLiveData() || {}) };
+}
+
+function categoryPath(category) {
+  return '/specialists.html?cat=' + encodeURIComponent(category.slug);
+}
+
+function localTitle(category) {
+  return LOCAL_TITLES.get(category.slug) || category.name + ' во Владивостоке';
+}
+
+function localCategories(data) {
+  const occupied = new Set(data.specialists.filter(s => s.hidden !== true).map(s => s.cat));
+  return data.categories.filter(c => !c.weddingOnly && occupied.has(c.slug));
+}
+
+function directoryBlock(title, items, description = '') {
+  if (!items.length) return '';
+  return `<section class="local-directory" style="max-width:1180px;margin:32px auto;padding:0 24px">
+    <h2>${escapeHtml(title)}</h2>
+    ${description ? '<p>' + escapeHtml(description) + '</p>' : ''}
+    <ul style="display:flex;flex-wrap:wrap;gap:12px 28px;padding:0;list-style:none">${items.join('')}</ul>
+  </section>`;
+}
+
+function directoryLinks(data) {
+  return directoryBlock('Специалисты для мероприятий во Владивостоке', localCategories(data).map(c =>
+    `<li><a style="color:inherit;text-decoration:underline" href="${escapeHtml(categoryPath(c))}">${escapeHtml(localTitle(c))}</a></li>`
+  ));
+}
+
+function categorySeo(category, data) {
+  const title = localTitle(category);
+  const intro = category.slug === 'organizatory'
+    ? 'Подбор команды, площадки и программы для корпоративов, деловых и частных событий.'
+    : category.desc || '';
+  const description = `${title}. ${intro} Портфолио и контакты специалистов «Хорошего решения».`;
+  const items = data.specialists.filter(s => s.hidden !== true && s.cat === category.slug).map(s =>
+    `<li><a style="color:inherit;text-decoration:underline" href="/specialist.html?id=${encodeURIComponent(s.id)}">${escapeHtml(s.name)}</a> — ${escapeHtml(s.role)}</li>`
+  );
+  return {
+    title: title + ' | Хорошее решение',
+    url: SITE_ORIGIN + categoryPath(category),
+    description: clamp(description, 175),
+    ogTitle: title,
+    ogDescription: clamp(description, 175),
+    body: directoryBlock(title, items, intro),
+  };
+}
+
 function injectHead(html, seo) {
   if (!seo) return html;
   if (seo.title) html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(seo.title)}</title>`);
@@ -274,7 +341,9 @@ function injectHead(html, seo) {
   if (seo.description) html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(seo.description)}">`);
   if (seo.ogTitle) html = html.replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${escapeHtml(seo.ogTitle)}">`);
   if (seo.ogDescription) html = html.replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escapeHtml(seo.ogDescription)}">`);
-  if (seo.ld) html = html.replace('<!--SEO_JSONLD-->', `<script type="application/ld+json">${escapeJsonLd(seo.ld)}</script>`);
+  if (seo.ld) html = html.replace('<!--SEO_JSONLD-->', `<script type="application/ld+json"${seo.ld["@type"] === "Person" ? ' id="server-person-seo"' : ""}>${escapeJsonLd(seo.ld)}</script>`);
+  if (seo.body) html = html.replace('<!--SEO_CONTENT-->', () => seo.body);
+  if (seo.url?.includes('?cat=')) html = html.replace(/<script type="application\/ld\+json"[^>]*>\{"@context":"https:\/\/schema\.org","@type":"(?:BreadcrumbList|ItemList)"[^<]*<\/script>/g, '');
   return html;
 }
 
@@ -286,8 +355,8 @@ function buildSpecialistSeo(s, categories, origin, ctx) {
   const cat = (categories || []).find(c => c.slug === profile.cat);
   const catName = cat ? cat.name : '';
   const eventLabel = eventNames[eventType] || '';
-  const title = clamp(`${profile.name} — ${profile.role} | Хорошее решение`, 90);
-  const description = clamp(`${profile.name}${catName ? ' (' + catName + (profile.exp ? ', опыт ' + profile.exp : '') + ')' : ''}${eventLabel ? ' — специалист: ' + eventLabel : ''} — профиль, портфолио и видео работ. Бронирование напрямую, ${profile.price || 'цена по запросу'}, без агентской наценки.`, 200);
+  const title = clamp(`${profile.name} — ${profile.role} во Владивостоке | Хорошее решение`, 105);
+  const description = clamp(`${profile.name}${catName ? ' (' + catName + (profile.exp ? ', опыт ' + profile.exp : '') + ')' : ''}${eventLabel ? ' — специалист: ' + eventLabel : ''} во Владивостоке — профиль, портфолио и видео работ. Бронирование напрямую, ${profile.price || 'цена по запросу'}, без агентской наценки.`, 200);
   const sectionPath = eventType === 'wedding' ? '/svadby' : eventType === 'corporate' ? '/korporativy' : eventType === 'entertainment' ? '/prazdniki-i-shou' : '';
   const url = `${origin}${sectionPath}${sectionPath ? '/' : '/'}specialist.html?id=${encodeURIComponent(s.id)}`;
   return {
@@ -363,13 +432,13 @@ function servePageWithSeo(req, res, filePath, seo) {
 // Отдаём безусловно (с id и без) — не только чтобы подставить SEO-теги, но и чтобы
 // путь гарантированно шёл через Node, а не через возможную статическую раздачу файла.
 // ctx — необязательный контекст (см. buildSpecialistSeo), напр. { wedding: true } для /svadby/specialist.html.
-function serveSpecialistPage(req, res, id, ctx) {
-  const d = readLiveData();
+async function serveSpecialistPage(req, res, id, ctx) {
+  const d = await readSeoData();
   const s = id && d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id && x.hidden !== true) : null;
-  if (id && d && Array.isArray(d.specialists) && d.specialists.some(x => x.id === id && x.hidden === true)) return notFound(req, res);
+  if (id && !s) return notFound(req, res);
   const profile = s && ctx && ctx.eventType ? getEventProfile(s, ctx.eventType) : null;
   if (ctx && ctx.eventType && (!profile || profile.enabled !== true)) return notFound(req, res);
-  const seo = s ? buildSpecialistSeo(s, d.categories, requestOrigin(req) || 'https://eventspecialists.ru', ctx) : null;
+  const seo = s ? buildSpecialistSeo(s, d.categories, SITE_ORIGIN, ctx) : null;
   servePageWithSeo(req, res, SPECIALIST_HTML_PATH, seo);
 }
 
@@ -388,8 +457,8 @@ function weddingCatalogSeo(origin) {
   };
 }
 
-function serveArticlePage(req, res, slug) {
-  const d = readLiveData();
+async function serveArticlePage(req, res, slug) {
+  const d = await readSeoData();
   const a = slug && d && Array.isArray(d.articles) ? d.articles.find(x => x.slug === slug) : null;
   const seo = a ? buildArticleSeo(a, requestOrigin(req) || 'https://eventspecialists.ru') : null;
   servePageWithSeo(req, res, BLOG_HTML_PATH, seo);
@@ -397,31 +466,31 @@ function serveArticlePage(req, res, slug) {
 
 // Карта сайта собирается на лету: базовые страницы + каждый специалист и каждая статья
 // блога из живых данных — так новые карточки из админки сами попадают в sitemap.
-function serveSitemap(req, res) {
-  const origin = requestOrigin(req) || 'https://eventspecialists.ru';
-  const d = readLiveData();
-  const today = new Date().toISOString().slice(0, 10);
+async function serveSitemap(req, res) {
+  const origin = SITE_ORIGIN;
+  const d = await readSeoData();
   const urls = [
-    { loc: origin + '/', priority: '1.0' },
-    { loc: origin + '/specialists.html', priority: '0.9' },
-    { loc: origin + '/svadby', priority: '0.85' },
-    { loc: origin + '/korporativy', priority: '0.85' },
-    { loc: origin + '/prazdniki-i-shou', priority: '0.85' },
-    { loc: origin + '/svadby/cases', priority: '0.75' },
-    { loc: origin + '/korporativy/cases', priority: '0.75' },
-    { loc: origin + '/prazdniki-i-shou/cases', priority: '0.75' },
-    { loc: origin + '/cases.html', priority: '0.8' },
-    { loc: origin + '/blog.html', priority: '0.7' },
+    { loc: origin + '/' },
+    { loc: origin + '/specialists.html' },
+    { loc: origin + '/svadby' },
+    { loc: origin + '/korporativy' },
+    { loc: origin + '/prazdniki-i-shou' },
+    { loc: origin + '/svadby/cases' },
+    { loc: origin + '/korporativy/cases' },
+    { loc: origin + '/prazdniki-i-shou/cases' },
+    { loc: origin + '/cases.html' },
+    { loc: origin + '/blog.html' },
   ];
+  localCategories(d).forEach(c => urls.push({ loc: origin + categoryPath(c) }));
   if (d && Array.isArray(d.specialists)) d.specialists.filter(s => s.hidden !== true).forEach(s => {
-    urls.push({ loc: origin + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
+    urls.push({ loc: origin + '/specialist.html?id=' + encodeURIComponent(s.id) });
     const paths = { wedding: '/svadby', corporate: '/korporativy', entertainment: '/prazdniki-i-shou' };
     for (const [type, basePath] of Object.entries(paths)) if (getEventProfile(s, type).enabled === true)
-      urls.push({ loc: origin + basePath + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
+      urls.push({ loc: origin + basePath + '/specialist.html?id=' + encodeURIComponent(s.id) });
   });
-  if (d && Array.isArray(d.articles)) d.articles.forEach(a => urls.push({ loc: origin + '/blog.html?post=' + encodeURIComponent(a.slug), priority: '0.6' }));
+  if (d && Array.isArray(d.articles)) d.articles.forEach(a => urls.push({ loc: origin + '/blog.html?post=' + encodeURIComponent(a.slug) }));
   const body = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    + urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc><lastmod>${today}</lastmod><priority>${u.priority}</priority></url>`).join('\n')
+    + urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc></url>`).join('\n')
     + '\n</urlset>\n';
   send(req, res, 200, body, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'no-cache' });
 }
@@ -821,7 +890,7 @@ async function handleReview(req, res) {
   }
 }
 
-http.createServer((req, res) => {
+http.createServer(async (req, res) => {
   let urlObj, urlPath;
   try {
     urlObj = new URL(req.url, 'http://x');
@@ -860,10 +929,13 @@ http.createServer((req, res) => {
   // хостингах со статической раздачей в обход Node (см. ADMIN_HTML_PATH) не сработает
   // подстановка контактных ссылок (см. injectContactHrefs).
   if (urlPath === '/') {
-    return servePlainPage(req, res, INDEX_HTML_PATH);
+    return servePageWithSeo(req, res, INDEX_HTML_PATH, { body: directoryLinks(await readSeoData()) });
   }
   if (urlPath === '/specialists.html' || urlPath === '/specialists') {
-    return servePlainPage(req, res, SPECIALISTS_HTML_PATH);
+    const data = await readSeoData();
+    const category = localCategories(data).find(c => c.slug === urlObj.searchParams.get('cat'));
+    const seo = category ? categorySeo(category, data) : { body: directoryLinks(data) };
+    return servePageWithSeo(req, res, SPECIALISTS_HTML_PATH, seo);
   }
   if (urlPath === '/cases.html' || urlPath === '/cases') {
     return servePlainPage(req, res, CASES_HTML_PATH);
