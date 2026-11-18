@@ -6,6 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const { createHash, randomBytes } = require('crypto');
 
 const ROOT = __dirname;
 
@@ -264,6 +265,21 @@ function clamp(s, n) {
 // Точечно подменяет title/canonical/og-теги и описание в уже готовом HTML на значения
 // конкретного специалиста/статьи — чтобы соцсети и поисковики видели их без выполнения JS
 // (клиентский код тоже это делает, но только после загрузки, а боты соцсетей JS не ждут).
+const SITE_ORIGIN = 'https://eventspecialists.ru';
+const siteDataModule = fs.promises.readFile(DATA_JS_PATH)
+  .then(source => import('data:text/javascript;base64,' + source.toString('base64')))
+  .catch(error => {
+    console.error('Unable to load SEO defaults:', error.message);
+    return null;
+  });
+
+async function readSeoData() {
+  const { mergeWithDefaults = live => live } = await siteDataModule || {};
+  const live = readLiveData();
+  const data = mergeWithDefaults(live || { specialists: [] });
+  return { categories: [], specialists: [], articles: [], ...data };
+}
+
 function injectHead(html, seo) {
   if (!seo) return html;
   if (seo.title) html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(seo.title)}</title>`);
@@ -274,7 +290,8 @@ function injectHead(html, seo) {
   if (seo.description) html = html.replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${escapeHtml(seo.description)}">`);
   if (seo.ogTitle) html = html.replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${escapeHtml(seo.ogTitle)}">`);
   if (seo.ogDescription) html = html.replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${escapeHtml(seo.ogDescription)}">`);
-  if (seo.ld) html = html.replace('<!--SEO_JSONLD-->', `<script type="application/ld+json">${escapeJsonLd(seo.ld)}</script>`);
+  if (seo.ld) html = html.replace('<!--SEO_JSONLD-->', () => `<script type="application/ld+json"${seo.ld['@type'] === 'Person' ? ' id="server-person-seo"' : ''}>${escapeJsonLd(seo.ld)}</script>`);
+  if (seo.body) html = html.replace('<!--SEO_CONTENT-->', () => seo.body);
   return html;
 }
 
@@ -286,7 +303,7 @@ function buildSpecialistSeo(s, categories, origin, ctx) {
   const cat = (categories || []).find(c => c.slug === profile.cat);
   const catName = cat ? cat.name : '';
   const eventLabel = eventNames[eventType] || '';
-  const title = clamp(`${profile.name} — ${profile.role} | Хорошее решение`, 90);
+  const title = clamp(`${profile.name} — ${profile.role}, Владивосток | Хорошее решение`, 100);
   const description = clamp(`${profile.name}${catName ? ' (' + catName + (profile.exp ? ', опыт ' + profile.exp : '') + ')' : ''}${eventLabel ? ' — специалист: ' + eventLabel : ''} — профиль, портфолио и видео работ. Бронирование напрямую, ${profile.price || 'цена по запросу'}, без агентской наценки.`, 200);
   const sectionPath = eventType === 'wedding' ? '/svadby' : eventType === 'corporate' ? '/korporativy' : eventType === 'entertainment' ? '/prazdniki-i-shou' : '';
   const url = `${origin}${sectionPath}${sectionPath ? '/' : '/'}specialist.html?id=${encodeURIComponent(s.id)}`;
@@ -343,9 +360,26 @@ function buildArticleSeo(a, origin) {
 
 // Статические страницы без per-request SEO (у них уже свои корректные title/description
 // в самом файле) — но всё равно через Node, чтобы сработала подстановка контактных ссылок.
-function servePlainPage(req, res, filePath) {
+function homeCasePreview(data) {
+  const cases = Array.isArray(data?.cases) ? data.cases : [];
+  const sections = { wedding: '/svadby/cases', corporate: '/korporativy/cases', entertainment: '/prazdniki-i-shou/cases' };
+  const items = Object.entries(sections).map(([type, href]) => {
+    const item = cases.find(c => c.title && c.desc && !c.hidden && !/заполните описание/i.test(c.desc)
+      && Array.isArray(c.eventTypes) && c.eventTypes.includes(type));
+    if (!item) return '';
+    const details = [item.format, item.city, item.guests && ('гостей: ' + item.guests)].filter(Boolean).join(' · ');
+    return `<li><a href="${href}">${escapeHtml(item.title)}</a><p>${escapeHtml(details)}</p></li>`;
+  }).filter(Boolean);
+  return items.length ? `<section class="home-cases" aria-labelledby="home-cases-title"><h2 id="home-cases-title">Наши проекты</h2><ul>${items.join('')}</ul></section>` : '';
+}
+
+function servePlainPage(req, res, filePath, directory = '') {
   fs.readFile(filePath, 'utf8', (err, html) => {
     if (err) return notFound(req, res);
+    if (filePath === INDEX_HTML_PATH) {
+      html = html.replace('<!-- published-case-preview -->', () => homeCasePreview(readLiveData()));
+      html = html.replace(/<!--SEO_CONTENT_START-->[\s\S]*?<!--SEO_CONTENT_END-->/, () => directory);
+    }
     html = injectContactHrefs(html);
     send(req, res, 200, html, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
   });
@@ -363,13 +397,13 @@ function servePageWithSeo(req, res, filePath, seo) {
 // Отдаём безусловно (с id и без) — не только чтобы подставить SEO-теги, но и чтобы
 // путь гарантированно шёл через Node, а не через возможную статическую раздачу файла.
 // ctx — необязательный контекст (см. buildSpecialistSeo), напр. { wedding: true } для /svadby/specialist.html.
-function serveSpecialistPage(req, res, id, ctx) {
-  const d = readLiveData();
+async function serveSpecialistPage(req, res, id, ctx) {
+  const d = await readSeoData();
   const s = id && d && Array.isArray(d.specialists) ? d.specialists.find(x => x.id === id && x.hidden !== true) : null;
-  if (id && d && Array.isArray(d.specialists) && d.specialists.some(x => x.id === id && x.hidden === true)) return notFound(req, res);
+  if (id && !s) return notFound(req, res);
   const profile = s && ctx && ctx.eventType ? getEventProfile(s, ctx.eventType) : null;
   if (ctx && ctx.eventType && (!profile || profile.enabled !== true)) return notFound(req, res);
-  const seo = s ? buildSpecialistSeo(s, d.categories, requestOrigin(req) || 'https://eventspecialists.ru', ctx) : null;
+  const seo = s ? buildSpecialistSeo(s, d.categories, SITE_ORIGIN, ctx) : null;
   servePageWithSeo(req, res, SPECIALIST_HTML_PATH, seo);
 }
 
@@ -388,19 +422,80 @@ function weddingCatalogSeo(origin) {
   };
 }
 
-function serveArticlePage(req, res, slug) {
-  const d = readLiveData();
+async function serveArticlePage(req, res, slug) {
+  const d = await readSeoData();
   const a = slug && d && Array.isArray(d.articles) ? d.articles.find(x => x.slug === slug) : null;
-  const seo = a ? buildArticleSeo(a, requestOrigin(req) || 'https://eventspecialists.ru') : null;
+  const seo = a ? buildArticleSeo(a, SITE_ORIGIN) : null;
   servePageWithSeo(req, res, BLOG_HTML_PATH, seo);
 }
 
 // Карта сайта собирается на лету: базовые страницы + каждый специалист и каждая статья
 // блога из живых данных — так новые карточки из админки сами попадают в sitemap.
-function serveSitemap(req, res) {
-  const origin = requestOrigin(req) || 'https://eventspecialists.ru';
-  const d = readLiveData();
-  const today = new Date().toISOString().slice(0, 10);
+const localCatalogs = new Map([
+  ['/organizatory', ['organizatory', 'Организаторы мероприятий во Владивостоке', 'Подбор команды, площадки и программы для корпоративов, деловых и частных событий.']],
+  ['/prokatchiki', ['prokatchiki', 'Прокат оборудования для мероприятий во Владивостоке', 'Подберите оборудование и технических специалистов для вашей площадки и программы.']],
+  ['/fotografy', ['fotografy', 'Фотографы во Владивостоке', 'Репортажная и постановочная съёмка свадеб, корпоративов и частных событий. Посмотрите портфолио фотографов и уточните стоимость и свободную дату.']],
+  ['/vedushchie', ['vedushchie', 'Ведущие мероприятий во Владивостоке', 'Ведущие для свадеб, корпоративов и частных праздников. Посмотрите видео и программы, чтобы выбрать стиль ведения вашего события.']],
+  ['/videografy', ['videografy', 'Видеографы во Владивостоке', 'Видеосъёмка свадеб, деловых мероприятий и праздников. Посмотрите примеры роликов и уточните условия съёмки на вашу дату.']],
+]);
+
+function localProfiles(data, category) {
+  return (Array.isArray(data?.specialists) ? data.specialists : [])
+    .filter(s => s.hidden !== true && s.cat === category && s.id && s.name);
+}
+
+function seoCatalogs(data) {
+  const catalogs = new Map(localCatalogs);
+  for (const category of Array.isArray(data.categories) ? data.categories : []) {
+    if (category.weddingOnly || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(category.slug) || !category.name) continue;
+    if (!catalogs.has('/' + category.slug)) {
+      catalogs.set('/' + category.slug, [category.slug, category.name + ' во Владивостоке', category.desc || 'Посмотрите портфолио специалистов и уточните условия на вашу дату.']);
+    }
+  }
+  return catalogs;
+}
+
+function directoryLinks(data) {
+  const links = [...seoCatalogs(data)]
+    .filter(([, [category]]) => localProfiles(data, category).length)
+    .map(([route, [, heading]]) => `<li><a href="${route}" style="color:inherit;text-decoration:underline">${escapeHtml(heading)}</a></li>`);
+  return links.length ? `<section style="max-width:1180px;margin:32px auto;padding:0 24px"><h2>Специалисты для мероприятий во Владивостоке</h2><ul style="display:flex;flex-wrap:wrap;gap:12px 28px;padding:0;list-style:none">${links.join('')}</ul></section>` : '';
+}
+
+function serveLocalCatalog(req, res, route, data, config) {
+  const [category, heading, description] = config;
+  const profiles = localProfiles(data, category);
+  const origin = SITE_ORIGIN;
+  const cards = profiles.map(s => {
+    const profileUrl = '/specialist.html?id=' + encodeURIComponent(s.id);
+    const price = /[0-9]/.test(s.price || '') ? s.price : 'Стоимость по запросу';
+    return `<li><a href="${profileUrl}">${escapeHtml(s.name)}</a><br>${escapeHtml(s.role)}<br>${escapeHtml(price)}</li>`;
+  }).join('');
+  const body = `<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(heading)} — Хорошее решение</title>
+<meta name="description" content="${escapeHtml(description)}">
+<link rel="canonical" href="${escapeHtml(origin + route)}"><link rel="icon" href="/favicon.svg">
+${cards ? '' : '<meta name="robots" content="noindex,follow">'}
+<style>
+body{margin:0;background:#0c1117;color:#f2f5f8;font:1rem/1.6 system-ui,sans-serif}
+main{max-width:70rem;margin:auto;padding:2rem 1.25rem 4rem}
+h1{font-size:clamp(2rem,5vw,3.75rem);line-height:1.12;margin:1rem 0}
+p{max-width:65ch;color:#c7d0d9}a{color:#ff9c55}
+ul{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem}
+li{padding:1rem;border:1px solid #35404d;background:#121a26;border-radius:.75rem}
+li a{font-weight:700}.cta{display:inline-block;background:#ee7f2d;color:#0c1117;padding:.65rem 1rem;border-radius:.5rem;font-weight:700}
+</style></head><body><main><nav aria-label="Навигация"><a href="/">Хорошее решение</a> · <a href="/specialists.html">Все специалисты</a></nav>
+<h1>${escapeHtml(heading)}</h1><p>${escapeHtml(description)}</p>
+${cards ? '<ul>' + cards + '</ul>' : '<p>Свяжитесь с командой, чтобы подобрать специалиста под ваш формат.</p>'}
+<a class="cta" href="/specialists.html?cat=${category}#zayavka">Помочь с подбором</a>
+</main></body></html>`;
+  send(req, res, 200, body, { 'Content-Type': 'text/html; charset=utf-8' });
+}
+
+async function serveSitemap(req, res) {
+  const origin = SITE_ORIGIN;
+  const d = await readSeoData();
   const urls = [
     { loc: origin + '/', priority: '1.0' },
     { loc: origin + '/specialists.html', priority: '0.9' },
@@ -413,6 +508,9 @@ function serveSitemap(req, res) {
     { loc: origin + '/cases.html', priority: '0.8' },
     { loc: origin + '/blog.html', priority: '0.7' },
   ];
+  for (const [route, [category]] of seoCatalogs(d)) {
+    if (localProfiles(d, category).length) urls.push({ loc: origin + route, priority: '0.8' });
+  }
   if (d && Array.isArray(d.specialists)) d.specialists.filter(s => s.hidden !== true).forEach(s => {
     urls.push({ loc: origin + '/specialist.html?id=' + encodeURIComponent(s.id), priority: '0.6' });
     const paths = { wedding: '/svadby', corporate: '/korporativy', entertainment: '/prazdniki-i-shou' };
@@ -421,7 +519,7 @@ function serveSitemap(req, res) {
   });
   if (d && Array.isArray(d.articles)) d.articles.forEach(a => urls.push({ loc: origin + '/blog.html?post=' + encodeURIComponent(a.slug), priority: '0.6' }));
   const body = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    + urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc><lastmod>${today}</lastmod><priority>${u.priority}</priority></url>`).join('\n')
+    + urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc></url>`).join('\n')
     + '\n</urlset>\n';
   send(req, res, 200, body, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'no-cache' });
 }
@@ -821,7 +919,180 @@ async function handleReview(req, res) {
   }
 }
 
-http.createServer((req, res) => {
+const applicationsDir = path.resolve(path.dirname(LIVE_DATA_PATH), '.specialist-applications');
+const tokenPattern = /^[0-9a-f]{48}$/;
+const applicationEvents = ['wedding', 'corporate', 'entertainment'];
+const applicationMax = 10 * 1024 * 1024;
+
+function readApplication(token) {
+  try { return JSON.parse(fs.readFileSync(path.join(applicationsDir, token + '.json'), 'utf8')); }
+  catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+}
+
+function saveApplication(record) {
+  fs.mkdirSync(applicationsDir, { recursive: true, mode: 0o700 });
+  const file = path.join(applicationsDir, record.token + '.json');
+  fs.writeFileSync(file + '.tmp', JSON.stringify(record), { mode: 0o600 });
+  fs.renameSync(file + '.tmp', file);
+}
+
+function applicationSummary({ token, status, created, name, specId }) {
+  if (status === 'open' && Date.now() - created >= 14 * 86400000) status = 'expired';
+  return { token, status, created, name, specId };
+}
+
+function applicationImage(value) {
+  const match = /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(value || ''));
+  if (!match || match[1].length > 950000) throw new Error('photo');
+  const bytes = Buffer.from(match[1], 'base64');
+  if (bytes.length < 5 || !bytes.subarray(0, 3).equals(Buffer.from([255, 216, 255]))) throw new Error('photo');
+  return bytes;
+}
+
+function normalizeApplication(input, categories) {
+  const field = (value, limit) => {
+    if (typeof value !== 'string' || value.length > limit) throw new Error('field');
+    return value.trim();
+  };
+  const urls = value => field(value, 3000).split(/\r?\n/).map(s => s.trim()).filter(Boolean).map(s => {
+    const url = new URL(s);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('url');
+    return url.href;
+  }).join('\n');
+  const clean = (p, general) => {
+    const cat = field(p.cat, 100);
+    const subcat = field(p.subcat, 100);
+    const category = categories.find(c => c.slug === cat);
+    if (!category || (subcat && !category.subcats?.some(c => c.slug === subcat))) throw new Error('category');
+    const name = general ? field(p.name, 100) : '';
+    const role = field(p.role, 120);
+    const about = field(p.about, 4000);
+    if (!role || !about || (general && !name)) throw new Error('required');
+    const photo = p.photo || '';
+    if (photo || general) applicationImage(photo);
+    if (!Array.isArray(p.photos) || p.photos.length > 6) throw new Error('photo');
+    p.photos.forEach(applicationImage);
+    return { name, role, cat, subcat, about, exp: field(p.exp, 80), price: field(p.price, 100),
+      feats: field(p.feats, 2500), videos: urls(p.videos), links: urls(p.links), photo, photos: p.photos };
+  };
+  const general = clean(input.general, true);
+  const contact = field(input.contact, 160);
+  if (!contact) throw new Error('required');
+  const events = {};
+  for (const type of applicationEvents) {
+    const entry = input.events?.[type];
+    if (entry) events[type] = entry === true ? true : clean(entry, false);
+  }
+  return { general, events, contact };
+}
+
+function publishApplication(token, profile, defaults) {
+  let index = 0;
+  const written = [];
+  const id = 'app-' + createHash('sha256').update(token).digest('hex').slice(0, 24);
+  const raw = fs.existsSync(LIVE_DATA_PATH) ? JSON.parse(fs.readFileSync(LIVE_DATA_PATH, 'utf8')) : {};
+  const specialists = raw.specialists || defaults;
+  if (specialists.some(s => s.id === id)) return id;
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  const savePhoto = value => {
+    const name = id + '-' + (++index) + '.jpg';
+    const file = path.join(UPLOADS_DIR, name);
+    written.push(file);
+    fs.writeFileSync(file, applicationImage(value));
+    return '/uploads/' + name;
+  };
+  const lines = s => s.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
+  const toProfile = p => ({
+    ...p, name: profile.general.name,
+    feats: lines(p.feats),
+    videos: lines(p.videos).map(url => ({ url, title: '' })),
+    links: lines(p.links).map(url => ({ url, title: '' })),
+    photo: p.photo ? savePhoto(p.photo) : '',
+    photos: p.photos.map(value => ({ url: savePhoto(value) })),
+    mediaCats: [],
+  });
+  try {
+    const general = toProfile(profile.general);
+    const eventProfiles = Object.fromEntries(applicationEvents.map(type => {
+      const row = profile.events[type];
+      const entry = row && row !== true ? toProfile(row) : general;
+      return [type, { ...entry, photo: entry.photo || general.photo, enabled: !!row, syncGeneral: row === true }];
+    }));
+    writeLiveData({ ...raw, specialists: [{ ...general, id, tg: '', hidden: false,
+      wedding: !!profile.events.wedding, eventProfiles }, ...specialists] });
+  } catch (error) {
+    for (const file of written) {
+      try { fs.rmSync(file, { force: true }); } catch (cleanupError) { console.error(cleanupError.message); }
+    }
+    throw error;
+  }
+  return id;
+}
+
+async function handleApplications(req, res, url, admin) {
+  const json = (code, body, headers) => send(req, res, code, JSON.stringify(body), {
+    'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers,
+  });
+  if (!ADMIN_PASSWORD || (admin && !adminAuthorized(req))) return json(401, { error: 'unauthorized' }, {
+    ...(admin && { 'WWW-Authenticate': 'Basic realm="Admin", charset="UTF-8"' }),
+  });
+  const token = url.searchParams.get('token');
+  const action = url.searchParams.get('action');
+  try {
+    if (admin && !token && req.method === 'GET') {
+      const files = fs.existsSync(applicationsDir) ? fs.readdirSync(applicationsDir) : [];
+      const records = files.filter(file => file.endsWith('.json') && tokenPattern.test(file.slice(0, -5)))
+        .map(file => applicationSummary(readApplication(file.slice(0, -5))));
+      return json(200, { records: records.sort((a, b) => b.created - a.created) });
+    }
+    if (req.method === 'POST' && req.headers['content-type'] !== 'application/json') return json(415, { error: 'format' });
+    if (admin && action === 'create' && req.method === 'POST') {
+      const record = { token: randomBytes(24).toString('hex'), created: Date.now(), status: 'open' };
+      saveApplication(record);
+      return json(201, applicationSummary(record));
+    }
+    if (!tokenPattern.test(token || '')) return json(404, { error: 'missing' });
+    const initial = readApplication(token);
+    if (!initial) return json(404, { error: 'missing' });
+    if (req.method === 'GET') {
+      const summary = applicationSummary(initial);
+      return json(200, admin ? { ...summary, profile: initial.profile } : { status: summary.status });
+    }
+    if (req.method !== 'POST') return json(405, { error: 'method' });
+    const expected = admin && action !== 'cancel' ? 'pending' : 'open';
+    if (applicationSummary(initial).status !== expected) return json(409, { error: 'closed' });
+    if (Number(req.headers['content-length']) > applicationMax) return json(413, { error: 'size' });
+    let input;
+    try { input = JSON.parse(await readBody(req, applicationMax)); }
+    catch { return json(400, { error: 'format' }); }
+    const defaults = (await siteDataModule)?.DEFAULTS;
+    const record = readApplication(token);
+    if (!record || applicationSummary(record).status !== expected) return json(409, { error: 'closed' });
+    if (admin && ['cancel', 'reject'].includes(action)) {
+      const { profile, ...rest } = record;
+      saveApplication({ ...rest, status: action === 'cancel' ? 'cancelled' : 'rejected' });
+      return json(200, { ok: true });
+    }
+    if (admin && action !== 'publish') return json(400, { error: 'action' });
+    if (!admin && input?.consent !== true) return json(400, { error: 'consent' });
+    const categories = readLiveData()?.categories || defaults?.categories || [];
+    let profile;
+    try { profile = normalizeApplication(input, categories); }
+    catch { return json(400, { error: 'invalid' }); }
+    if (admin) {
+      const specId = publishApplication(token, profile, defaults?.specialists || []);
+      saveApplication({ token, created: record.created, submitted: record.submitted, name: profile.general.name, status: 'published', specId });
+      return json(200, { ok: true, specId });
+    }
+    saveApplication({ ...record, submitted: Date.now(), name: profile.general.name, status: 'pending', profile });
+    return json(200, { ok: true });
+  } catch (error) {
+    console.error('Specialist application:', error.message);
+    return json(500, { error: 'server' });
+  }
+}
+
+http.createServer(async (req, res) => {
   let urlObj, urlPath;
   try {
     urlObj = new URL(req.url, 'http://x');
@@ -843,6 +1114,14 @@ http.createServer((req, res) => {
   if (urlPath === '/api/lead') return handleLead(req, res);
   if (urlPath === '/api/data') return handleData(req, res);
   if (urlPath === '/api/review') return handleReview(req, res);
+  if (urlPath === '/api/specialist-application') return handleApplications(req, res, urlObj, false);
+  if (urlPath === '/admin/specialist-applications/api') return handleApplications(req, res, urlObj, true);
+  if (urlPath === '/anketa-specialista' || urlPath === '/admin/specialist-applications/') {
+    if (urlPath.startsWith('/admin/') && (!ADMIN_PASSWORD || !adminAuthorized(req))) return send(req, res, 401, 'Admin login required', {
+      'WWW-Authenticate': 'Basic realm="Admin", charset="UTF-8"',
+    });
+    return sendFile(req, res, path.join(ROOT, 'specialist-application.html'));
+  }
   if (urlPath === '/api/video-thumb') return handleVideoThumb(req, res, urlObj.searchParams.get('url'));
   if (urlPath === '/api/upload-photo') return handleUploadPhoto(req, res);
   if (urlPath === '/api/delete-photo') return handleDeletePhoto(req, res);
@@ -860,10 +1139,15 @@ http.createServer((req, res) => {
   // хостингах со статической раздачей в обход Node (см. ADMIN_HTML_PATH) не сработает
   // подстановка контактных ссылок (см. injectContactHrefs).
   if (urlPath === '/') {
-    return servePlainPage(req, res, INDEX_HTML_PATH);
+    const data = await readSeoData();
+    return servePlainPage(req, res, INDEX_HTML_PATH, directoryLinks(data));
   }
   if (urlPath === '/specialists.html' || urlPath === '/specialists') {
-    return servePlainPage(req, res, SPECIALISTS_HTML_PATH);
+    const data = await readSeoData();
+    const cat = urlObj.searchParams.get('cat');
+    const route = '/' + cat;
+    const canonical = cat && seoCatalogs(data).has(route) && localProfiles(data, cat).length ? SITE_ORIGIN + route : SITE_ORIGIN + '/specialists.html';
+    return servePageWithSeo(req, res, SPECIALISTS_HTML_PATH, { url: canonical, body: directoryLinks(data) });
   }
   if (urlPath === '/cases.html' || urlPath === '/cases') {
     return servePlainPage(req, res, CASES_HTML_PATH);
@@ -889,7 +1173,7 @@ http.createServer((req, res) => {
   };
   const eventRoute = eventRoutes[urlPath.replace(/\/$/, '')];
   if (eventRoute) {
-    const origin = requestOrigin(req) || 'https://eventspecialists.ru';
+    const origin = SITE_ORIGIN;
     const desc = `Специалисты и портфолио для направления «${eventRoute.name}» во Владивостоке. Подбор команды и бронирование напрямую.`;
     const routePath = urlPath.replace(/\/$/, '');
     const seo = eventRoute.id === 'wedding' ? weddingCatalogSeo(origin) : {
@@ -930,9 +1214,16 @@ http.createServer((req, res) => {
     });
   }
 
+  if (/^\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(urlPath)) {
+    const route = urlPath.replace(/\/$/, '');
+    const data = await readSeoData();
+    const config = seoCatalogs(data).get(route);
+    if (config) return serveLocalCatalog(req, res, route, data, config);
+  }
   if (urlPath === '/' || urlPath === '') urlPath = '/index.html';
   if (!path.extname(urlPath)) urlPath += '.html'; // /cases -> /cases.html
 
+  if (urlPath.split(/[\\/]/).some(segment => segment.startsWith('.'))) return notFound(req, res);
   const filePath = path.join(ROOT, urlPath);
   if (!filePath.startsWith(ROOT + path.sep)) return notFound(req, res); // защита от ../
   const forbidden = new Set(['server.js', '_admin.html', '.live-data.json', '.env', 'index.html', 'specialists.html', 'cases.html', 'privacy.html']);

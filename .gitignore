@@ -1,5 +1,6 @@
 .env
 .live-data.json
 .live-data.json.tmp
+/.specialist-applications/
 /uploads/
 /backups/

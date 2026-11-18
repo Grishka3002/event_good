@@ -46,6 +46,7 @@ option{background:#121A26;color:#F2F5F8}
   <div style="border:1px solid rgba(255,255,255,.08);background:#0E141D;border-radius:12px;padding:15px 20px;font-size:12.5px;line-height:1.65;color:#7C8894;margin-bottom:24px">Правки становятся видны на сайте только после нажатия кнопки «Сохранить» в правом верхнем углу (или Ctrl+S) — до этого спокойно правьте текст, ничего никуда не уходит. Если закрыть вкладку с несохранёнными правками, браузер предупредит. Это касается и фотографий: выбранные снимки видны сразу, но на сайт уходят вместе с остальными правками по кнопке «Сохранить». Можно редактировать одновременно с другого устройства: разные карточки не мешают друг другу, сервер сам сливает правки.</div>
 
   <div data-screen-label="Вкладки" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px">
+    <a href="/admin/specialist-applications/" style="border:1px solid var(--acc);color:var(--acc);border-radius:999px;padding:11px 20px;font-size:12px;font-weight:700">Анкеты специалистов</a>
     <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="7">
       <button onClick="{{ t.pick }}" style="background:{{ t.bg }};color:{{ t.color }};border:1px solid {{ t.border }};border-radius:999px;padding:11px 20px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;font-family:inherit" style-hover="border-color:var(--acc)">{{ t.label }}</button>
     </sc-for>

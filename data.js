@@ -192,7 +192,7 @@ export const DEFAULTS = {
 
 export const STORE_KEY = 'hr-site-data-v1';
 
-function mergeWithDefaults(saved) {
+export function mergeWithDefaults(saved) {
   const d = { ...DEFAULTS, ...saved, contacts: { ...DEFAULTS.contacts, ...(saved.contacts || {}) } };
   // миграция: подтягиваем новые поля из DEFAULTS в ранее сохранённые записи —
   // так код можно обновлять сколько угодно, старые сохранённые данные не «слетают»

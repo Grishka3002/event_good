@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="/support.js"></script>
+<script src="/site-analytics.js"></script>
 </head>
 <body>
 <x-dc>
@@ -134,7 +135,7 @@ a:hover{color:var(--acc)}
           </div>
         </sc-if>
         <div style="display:flex;gap:14px;flex-wrap:wrap">
-          <button onClick="{{ book }}" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:18px 30px;border-radius:11px;border:none;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1);transform:translateY(-1px)">Забронировать</button>
+          <a href="{{ bookHref }}" style="background:var(--acc);color:#0C1117;font-weight:800;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:18px 30px;border-radius:11px;border:none;cursor:pointer;font-family:inherit" style-hover="filter:brightness(1.1);transform:translateY(-1px)">Узнать свободные даты</a>
           <a href="{{ mainHref }}" target="_blank" style="display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:17px 28px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Задать вопрос в&nbsp;{{ mainLabel }}</a>
           <sc-if value="{{ hasMax }}" hint-placeholder-val="{{ false }}"><a href="{{ tgHref }}" target="_blank" style="display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.22);color:#F2F5F8;font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;padding:17px 28px;border-radius:11px" style-hover="border-color:var(--acc);color:var(--acc)">Задать вопрос в TG</a></sc-if>
         </div>
@@ -351,7 +352,14 @@ class Component extends DCLogic {
   _thumbPortrait = {};
   componentDidMount() {
     this._qid = new URLSearchParams(location.search).get('id');
-    import('/data.js?v=3').then(m => { this.mod = m; m.loadData().then(d => this.setState({ d, id: this._qid })); });
+    import('/data.js?v=3').then(m => { this.mod = m; m.loadData().then(d => this.setState({ d, id: this._qid }, () => {
+      const s = this.spec();
+      const direction = window.siteAnalytics?.direction || 'general';
+      const profile = s && direction !== 'general' && m.eventProfile ? m.eventProfile(s, direction) : s;
+      if (s && profile && (direction === 'general' || profile.enabled === true)) {
+        window.siteAnalytics?.track('profile_view', { specialist_id: s.id, direction, category: profile.cat || '' });
+      }
+    })); });
     this.applyVars();
     this._mq = window.matchMedia('(max-width: 1020px)');
     this._mqFn = () => this.setState({ mobile: this._mq.matches, menuOpen: false });
@@ -373,7 +381,7 @@ class Component extends DCLogic {
   }
   syncSeo() {
     const s = this.spec();
-    if (!s) return;
+    if (!s || document.getElementById('server-person-seo')) return;
     const eventType = location.pathname.startsWith('/svadby/') ? 'wedding' : location.pathname.startsWith('/korporativy/') ? 'corporate' : location.pathname.startsWith('/prazdniki-i-shou/') ? 'entertainment' : '';
     const profile = eventType && this.mod && this.mod.eventProfile ? this.mod.eventProfile(s, eventType) : s;
     const title = (eventType === 'wedding' ? 'Свадебный ' : '') + profile.name + ' — ' + profile.role + ' | Хорошее решение';
@@ -485,7 +493,6 @@ class Component extends DCLogic {
     const C = (d && d.categories) || [];
     const cts = d ? d.contacts : { person: 'Сергей Зеленский', phone: '+7 918 206 29 11', tg: 'sazelenskiy' };
     const tgHref = 'https://t.me/' + String(cts.tg || '').replace(/^@/, '');
-    const bookingHref = 'https://t.me/sazelenskii';
     const maxRaw = String(cts.max || '').trim();
     const maxHref = maxRaw ? (maxRaw.startsWith('http') ? maxRaw : 'https://' + maxRaw.replace(/^\/+/, '')) : '';
     const mainHref = maxHref || tgHref;
@@ -641,15 +648,7 @@ class Component extends DCLogic {
         if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) this.lbGo(dx < 0 ? 1 : -1);
         else if (dy > 90 && Math.abs(dy) > Math.abs(dx) * 1.5) this.closeLb();
       },
-      book: () => {
-        if (!s) return;
-        // "Бронь" не идёт через /api/lead — это сразу диалог в Telegram, поэтому источник
-        // (обычный сайт / свадебный раздел) помечаем прямо в тексте сообщения, иначе его
-        // негде увидеть на другой стороне.
-        const msg = 'Здравствуйте! Нашёл(а) на странице ' + (eventMeta ? eventMeta.name.toLowerCase() : 'специалистов') + ' сайта «Хорошее решение» и хочу забронировать: ' + profile.name + ' (' + profile.role + '). Подскажите свободные даты и цену.';
-        try { navigator.clipboard && navigator.clipboard.writeText(msg); } catch (e) {}
-        window.open(bookingHref, '_blank');
-      }
+      bookHref: s ? (eventMeta ? eventMeta.path : '/specialists.html') + '?specialist=' + encodeURIComponent(s.id) + '#zayavka' : '/specialists.html#zayavka'
     };
   }
 }
