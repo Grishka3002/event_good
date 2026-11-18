@@ -1,6 +1,15 @@
-// Anonymous interaction events for Yandex Metrika. Never send form field values.
+// Anonymous interaction events for Yandex Metrika and Google Analytics. Never send form field values.
 (function () {
   const counter = 111261477;
+  const googleMeasurementId = 'G-82BRBRPK9N';
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', googleMeasurementId);
+  const googleTag = document.createElement('script');
+  googleTag.async = true;
+  googleTag.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(googleMeasurementId);
+  document.head.appendChild(googleTag);
   const direction = location.pathname.startsWith('/svadby') ? 'wedding'
     : location.pathname.startsWith('/korporativy') ? 'corporate'
     : location.pathname.startsWith('/prazdniki-i-shou') ? 'entertainment' : 'general';
@@ -19,8 +28,14 @@
   }
 
   function track(goal, details) {
-    pending.push([goal, details || {}]);
+    const anonymousDetails = details || {};
+    pending.push([goal, anonymousDetails]);
     flush();
+    try {
+      window.gtag('event', goal, { ...anonymousDetails, send_to: googleMeasurementId });
+    } catch (_) {
+      // Analytics must never interrupt navigation or a successful request.
+    }
   }
 
   window.siteAnalytics = { track, direction };

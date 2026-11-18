@@ -412,12 +412,12 @@ async function serveSpecialistPage(req, res, id, ctx) {
 // только заголовок/описание для соцсетей и поисковиков — под свадебную тематику.
 function weddingCatalogSeo(origin) {
   const o = origin || 'https://eventspecialists.ru';
-  const description = 'Свадебные специалисты «Хорошего решения»: ведущие, фотографы, видеографы, декораторы и флористы, кейтеринг, кондитеры, визажисты и стилисты, площадки — заточены именно под свадьбы.';
+  const description = 'Организация свадебных событий во Владивостоке: подбор ведущего, фотографа, видеографа, декора и площадки. Свадебные кейсы, портфолио специалистов и заявка на мероприятие.';
   return {
-    title: 'Специалисты на свадьбу | Хорошее решение',
+    title: 'Организация свадьбы во Владивостоке и свадебные специалисты | Хорошее решение',
     description,
     url: `${o}/svadby`,
-    ogTitle: 'Специалисты на свадьбу',
+    ogTitle: 'Свадебные события и специалисты во Владивостоке',
     ogDescription: description,
   };
 }
@@ -476,6 +476,7 @@ function serveLocalCatalog(req, res, route, data, config) {
 <title>${escapeHtml(heading)} — Хорошее решение</title>
 <meta name="description" content="${escapeHtml(description)}">
 <link rel="canonical" href="${escapeHtml(origin + route)}"><link rel="icon" href="/favicon.svg">
+<script src="/site-analytics.js"></script>
 ${cards ? '' : '<meta name="robots" content="noindex,follow">'}
 <style>
 body{margin:0;background:#0c1117;color:#f2f5f8;font:1rem/1.6 system-ui,sans-serif}
@@ -1174,17 +1175,30 @@ http.createServer(async (req, res) => {
   const eventRoute = eventRoutes[urlPath.replace(/\/$/, '')];
   if (eventRoute) {
     const origin = SITE_ORIGIN;
-    const desc = `Специалисты и портфолио для направления «${eventRoute.name}» во Владивостоке. Подбор команды и бронирование напрямую.`;
+    const details = {
+      corporate: ['Организация корпоративов и деловых мероприятий во Владивостоке | Хорошее решение', 'Корпоративы, конференции, форумы и презентации во Владивостоке. Подбор организаторов, ведущих и технической команды, кейсы и заявка на событие.'],
+      entertainment: ['Организация праздников во Владивостоке и специалисты | Хорошее решение', 'Организация частных праздников, фестивалей и шоу во Владивостоке. Ведущие, артисты, декор и другие специалисты, реальные кейсы и заявка на мероприятие.'],
+    };
+    const [title, desc] = details[eventRoute.id] || [];
     const routePath = urlPath.replace(/\/$/, '');
     const seo = eventRoute.id === 'wedding' ? weddingCatalogSeo(origin) : {
-      title: `${eventRoute.name} во Владивостоке | Хорошее решение`, description: desc,
+      title, description: desc,
       url: `${origin}${routePath}`,
       ogTitle: eventRoute.name, ogDescription: desc,
     };
     return servePageWithSeo(req, res, SPECIALISTS_HTML_PATH, seo);
   }
-  if (urlPath === '/svadby/cases' || urlPath === '/korporativy/cases' || urlPath === '/prazdniki-i-shou/cases')
-    return servePlainPage(req, res, CASES_HTML_PATH);
+  const caseSeo = {
+    '/svadby/cases': ['Свадебные кейсы во Владивостоке | Хорошее решение', 'Реальные свадебные события: формат, команда и фотографии. Посмотрите примеры организации свадеб и подберите специалистов для своей даты.'],
+    '/korporativy/cases': ['Кейсы корпоративов и деловых мероприятий | Хорошее решение', 'Примеры корпоративов, конференций и форумов: программа, команда и масштаб событий. Выберите формат делового мероприятия для своей компании.'],
+    '/prazdniki-i-shou/cases': ['Кейсы праздников и шоу во Владивостоке | Хорошее решение', 'Реальные праздники, фестивали и шоу: идеи, исполнители и фотографии. Посмотрите проекты и обсудите организацию своего события.'],
+  };
+  if (caseSeo[urlPath]) {
+    const [title, description] = caseSeo[urlPath];
+    return servePageWithSeo(req, res, CASES_HTML_PATH, {
+      title, description, url: SITE_ORIGIN + urlPath, ogTitle: title, ogDescription: description,
+    });
+  }
   if (urlPath === '/svadby/specialist.html' || urlPath === '/svadby/specialist')
     return serveSpecialistPage(req, res, urlObj.searchParams.get('id'), { eventType: 'wedding' });
   if (urlPath === '/korporativy/specialist.html' || urlPath === '/korporativy/specialist')
